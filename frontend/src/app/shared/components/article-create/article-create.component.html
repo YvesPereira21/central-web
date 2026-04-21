@@ -1,0 +1,22 @@
+<section class="w-[940px] max-w-[940px] mx-auto">
+    <!-- create article -->
+    <div class="rounded-xl bg-[#161B22] p-6 text-white shadow-lg">
+        <!-- Forms-->
+        <form [formGroup]="articleForm" class="space-y-5">
+            <!-- Ttle -->
+            <div class="space-y-1">
+                <label for="title" class="text-sm font-medium text-gray-300">Título</label>
+                <input id="title" formControlName="title" type="text"
+                    placeholder="Ex: Como implementar Refresh Token com Axios e Spring Boot"
+                    class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-3 text-white placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none" />
+            </div>
+
+            <!-- Content -->
+            <div class="space-y-1">
+                <label for="content" class="text-sm font-medium text-gray-300">Conteúdo</label>
+                <textarea id="content" formControlName="content" rows="10" placeholder="Escreva seu artigo aqui..."
+                    class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-3 text-white placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none"></textarea>
+            </div>
+        </form>
+    </div>
+</section>
