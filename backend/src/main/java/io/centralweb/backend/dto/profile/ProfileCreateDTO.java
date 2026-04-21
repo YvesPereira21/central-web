@@ -1,12 +1,13 @@
 package io.centralweb.backend.dto.profile;
 
 import io.centralweb.backend.dto.user.UserDTO;
+import io.centralweb.backend.enums.ProfileType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record ProfileCreateDTO(
         @NotBlank String bio,
-        @NotBlank String photoUrl,
+        @NotBlank ProfileType profileType,
         @NotBlank String expertise,
         @NotNull UserDTO user
 ) {}

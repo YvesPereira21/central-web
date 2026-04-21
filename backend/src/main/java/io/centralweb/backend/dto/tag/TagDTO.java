@@ -4,6 +4,5 @@ import jakarta.validation.constraints.NotBlank;
 
 public record TagDTO(
         @NotBlank String technologyName,
-        @NotBlank String languageLogoUrl,
         @NotBlank String color
 ) {}
