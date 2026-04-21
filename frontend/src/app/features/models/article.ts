@@ -20,5 +20,13 @@ export interface ArticleCreate {
 export interface ArticleUpdate {
     title: string,
     content: string,
-    tags: string[]
+    technologyNames: string[]
+}
+
+export interface ArticleSimple {
+    articleId: string,
+    title: string,
+    content: string,
+    tags: Tag[],
+    articleTotalLikes: number
 }

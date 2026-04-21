@@ -1,0 +1,74 @@
+<article class="w-[600px] max-w-[600px] mx-auto">
+    <section class="rounded-xl bg-[#161B22] p-6 text-white shadow-lg">
+        <div class="space-y-6">
+            <form [formGroup]="qualificationForm" class="space-y-5">
+                <!-- jobtitle -->
+                <div class="space-y-1.5">
+                    <label for="jobTitle" class="text-sm font-medium text-gray-300">Cargo</label>
+                    <input id="jobTitle" formControlName="jobTitle" type="text"
+                        placeholder="Ex: Assegurador de Qualidade" required
+                        class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-3 text-white placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none" />
+                </div>
+
+                <!-- Experience level -->
+                <div class="space-y-1.5">
+                    <label for="experienceLevel" class="text-sm font-medium text-gray-300">Nível de experiência</label>
+                    <select id="experienceLevel" formControlName="experienceLevel" required
+                        class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-3 text-white focus:border-emerald-500 focus:outline-none">
+                        <option value="" disabled selected>Selecione o nível</option>
+                        <option value="intern">Estagiário</option>
+                        <option value="junior">Júnior</option>
+                        <option value="mid">Pleno</option>
+                        <option value="senior">Sênior</option>
+                    </select>
+                </div>
+
+                <!-- Institution -->
+                <div class="space-y-1.5">
+                    <label for="institution" class="text-sm font-medium text-gray-300">Instituição / Empresa</label>
+                    <input id="institution" formControlName="institution" placeholder="Ex: Phoebus" type="text" required
+                        class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-3 text-white placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none" />
+                </div>
+
+                <!-- Start and end data -->
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Data de início -->
+                    <div class="space-y-1.5">
+                        <label for="startDate" class="text-sm font-medium text-gray-300">Data de início</label>
+                        <input id="start_date" formControlName="startDate" type="date" required
+                            class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-3 text-white focus:border-emerald-500 focus:outline-none" />
+                    </div>
+
+                    <!-- Data de fim (pode ser opcional se for cargo atual) -->
+                    <div class="space-y-1.5">
+                        <label for="endDate" class="text-sm font-medium text-gray-300">Data de fim</label>
+                        <input id="endDate" formControlName="endDate" type="date"
+                            class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-3 text-white focus:border-emerald-500 focus:outline-none" />
+                        <p class="text-xs text-gray-500">Deixe em branco se for seu cargo atual</p>
+                    </div>
+                </div>
+
+                <!-- Botões de ação -->
+                <div class="flex flex-wrap items-center justify-end gap-3 pt-4">
+                    <a href="#"
+                        class="rounded-lg border border-[#30363d] px-5 py-2.5 text-sm font-medium text-gray-300 hover:bg-[#21262d] hover:text-white">
+                        Cancelar
+                    </a>
+                    <button type="submit" class=" inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm
+                        font-medium text-white shadow-sm transition-all hover:bg-emerald-500 hover:shadow-md"
+                        (click)="onSubmit()" [disabled]="isSubmiting || qualificationForm.invalid">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-4">
+                            <path fill-rule="evenodd"
+                                d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        @if(isSubmiting){
+                        Cadastrando...
+                        }
+                        Cadastrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+</article>

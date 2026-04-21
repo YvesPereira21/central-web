@@ -1,0 +1,155 @@
+<article class="w-[940px] max-w-[940px] h-auto container mx-auto my-4 space-y-4">
+    <section class="rounded-lg bg-[#161B22] p-4 text-white shadow-md">
+        <div class="flex flex-col items-center gap-4">
+            <img alt="Avatar do usuário" src="https://img.daisyui.com/images/profile/demo/yellingcat@192.webp"
+                class="size-28 rounded-full" />
+            <span class="text-2xl">{{ profile?.username }}</span>
+            <p class="text-justify break-words">
+                {{ profile?.bio }}
+            </p>
+        </div>
+    </section>
+
+    <!-- User statistics -->
+    <section class="rounded-lg bg-[#161B22] p-4 text-white shadow-md">
+        <div class="grid grid-cols-3 gap-4">
+            <div class="flex flex-col items-center gap-2 rounded-lg bg-[#21262D]/50 p-3">
+                <span class="text-sm font-merriweather font-semibold uppercase text-gray-300">
+                    Nível do usuário
+                </span>
+                <span class="text-xl font-bold text-emerald-500">
+                    {{ profile?.level }}
+                </span>
+            </div>
+            <div class="flex flex-col items-center gap-2 rounded-lg bg-[#21262D]/50 p-3">
+                <span class="text-sm font-merriweather font-semibold uppercase text-gray-300">
+                    Artigos escritos
+                </span>
+                <span class="text-xl font-bold text-white">
+                    12
+                </span>
+            </div>
+            <div class="flex flex-col items-center gap-2 rounded-lg bg-[#21262D]/50 p-3">
+                <span class="text-sm font-merriweather font-semibold uppercase text-gray-300">
+                    Respostas aceitas
+                </span>
+                <span class="text-xl font-bold text-white">
+                    3
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Card and Link to all articles written by the profile -->
+    <section class="rounded-lg bg-[#161B22] p-4 text-white shadow-md space-y-4">
+        <div class="flex flex-wrap items-center justify-between">
+            <span class="text-2xl font-lora font-semibold">Todos os artigos publicados</span>
+            <a href="#"
+                class="inline-flex items-center gap-2 rounded-full border border-emerald-500/50 bg-emerald-500/10 px-5 py-2 text-sm font-medium text-emerald-300 transition-all hover:border-emerald-400 hover:bg-emerald-500/20 hover:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-4">
+                    <path
+                        d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                </svg>
+                Criar novo artigo
+            </a>
+        </div>
+
+        <!-- Card -->
+        @for (article of profile?.articles; track article.articleId) {
+        <div class="grid grid-cols-2 justify-items-center">
+            <article class="w-full max-w-[450px] rounded-md bg-[#21262D] text-white shadow-md">
+                <section class="flex h-[70px] gap-4 px-3 py-2">
+                    <a href="#">
+                        <div tabindex="0" role="button" class="avatar btn btn-circle btn-ghost">
+                            <div class="w-12 rounded-full">
+                                <img alt="Avatar do usuário"
+                                    src="https://img.daisyui.com/images/profile/demo/yellingcat@192.webp" />
+                            </div>
+                        </div>
+                    </a>
+                    <div class="flex flex-col gap-1 font-inter">
+                        <span> {{ profile?.username }} </span>
+                        <div
+                            class="w-fit rounded-full border-2 border-[#3FB950]/30 bg-[#3FB950]/15 px-3 text-center text-sm text-[#3FB950]">
+                            {{ profile?.level }}
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Content -->
+                <section class="px-4 py-2">
+                    <h1 class="font-inter text-xl font-bold text-[#C9D1D9]">
+                        {{ article.title }}
+                    </h1>
+                    @for (tag of article.tags; track tag.technologyName) {
+                    <div class="mt-1 flex flex-wrap gap-2">
+                        <span
+                            class="rounded-md border border-[#30363d] bg-[#0d1117] px-3 py-1 text-xs font-medium text-gray-400">
+                            {{ tag.technologyName }}
+                        </span>
+                    </div>
+                    }
+                    <p class="mt-3 line-clamp-6 font-lora font-semibold 
+                      text-sm text-justify leading-relaxed text-[#8B949E]">
+                        {{ article.content }}
+                    </p>
+                    <hr class="mt-1 border-[#8B949E]" />
+                </section>
+
+                <!-- Article actions -->
+                <section class="flex items-center justify-between px-5 py-2">
+                    <div class="flex items-center gap-5">
+                        <!-- Like button -->
+                        <button class="group flex items-center gap-1 py-1 transition-all
+                             hover:text-red-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
+                                class="size-5 fill-current transition-transform group-hover:scale-110">
+                                <path
+                                    d="M241 87.1l15 20.7 15-20.7C296 52.5 336.2 32 378.9 32 452.4 32 512 91.6 512 165.1l0 2.6c0 112.2-139.9 242.5-212.9 298.2-12.4 9.4-27.6 14.1-43.1 14.1s-30.8-4.6-43.1-14.1C139.9 410.2 0 279.9 0 167.7l0-2.6C0 91.6 59.6 32 133.1 32 175.8 32 216 52.5 241 87.1z" />
+                            </svg>
+                            <span class="text-sm font-medium">{{ article.articleTotalLikes }}</span>
+                        </button>
+
+                        <!-- Save button -->
+                        <button class="group flex items-center gap-1 py-1 transition-all 
+                             hover:text-emerald-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"
+                                class="size-5 fill-current transition-transform group-hover:scale-110">
+                                <path
+                                    d="M64 0C28.7 0 0 28.7 0 64L0 480c0 11.5 6.2 22.2 16.2 27.8s22.3 5.5 32.2-.4L192 421.3 335.5 507.4c9.9 5.9 22.2 6.1 32.2 .4S384 491.5 384 480l0-416c0-35.3-28.7-64-64-64L64 0z" />
+                            </svg>
+                            <span class="text-sm font-medium">Salvar</span>
+                        </button>
+                    </div>
+
+                    <!-- Link to see the article entire content -->
+                    <a href="#" class="group flex items-center gap-1 text-sm font-medium 
+                               hover:text-[#3FB950]">
+                        Veja mais
+                    </a>
+                </section>
+            </article>
+        </div>
+        }
+
+        <!-- Link to all articles written by the profile -->
+        <a href="#"
+            class="block w-full rounded-md bg-[#30363D] p-3 text-center text-white shadow-sm transition hover:bg-[#3c444d]">
+            Mostrar todos os artigos do perfil
+        </a>
+    </section>
+
+    <!-- User experience -->
+    <section class="rounded-lg bg-[#161B22] p-4 text-white shadow-md">
+        <h1 class="text-xl font-semibold">Experiências</h1>
+        @for (qualification of profile?.qualifications; track qualification.qualificationId) {
+        <div class="mt-3 flex flex-col gap-1">
+            <span class="font-medium">qualification.jobTitle</span>
+            <span class="text-gray-300">qualification.experienceLevel</span>
+            <span class="text-gray-300">qualification.institution</span>
+            <span class="text-sm text-gray-400">qualification.startDate – qualification.endDate</span>
+        </div>
+        <hr class="my-3 border-[#8B949E]" />
+        }
+    </section>
+</article>

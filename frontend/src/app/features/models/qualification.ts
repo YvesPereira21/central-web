@@ -1,4 +1,5 @@
 export interface Qualification {
+    qualificationId: string,
     jobTitle: string,
     experienceLevel: string,
     institution: string,

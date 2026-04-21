@@ -1,0 +1,58 @@
+<article class="w-[600px] max-w-[600px] mx-auto">
+    <section class="rounded-xl bg-[#161B22] p-6 text-white shadow-lg">
+        <div class="space-y-6">
+            <!-- Form -->
+            <form [formGroup]="profileForm" class="space-y-5">
+                <!-- Username -->
+                <div class="space-y-1.5">
+                    <label for="username" class="text-sm font-medium text-gray-300">Nome de usuário</label>
+                    <input id="username" formControlName="username" placeholder="ex: maicon_jackson" type="text"
+                        required
+                        class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-3 text-white placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none" />
+                </div>
+
+                <!-- Email -->
+                <div class="space-y-1.5">
+                    <label for="email" class="text-sm font-medium text-gray-300">Email</label>
+                    <input id="email" formControlName="email" type="email" placeholder="ex: maicon@email.com" required
+                        class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-3 text-white placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none" />
+                </div>
+
+                <!-- Password -->
+                <div class="space-y-1.5">
+                    <label for="password" class="text-sm font-medium text-gray-300">Senha</label>
+                    <input id="password" formControlName="password" type="password" placeholder="••••••••" required
+                        class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-3 text-white placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none" />
+                    <p class="text-xs text-gray-500">Mínimo de 8 caracteres</p>
+                </div>
+
+                <!-- Bio -->
+                <div class="space-y-1.5">
+                    <label for="bio" class="text-sm font-medium text-gray-300">Bio</label>
+                    <textarea id="bio" formControlName="bio" rows="3" placeholder="Conte um pouco sobre você..."
+                        class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-3 text-white placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none"></textarea>
+                </div>
+
+                <!-- ProfileType -->
+                <div class="space-y-1.5">
+                    <label for="profileType" class="text-sm font-medium text-gray-300">Perfil</label>
+                    <input id="profileType" formControlName="profileType" type="text"
+                        placeholder="ex: Estudante Universitário, Autodidata" required
+                        class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-3 text-white placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none" />
+                </div>
+
+                <!-- Action buttons -->
+                <div class="flex flex-wrap items-center justify-end gap-3 pt-4">
+                    <button type="submit"
+                        class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-emerald-500 hover:shadow-md"
+                        (click)="onSubmit()" [disabled]="isSubmiting || profileForm.invalid">
+                        @if (isSubmiting) {
+                        Cadastrando
+                        }
+                        Cadastrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+</article>
