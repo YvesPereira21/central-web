@@ -4,8 +4,8 @@ import { User } from './user';
 
 export interface Profile {
     profileId: string,
+    name: string,
     bio: string,
-    username: string,
     expertise: string,
     level: string,
     reputationScore: number,
@@ -15,6 +15,7 @@ export interface Profile {
 }
 
 export interface ProfileCreate {
+    name: string,
     bio: string,
     profileType: string,
     expertise: string,
@@ -23,13 +24,14 @@ export interface ProfileCreate {
 }
 
 export interface ProfileUpdate {
+    name: string,
     bio: string,
     expertise: string
 }
 
 export interface ProfileSimple {
     profileId: string,
-    username: string,
+    name: string,
     expertise: string,
     level: string,
     professional: boolean

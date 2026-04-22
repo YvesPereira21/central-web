@@ -4,8 +4,7 @@ import java.util.UUID;
 
 public record ProfileSimpleDTO(
         UUID profileId,
-        String username,
-        String photoUrl,
+        String name,
         String expertise,
         String level,
         boolean professional

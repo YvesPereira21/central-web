@@ -21,8 +21,6 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "user_id")
     private UUID userId;
-    @Column(name = "username")
-    private String username;
     @Column(name = "password")
     private String password;
     @Column(name = "email", unique = true)
@@ -35,10 +33,9 @@ public class User implements UserDetails {
     public User() {
     }
 
-    public User(UUID userId, String password, String username, String email) {
+    public User(UUID userId, String password, String email) {
         this.userId = userId;
         this.password = password;
-        this.username = username;
         this.email = email;
     }
 
@@ -46,12 +43,9 @@ public class User implements UserDetails {
         return userId;
     }
 
+    @Override
     public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
+        return email;
     }
 
     @Override

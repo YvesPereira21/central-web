@@ -17,6 +17,8 @@ public class Profile {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "profile_id")
     private UUID profileId;
+    @Column(name = "name")
+    private String name;
     @Column(name = "bio")
     private String bio;
     private ProfileType profileType;
@@ -43,8 +45,9 @@ public class Profile {
     public Profile() {
     }
 
-    public Profile(UUID profileId, String bio, ProfileType profileType, String expertise, String level, long reputationScore, boolean professional, User user, List<Question> questions, List<Article> articles, List<Answer> answers, List<Qualification> qualifications) {
+    public Profile(UUID profileId, String name, String bio, ProfileType profileType, String expertise, String level, long reputationScore, boolean professional, User user, List<Question> questions, List<Article> articles, List<Answer> answers, List<Qualification> qualifications) {
         this.profileId = profileId;
+        this.name = name;
         this.bio = bio;
         this.profileType = profileType;
         this.expertise = expertise;
@@ -60,6 +63,14 @@ public class Profile {
 
     public UUID getProfileId() {
         return profileId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getBio() {

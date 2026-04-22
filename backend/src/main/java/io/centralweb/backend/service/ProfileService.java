@@ -27,7 +27,6 @@ public class ProfileService {
 
     public ProfileDTO createProfile(ProfileCreateDTO profile) {
         User user = new User();
-        user.setUsername(profile.user().username());
         user.setEmail(profile.user().email());
         user.setPassword(bCryptPasswordEncoder.encode(profile.user().password()));
         user.setRole(UserRole.PERSON);
