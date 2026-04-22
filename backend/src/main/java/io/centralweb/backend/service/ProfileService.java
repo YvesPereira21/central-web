@@ -8,6 +8,7 @@ import io.centralweb.backend.mapper.ProfileMapper;
 import io.centralweb.backend.model.Profile;
 import io.centralweb.backend.model.User;
 import io.centralweb.backend.repository.ProfileRepository;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -16,17 +17,19 @@ import java.util.UUID;
 public class ProfileService {
     private final ProfileRepository profileRepository;
     private final ProfileMapper profileMapper;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public ProfileService(ProfileRepository profileRepository, ProfileMapper profileMapper) {
+    public ProfileService(ProfileRepository profileRepository, ProfileMapper profileMapper, BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.profileRepository = profileRepository;
         this.profileMapper = profileMapper;
+        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
     public ProfileDTO createProfile(ProfileCreateDTO profile) {
         User user = new User();
         user.setUsername(profile.user().username());
-        user.setEmail(profile.user().username());
-        user.setPassword(profile.user().username());
+        user.setEmail(profile.user().email());
+        user.setPassword(bCryptPasswordEncoder.encode(profile.user().password()));
         user.setRole(UserRole.PERSON);
 
         Profile newProfile = new Profile();

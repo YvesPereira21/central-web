@@ -109,4 +109,3 @@ public class Answer {
         return answerTotalLikes == null ? 0 : answerTotalLikes;
     }
 }
-
