@@ -38,6 +38,11 @@ public class QuestionController {
         return ResponseEntity.status(HttpStatus.OK).body(question);
     }
 
+    @GetMapping("")
+    public ResponseEntity<List<QuestionListDTO>> getAllPublishedQuestions() {
+        return ResponseEntity.status(HttpStatus.OK).body(questionService.getAllPublishedQuestions());
+    }
+
     @GetMapping("/{title}/title")
     public ResponseEntity<List<QuestionListDTO>> getQuestionsByTitle(
             @PathVariable("title") String title

@@ -42,6 +42,12 @@ public class ArticleService {
         return articleMapper.toDTO(article);
     }
 
+    public List<ArticleDTO> getAllPublishedArticles(){
+        return articleRepository.findAllByPublishedIsTrue().stream()
+                .map(articleMapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
     public List<ArticleDTO> getAllPublishedArticlesByTitle(String title){
         return articleRepository
                 .findAllByTitleContainingIgnoreCaseAndPublishedIsTrue(title)

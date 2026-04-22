@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class TagService {
@@ -41,6 +42,12 @@ public class TagService {
                 .orElseThrow();
 
         return tagMapper.toDTO(tag);
+    }
+
+    public List<TagDTO> getAllTags(){
+        return tagRepository.findAll().stream()
+                .map(tagMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     public TagDTO updateTag(UUID tagId, TagUpdateDTO tagUpdated) {

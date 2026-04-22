@@ -43,6 +43,12 @@ public class QuestionService {
         return questionMapper.toQuestionDTO(question);
     }
 
+    public List<QuestionListDTO> getAllPublishedQuestions(){
+        return questionRepository.findAllByPublishedIsTrue().stream()
+                .map(questionMapper::toQuestionListDTO)
+                .collect(Collectors.toList());
+    }
+
     public List<QuestionListDTO> getAllPublishedQuestionsByTitle(String title){
         return questionRepository
                 .findAllByTitleContainingIgnoreCaseAndPublishedIsTrue(title)

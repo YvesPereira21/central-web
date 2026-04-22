@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ArticleRepository extends JpaRepository<Article, UUID> {
+    List<Article> findAllByPublishedIsTrue();
     List<Article> findAllByTitleContainingIgnoreCaseAndPublishedIsTrue(
             String title
     );

@@ -34,6 +34,11 @@ public class ArticleController {
         return ResponseEntity.status(HttpStatus.OK).body(articleService.getArticleById(articleId));
     }
 
+    @GetMapping("")
+    public ResponseEntity<List<ArticleDTO>> getAllPublishedArticles(){
+        return ResponseEntity.status(HttpStatus.OK).body(articleService.getAllPublishedArticles());
+    }
+
     @GetMapping("/{title}/title")
     public ResponseEntity<List<ArticleDTO>> getArticlesByTitle(
             @PathVariable("title") String title

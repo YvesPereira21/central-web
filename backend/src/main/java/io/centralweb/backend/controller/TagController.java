@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -25,6 +26,11 @@ public class TagController {
     public ResponseEntity<TagDTO> createTag(@RequestBody @Valid TagDTO tag) {
         TagDTO newTag = tagService.createTag(tag);
         return ResponseEntity.status(HttpStatus.CREATED).body(newTag);
+    }
+
+    @GetMapping("")
+    public ResponseEntity<List<TagDTO>> getAllTags() {
+        return ResponseEntity.status(HttpStatus.OK).body(tagService.getAllTags());
     }
 
     @PutMapping("/{tagId}")
