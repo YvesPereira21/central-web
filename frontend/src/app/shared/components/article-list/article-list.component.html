@@ -1,0 +1,80 @@
+@for (article of articles(); track article.articleId) {
+<article class="w-full max-w-[940px] h-auto my-4 rounded-md bg-[#161B22] text-white shadow-md">
+    <!-- profile -->
+    <section class="flex gap-4 px-3 py-2 h-[70px]">
+        <a href="">
+            <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+                <div class="w-12 rounded-full">
+                    <img alt="Avatar do usuário"
+                        src="https://img.daisyui.com/images/profile/demo/yellingcat@192.webp" />
+                </div>
+            </div>
+        </a>
+        <!-- name and level in website -->
+        <div class="flex flex-col gap-1 font-inter">
+            <span>
+                {{ article.profile.username }}
+            </span>
+            <div
+                class="w-fit px-3 text-[#3FB950] text-sm text-center bg-[#3FB950]/15 rounded-full border-2 border-[#3FB950]/30">
+                {{ article.profile.level }}
+            </div>
+        </div>
+    </section>
+    <!-- title, tags and content -->
+    <section class="w-full px-4 py-2">
+        <h1 class="text-[#C9D1D9] text-xl font-inter font-bold break-words">
+            {{ article.title }}
+        </h1>
+        <div class="flex flex-wrap gap-2 mb-2">
+            @for(tag of article.tags; track tag.technologyName){
+            <div class="px-3 py-1 text-xs font-medium text-gray-400 bg-[#0d1117] border border-[#30363d] rounded-md">
+                #{{ tag.technologyName }}
+            </div>
+            }
+
+        </div>
+        <p class="break-words line-clamp-6 text-[#8B949E] text-justify font-lora font-semibold">
+            {{ article.content }}
+        </p>
+        <hr class="border-[#8B949E] mt-1">
+    </section>
+
+    <section class="flex h-[40px] items-center justify-between px-5">
+        <!-- Like and amount like, save article, etc. -->
+        <div class="flex items-center gap-5">
+            <!-- Like button -->
+            <button class="group flex items-center gap-1 transition-all
+                             hover:text-red-400">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
+                    class="size-5 fill-current transition-transform group-hover:scale-110">
+                    <path
+                        d="M241 87.1l15 20.7 15-20.7C296 52.5 336.2 32 378.9 32 452.4 32 512 91.6 512 165.1l0 2.6c0 112.2-139.9 242.5-212.9 298.2-12.4 9.4-27.6 14.1-43.1 14.1s-30.8-4.6-43.1-14.1C139.9 410.2 0 279.9 0 167.7l0-2.6C0 91.6 59.6 32 133.1 32 175.8 32 216 52.5 241 87.1z" />
+                </svg>
+                <span class="text-sm font-medium">{{ article.articleTotalLikes }}</span>
+            </button>
+
+            <!-- Save button -->
+            <button class="group flex items-center gap-1 transition-all 
+                             hover:text-emerald-400">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"
+                    class="size-5 fill-current transition-transform group-hover:scale-110">
+                    <path
+                        d="M64 0C28.7 0 0 28.7 0 64L0 480c0 11.5 6.2 22.2 16.2 27.8s22.3 5.5 32.2-.4L192 421.3 335.5 507.4c9.9 5.9 22.2 6.1 32.2 .4S384 491.5 384 480l0-416c0-35.3-28.7-64-64-64L64 0z" />
+                </svg>
+                <span class="text-sm font-medium">Salvar</span>
+            </button>
+        </div>
+
+        <!-- Link "Veja mais" -->
+        <a href="#" class="group flex items-center gap-1 text-sm font-medium 
+                               hover:text-[#3FB950]">
+            Veja mais
+        </a>
+    </section>
+
+</article>
+}
+@empty {
+
+}
