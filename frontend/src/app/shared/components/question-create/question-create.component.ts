@@ -1,7 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { QuestionService } from '../../../features/questions/services/question.service';
-import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { QuestionCreate } from '../../../features/models/question';
+import { Tag } from '../../../features/models/tag';
+import { TagService } from '../../../features/tags/services/tag.service';
 
 @Component({
   selector: 'app-question-create',
@@ -12,7 +14,9 @@ import { QuestionCreate } from '../../../features/models/question';
 export class QuestionCreateComponent {
   private formBuilder = inject(FormBuilder);
   private questionService = inject(QuestionService);
+  private tagService = inject(TagService);
 
+  tags = signal<Tag[]>([]);
   isSubmiting: boolean = false;
   questionForm = this.formBuilder.group({
     title: [''],
@@ -21,7 +25,36 @@ export class QuestionCreateComponent {
   })
 
   ngOnInit(): void {
-    throw new Error('Method not implemented.');
+    this.loadAllTags();
+  }
+
+  loadAllTags() {
+    this.tagService.getAllTags().subscribe({
+      next: (data) => {
+        this.tags.set(data);
+      },
+      error: (erro) => {
+        console.log('Erro procurar as tags');
+      }
+    })
+  }
+
+  get technologyNames() {
+    return this.questionForm.get('technologyNames') as FormArray;
+  }
+
+  toggleTag(technologyName: string) {
+    const index = this.technologyNames.controls.findIndex(control => control.value === technologyName);
+
+    if (index === -1) {
+      this.technologyNames.controls.push(this.formBuilder.control(technologyName));
+    } else {
+      this.technologyNames.removeAt(index);
+    }
+  }
+
+  isTagSelected(technologyName: string): boolean {
+    return this.technologyNames.controls.some(control => control.value === technologyName);
   }
 
   onSubmit() {

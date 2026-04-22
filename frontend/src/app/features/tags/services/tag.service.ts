@@ -15,6 +15,10 @@ export class TagService {
     return this.http.post<Tag>(this.apiUrl, tagData);
   }
 
+  getAllTags(): Observable<Tag[]> {
+    return this.http.get<Tag[]>(this.apiUrl);
+  }
+
   updateTag(tagId: string, tagUpdated: TagUpdate): Observable<Tag> {
     return this.http.put<Tag>(`${this.apiUrl}/${tagId}`, tagUpdated);
   }

@@ -19,6 +19,10 @@ export class QuestionService {
     return this.http.get<Question>(`${this.apiUrl}/${questionId}`);
   }
 
+  getAllPublishedQuestions(): Observable<Question[]> {
+    return this.http.get<Question[]>(this.apiUrl);
+  }
+
   getQuestionsByTitle(title: string): Observable<Question[]> {
     return this.http.get<Question[]>(`${this.apiUrl}/${title}/title`);
   }
