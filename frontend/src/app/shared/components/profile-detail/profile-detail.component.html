@@ -44,7 +44,7 @@
     <section class="rounded-lg bg-[#161B22] p-4 text-white shadow-md space-y-4">
         <div class="flex flex-wrap items-center justify-between">
             <span class="text-2xl font-lora font-semibold">Todos os artigos publicados</span>
-            <a href="#"
+            <a routerLink="/create-article"
                 class="inline-flex items-center gap-2 rounded-full border border-emerald-500/50 bg-emerald-500/10 px-5 py-2 text-sm font-medium text-emerald-300 transition-all hover:border-emerald-400 hover:bg-emerald-500/20 hover:text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-4">
                     <path
@@ -123,7 +123,7 @@
                     </div>
 
                     <!-- Link to see the article entire content -->
-                    <a href="#" class="group flex items-center gap-1 text-sm font-medium 
+                    <a [routerLink]="['/articles', article.articleId]" class="group flex items-center gap-1 text-sm font-medium 
                                hover:text-[#3FB950]">
                         Veja mais
                     </a>
@@ -150,6 +150,8 @@
             <span class="text-sm text-gray-400">qualification.startDate – qualification.endDate</span>
         </div>
         <hr class="my-3 border-[#8B949E]" />
+        } @empty {
+
         }
     </section>
 </article>

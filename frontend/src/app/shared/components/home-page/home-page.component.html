@@ -1,5 +1,12 @@
 <app-header></app-header>
-<main class="flex h-[calc(100vh-64px)] bg-[#0d1117]">
+<main class="flex h-[calc(100vh-64px)] overflow-hidden bg-[#0d1117]">
     <app-left-bar></app-left-bar>
+
+    <div class="flex-1 overflow-y-auto mx-auto scrollbar-thin scrollbar-thumb-gray-700">
+        <div class="flex justify-center">
+            <router-outlet class="block w-full max-w-[940px]"></router-outlet>
+        </div>
+    </div>
+
     <app-left-bar></app-left-bar>
 </main>

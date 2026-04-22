@@ -2,7 +2,7 @@
 <article class="w-full max-w-[940px] h-auto my-4 rounded-md bg-[#161B22] text-white shadow-md">
     <!-- profile -->
     <section class="flex gap-4 px-3 py-2 h-[70px]">
-        <a href="">
+        <a [routerLink]="['/profiles', article.profile.profileId]">
             <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
                 <div class="w-12 rounded-full">
                     <img alt="Avatar do usuário"
@@ -67,8 +67,8 @@
         </div>
 
         <!-- Link "Veja mais" -->
-        <a href="#" class="group flex items-center gap-1 text-sm font-medium 
-                               hover:text-[#3FB950]">
+        <a [routerLink]="['/articles', article.articleId]" class="group flex items-center gap-1 text-sm font-medium 
+            hover:text-[#3FB950]">
             Veja mais
         </a>
     </section>

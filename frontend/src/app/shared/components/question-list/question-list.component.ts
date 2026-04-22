@@ -1,10 +1,11 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { QuestionService } from '../../../features/questions/services/question.service';
 import { Question, QuestionList } from '../../../features/models/question';
+import { RouterLink } from "@angular/router";
 
 @Component({
   selector: 'app-question-list',
-  imports: [],
+  imports: [RouterLink],
   templateUrl: './question-list.component.html',
   styleUrl: './question-list.component.css'
 })

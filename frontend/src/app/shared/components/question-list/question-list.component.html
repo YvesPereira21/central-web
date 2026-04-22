@@ -2,7 +2,7 @@
 <article class="w-full max-w-[940px] h-auto container mx-auto my-4 rounded-md bg-[#161B22] text-white shadow-md">
     <!-- profile -->
     <section class="flex gap-4 px-3 py-2 h-[70px]">
-        <a href="">
+        <a [routerLink]="['/profiles', question.profile.profileId]">
             <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
                 <div class="w-12 rounded-full">
                     <img alt="Avatar do usuário"
@@ -76,7 +76,7 @@
 
         <!-- see more about this article -->
         <div>
-            <a href="" class="hover:text-[#3FB950] text-sm font-medium">
+            <a [routerLink]="['/questions', question.questionId]" class="hover:text-[#3FB950] text-sm font-medium">
                 Veja mais sobre
             </a>
         </div>

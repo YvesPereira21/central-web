@@ -1,11 +1,11 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { ProfileService } from '../../../features/profiles/services/profile.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Profile } from '../../../features/models/profile';
 
 @Component({
   selector: 'app-profile-detail',
-  imports: [],
+  imports: [RouterLink],
   templateUrl: './profile-detail.component.html',
   styleUrl: './profile-detail.component.css'
 })
