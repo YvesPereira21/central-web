@@ -15,13 +15,11 @@ export class ProfileCreateComponent {
 
   isSubmiting: boolean = false;
   profileForm = this.formBuilder.group({
-    username: [''],
+    name: [''],
     email: [''],
     password: [''],
     bio: [''],
-    profileType: [''],
-    expertise: [''],
-    level: ['']
+    profileType: ['']
   });
 
   onSubmit() {
@@ -30,12 +28,10 @@ export class ProfileCreateComponent {
 
     const formValues = this.profileForm.value;
     const profile: ProfileCreate = {
+      name: formValues.name!,
       bio: formValues.bio!,
       profileType: formValues.profileType!,
-      expertise: formValues.expertise!,
-      level: formValues.level!,
       user: {
-        username: formValues.username!,
         email: formValues.email!,
         password: formValues.password!
       }

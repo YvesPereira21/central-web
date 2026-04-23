@@ -18,8 +18,6 @@ export interface ProfileCreate {
     name: string,
     bio: string,
     profileType: string,
-    expertise: string,
-    level: string,
     user: User
 }
 
