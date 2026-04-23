@@ -15,7 +15,6 @@ public interface ProfileMapper {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "answers", ignore = true)
     @Mapping(target = "articles", ignore = true)
-    @Mapping(target = "profile", ignore = true)
     @Mapping(target = "level", ignore = true)
     @Mapping(target = "profileType", ignore = true)
     @Mapping(target = "professional", ignore = true)
