@@ -74,10 +74,11 @@ public class QuestionController {
     @PutMapping("/{questionId}")
     public ResponseEntity<QuestionDTO> updateQuestion(
             @PathVariable UUID questionId,
-            @RequestBody @Valid QuestionUpdateDTO question
+            @RequestBody @Valid QuestionUpdateDTO question,
+            @AuthenticationPrincipal(expression = "userId") UUID userId
     ) {
         return ResponseEntity.status(HttpStatus.OK).body(
-                questionService.updateQuestion(questionId, question)
+                questionService.updateQuestion(questionId, question, userId)
         );
     }
 

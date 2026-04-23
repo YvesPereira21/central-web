@@ -12,6 +12,7 @@ import io.centralweb.backend.repository.QuestionRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -84,9 +85,13 @@ public class QuestionService {
                 .toList();
     }
 
-    public QuestionDTO updateQuestion(UUID questionId, QuestionUpdateDTO questionUpdated) {
+    public QuestionDTO updateQuestion(UUID questionId, QuestionUpdateDTO questionUpdated, UUID userProfileId) {
         Question question = questionRepository.findById(questionId)
                 .orElseThrow();
+
+        if(!question.getProfile().getUser().getUserId().equals(userProfileId)) {
+            throw new RuntimeException();
+        }
 
         questionMapper.updateQuestionFromDTO(questionUpdated, question);
 

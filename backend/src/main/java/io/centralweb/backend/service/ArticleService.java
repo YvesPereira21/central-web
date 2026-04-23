@@ -83,9 +83,13 @@ public class ArticleService {
                 .toList();
     }
 
-    public ArticleDTO updateArticle(UUID articleId, ArticleUpdateDTO articleUpdated) {
+    public ArticleDTO updateArticle(UUID articleId, ArticleUpdateDTO articleUpdated, UUID userProfileId) {
         Article article = articleRepository.findById(articleId)
                 .orElseThrow();
+
+        if(!article.getProfile().getUser().getUserId().equals(userProfileId)) {
+            throw new RuntimeException();
+        }
 
         articleMapper.updateArticleFromDTO(articleUpdated, article);
 

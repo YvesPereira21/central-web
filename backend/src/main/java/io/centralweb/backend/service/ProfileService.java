@@ -47,9 +47,13 @@ public class ProfileService {
         return profileMapper.toProfileUniqueDTO(profile);
     }
 
-    public ProfileDTO updateProfile(UUID profileId, ProfileUpdateDTO profileUpdated) {
+    public ProfileDTO updateProfile(UUID profileId, ProfileUpdateDTO profileUpdated, UUID userProfileId) {
         Profile profile = profileRepository.findById(profileId)
                 .orElseThrow();
+
+        if(!profile.getUser().getUserId().equals(userProfileId)) {
+            throw new RuntimeException();
+        }
 
         profileMapper.updateProfileFromDTO(profileUpdated, profile);
 

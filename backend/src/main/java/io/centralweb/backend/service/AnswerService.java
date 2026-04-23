@@ -55,9 +55,13 @@ public class AnswerService {
                 .collect(Collectors.toList());
     }
 
-    public void acceptAnswer(AnswerAcceptedDTO answerAccepted) {
+    public void acceptAnswer(AnswerAcceptedDTO answerAccepted, UUID userProfileId) {
         Answer answer = answerRepository.findById(answerAccepted.answerId())
                 .orElseThrow();
+
+        if(answer.getProfile().getUser().getUserId().equals(userProfileId)) {
+            throw new RuntimeException();
+        }
 
         answer.setAccepted(true);
         answerRepository.save(answer);

@@ -74,10 +74,11 @@ public class ArticleController {
     @PutMapping("/{articleId}")
     public ResponseEntity<ArticleDTO> updateArticle(
             @PathVariable UUID articleId,
-            @RequestBody @Valid ArticleUpdateDTO articleUpdated
+            @RequestBody @Valid ArticleUpdateDTO articleUpdated,
+            @AuthenticationPrincipal(expression = "userId") UUID userId
     ) {
         return ResponseEntity.status(HttpStatus.OK).body(
-                articleService.updateArticle(articleId, articleUpdated)
+                articleService.updateArticle(articleId, articleUpdated, userId)
         );
     }
 

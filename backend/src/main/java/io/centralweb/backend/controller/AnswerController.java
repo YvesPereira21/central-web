@@ -41,8 +41,11 @@ public class AnswerController {
     }
 
     @PatchMapping("")
-    public ResponseEntity<Void> acceptAnswer(AnswerAcceptedDTO answerAccepted) {
-        answerService.acceptAnswer(answerAccepted);
+    public ResponseEntity<Void> acceptAnswer(
+            AnswerAcceptedDTO answerAccepted,
+            @AuthenticationPrincipal(expression = "userId") UUID userId
+    ) {
+        answerService.acceptAnswer(answerAccepted, userId);
         return ResponseEntity.ok().build();
     }
 
