@@ -2,10 +2,12 @@ package io.centralweb.backend.controller;
 
 import io.centralweb.backend.dto.qualification.QualificationCreateDTO;
 import io.centralweb.backend.dto.qualification.QualificationDTO;
+import io.centralweb.backend.model.User;
 import io.centralweb.backend.service.QualificationService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,9 +26,11 @@ public class QualificationController {
 
     @PostMapping("")
     public ResponseEntity<QualificationDTO> createQualification(
-            @RequestBody @Valid QualificationCreateDTO qualification
+            @RequestBody @Valid QualificationCreateDTO qualification,
+            @AuthenticationPrincipal(expression = "userId") UUID userId
     ) {
-        QualificationDTO newQualification = qualificationService.createQualification(qualification);
+        QualificationDTO newQualification = qualificationService
+                .createQualification(qualification, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(newQualification);
     }
 

@@ -3,10 +3,12 @@ package io.centralweb.backend.controller;
 import io.centralweb.backend.dto.article.ArticleCreateDTO;
 import io.centralweb.backend.dto.article.ArticleDTO;
 import io.centralweb.backend.dto.article.ArticleUpdateDTO;
+import io.centralweb.backend.model.User;
 import io.centralweb.backend.service.ArticleService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,8 +26,11 @@ public class ArticleController {
     }
 
     @PostMapping("")
-    public ResponseEntity<ArticleDTO> createArticle(@RequestBody @Valid ArticleCreateDTO article){
-        ArticleDTO newArticle = articleService.createArticle(article);
+    public ResponseEntity<ArticleDTO> createArticle(
+            @RequestBody @Valid ArticleCreateDTO article,
+            @AuthenticationPrincipal(expression = "userId") UUID userId
+    ){
+        ArticleDTO newArticle = articleService.createArticle(article, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(newArticle);
     }
 

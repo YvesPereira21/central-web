@@ -4,10 +4,12 @@ import io.centralweb.backend.dto.question.QuestionCreateDTO;
 import io.centralweb.backend.dto.question.QuestionListDTO;
 import io.centralweb.backend.dto.question.QuestionDTO;
 import io.centralweb.backend.dto.question.QuestionUpdateDTO;
+import io.centralweb.backend.model.User;
 import io.centralweb.backend.service.QuestionService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,9 +28,10 @@ public class QuestionController {
 
     @PostMapping("")
     public ResponseEntity<QuestionDTO> createQuestion(
-            @RequestBody @Valid QuestionCreateDTO question
-    ) {
-        QuestionDTO newQuestion = questionService.createQuestion(question);
+            @RequestBody @Valid QuestionCreateDTO question,
+            @AuthenticationPrincipal(expression = "userId") UUID userId
+            ) {
+        QuestionDTO newQuestion = questionService.createQuestion(question, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(newQuestion);
     }
 

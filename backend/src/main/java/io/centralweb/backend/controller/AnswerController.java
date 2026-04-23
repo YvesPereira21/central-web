@@ -3,10 +3,12 @@ package io.centralweb.backend.controller;
 import io.centralweb.backend.dto.answer.AnswerAcceptedDTO;
 import io.centralweb.backend.dto.answer.AnswerCreateDTO;
 import io.centralweb.backend.dto.answer.AnswerDTO;
+import io.centralweb.backend.model.User;
 import io.centralweb.backend.service.AnswerService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,8 +26,11 @@ public class AnswerController {
     }
 
     @PostMapping("")
-    public ResponseEntity<AnswerDTO> createAnswer(@RequestBody @Valid AnswerCreateDTO answer) {
-        AnswerDTO newAwnser = answerService.createAnswer(answer);
+    public ResponseEntity<AnswerDTO> createAnswer(
+            @RequestBody @Valid AnswerCreateDTO answer,
+            @AuthenticationPrincipal(expression = "userId") UUID userId
+    ) {
+        AnswerDTO newAwnser = answerService.createAnswer(answer, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(newAwnser);
     }
 
@@ -36,7 +41,7 @@ public class AnswerController {
     }
 
     @PatchMapping("")
-    public ResponseEntity<Void> accepteAnswer(AnswerAcceptedDTO answerAccepted) {
+    public ResponseEntity<Void> acceptAnswer(AnswerAcceptedDTO answerAccepted) {
         answerService.acceptAnswer(answerAccepted);
         return ResponseEntity.ok().build();
     }

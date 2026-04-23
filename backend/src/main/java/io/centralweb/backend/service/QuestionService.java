@@ -5,8 +5,11 @@ import io.centralweb.backend.dto.question.QuestionListDTO;
 import io.centralweb.backend.dto.question.QuestionDTO;
 import io.centralweb.backend.dto.question.QuestionUpdateDTO;
 import io.centralweb.backend.mapper.QuestionMapper;
+import io.centralweb.backend.model.Profile;
 import io.centralweb.backend.model.Question;
+import io.centralweb.backend.repository.ProfileRepository;
 import io.centralweb.backend.repository.QuestionRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -18,20 +21,26 @@ import java.util.stream.Collectors;
 public class QuestionService {
     private final QuestionRepository questionRepository;
     private final QuestionMapper questionMapper;
+    private final ProfileRepository profileRepository;
     private final TagService tagService;
 
-    public QuestionService(QuestionRepository questionRepository, QuestionMapper questionMapper, TagService tagService) {
+    public QuestionService(QuestionRepository questionRepository, QuestionMapper questionMapper, ProfileRepository profileRepository, TagService tagService) {
         this.questionRepository = questionRepository;
         this.questionMapper = questionMapper;
+        this.profileRepository = profileRepository;
         this.tagService = tagService;
     }
 
-    public QuestionDTO createQuestion(QuestionCreateDTO questionUniqueDTO) {
+    public QuestionDTO createQuestion(QuestionCreateDTO questionUniqueDTO, UUID userProfileId) {
+        Profile profile = profileRepository.findByUser_UserId(userProfileId)
+                .orElseThrow(() -> new EntityNotFoundException("Profile not found"));
+
         Question question = new Question();
         question.setTitle(questionUniqueDTO.title());
         question.setContent(questionUniqueDTO.content());
         question.setCreatedAt(LocalDate.now());
         question.setTags(tagService.convertTechnologyNamesToTags(questionUniqueDTO.technologyNames()));
+        question.setProfile(profile);
 
         return questionMapper.toQuestionDTO(questionRepository.save(question));
     }
