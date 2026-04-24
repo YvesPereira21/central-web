@@ -9,7 +9,7 @@ import org.mapstruct.*;
 
 @Mapper(
         componentModel = "spring",
-        uses = {TagMapper.class, ProfileMapper.class, AnswerMapper.class, TagService.class}
+        uses = {TagMapper.class, ProfileMapper.class, AnswerMapper.class}
 )
 public interface QuestionMapper {
     QuestionDTO toQuestionDTO(Question question);

@@ -19,18 +19,18 @@ public class Profile {
     private UUID profileId;
     @Column(name = "name")
     private String name;
-    @Column(name = "bio")
+    @Column(name = "bio", columnDefinition = "TEXT")
     private String bio;
     private ProfileType profileType;
     @Column(name = "expertise")
     private String expertise;
     @Column(name = "level")
-    private String level;
+    private String level = "iniciante";
     @Column(name = "reputation_score")
-    private long reputationScore;
+    private long reputationScore = 0;
     @Column(name = "professional")
-    private boolean professional;
-    @OneToOne
+    private boolean professional = false;
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
     private User user;
     @OneToMany(mappedBy = "profile")

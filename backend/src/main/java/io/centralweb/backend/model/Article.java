@@ -23,7 +23,7 @@ public class Article {
     @Column(name = "content", columnDefinition = "TEXT")
     private String content;
     @Column(name = "published")
-    private boolean published;
+    private boolean published = false;
     @Column(name = "created_at")
     private LocalDate createdAt;
     @ManyToOne

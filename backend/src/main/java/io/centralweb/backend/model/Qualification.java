@@ -28,7 +28,7 @@ public class Qualification {
     @Column(name = "end_date")
     private LocalDate endDate;
     @Column(name = "verified")
-    private boolean verified;
+    private boolean verified = false;
     @ManyToOne
     @JoinColumn(name = "profile_id")
     private Profile profile;

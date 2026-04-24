@@ -21,7 +21,7 @@ public class Answer {
     @Column(name = "content", columnDefinition = "TEXT")
     private String content;
     @Column(name = "accepted")
-    private boolean accepted;
+    private boolean accepted = false;
     @Column(name = "created_at")
     private LocalDate createdAt;
     @ManyToOne

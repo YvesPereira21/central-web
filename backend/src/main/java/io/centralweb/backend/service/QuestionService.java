@@ -12,7 +12,6 @@ import io.centralweb.backend.repository.QuestionRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.nio.file.AccessDeniedException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -41,6 +40,7 @@ public class QuestionService {
         question.setContent(questionUniqueDTO.content());
         question.setCreatedAt(LocalDate.now());
         question.setTags(tagService.convertTechnologyNamesToTags(questionUniqueDTO.technologyNames()));
+        question.setPublished(true);
         question.setProfile(profile);
 
         return questionMapper.toQuestionDTO(questionRepository.save(question));
@@ -94,6 +94,10 @@ public class QuestionService {
         }
 
         questionMapper.updateQuestionFromDTO(questionUpdated, question);
+
+        if (questionUpdated.technologyNames() != null) {
+            question.setTags(tagService.convertTechnologyNamesToTags(questionUpdated.technologyNames()));
+        }
 
         return questionMapper.toQuestionDTO(questionRepository.save(question));
     }

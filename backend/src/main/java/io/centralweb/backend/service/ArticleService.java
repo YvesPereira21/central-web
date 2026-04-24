@@ -39,6 +39,7 @@ public class ArticleService {
         newArticle.setContent(article.content());
         newArticle.setCreatedAt(LocalDate.now());
         newArticle.setTags(tagService.convertTechnologyNamesToTags(article.technologyNames()));
+        newArticle.setPublished(true);
         newArticle.setProfile(profile);
 
         return articleMapper.toDTO(articleRepository.save(newArticle));
@@ -92,6 +93,10 @@ public class ArticleService {
         }
 
         articleMapper.updateArticleFromDTO(articleUpdated, article);
+
+        if (articleUpdated.technologyNames() != null) {
+            article.setTags(tagService.convertTechnologyNamesToTags(articleUpdated.technologyNames()));
+        }
 
         return articleMapper.toDTO(articleRepository.save(article));
     }

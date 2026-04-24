@@ -32,6 +32,7 @@ public class ProfileService {
         user.setRole(UserRole.PERSON);
 
         Profile newProfile = new Profile();
+        newProfile.setName(profile.name());
         newProfile.setBio(profile.bio());
         newProfile.setProfileType(profile.profileType());
         newProfile.setExpertise(profile.expertise());

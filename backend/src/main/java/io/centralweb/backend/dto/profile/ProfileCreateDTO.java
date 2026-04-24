@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotNull;
 public record ProfileCreateDTO(
         @NotBlank String name,
         @NotBlank String bio,
-        @NotBlank ProfileType profileType,
+        @NotNull ProfileType profileType,
         @NotBlank String expertise,
         @NotNull UserDTO user
 ) {}
