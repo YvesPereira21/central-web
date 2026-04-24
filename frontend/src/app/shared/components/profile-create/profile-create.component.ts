@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ProfileService } from '../../../features/profiles/services/profile.service';
 import { ProfileCreate } from '../../../features/models/profile';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-profile-create',
@@ -12,6 +13,7 @@ import { ProfileCreate } from '../../../features/models/profile';
 export class ProfileCreateComponent {
   private formBuilder = inject(FormBuilder);
   private profileService = inject(ProfileService);
+  private router = inject(Router);
 
   isSubmiting: boolean = false;
   profileForm = this.formBuilder.group({
@@ -39,8 +41,9 @@ export class ProfileCreateComponent {
 
     this.profileService.createProfile(profile).subscribe({
       next: (response) => {
-        console.log('Conta criada com sucesso!')
+        alert('Conta criada com sucesso! Por favor, faça o login.');
         this.clearForm();
+        this.router.navigate(['/login']);
       },
       error: (error) => {
         console.log('Erro ao registrar artigo.');

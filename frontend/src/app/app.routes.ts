@@ -9,16 +9,19 @@ import { QuestionDetailComponent } from './shared/components/question-detail/que
 import { ProfileDetailComponent } from './shared/components/profile-detail/profile-detail.component';
 import { QualificationCreateComponent } from './shared/components/qualification-create/qualification-create.component';
 import { HomePageComponent } from './shared/components/home-page/home-page.component';
+import { LoginComponent } from './shared/components/login/login.component';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
-    { path: '', component: HomePageComponent },
+    { path: '', component: HomePageComponent, canActivate: [authGuard] },
+    { path: 'login', component: LoginComponent },
     { path: 'create-profile', component: ProfileCreateComponent },
-    { path: 'create-article', component: ArticleCreateComponent },
-    { path: 'create-question', component: QuestionCreateComponent },
-    { path: 'create-qualification', component: QualificationCreateComponent },
-    { path: 'articles', component: ArticleListComponent },
-    { path: 'questions', component: QuestionListComponent },
-    { path: 'articles/:id', component: ArticleDetailComponent },
-    { path: 'questions/:id', component: QuestionDetailComponent },
-    { path: 'profiles/:id', component: ProfileDetailComponent }
+    { path: 'create-article', component: ArticleCreateComponent, canActivate: [authGuard] },
+    { path: 'create-question', component: QuestionCreateComponent, canActivate: [authGuard] },
+    { path: 'create-qualification', component: QualificationCreateComponent, canActivate: [authGuard] },
+    { path: 'articles', component: ArticleListComponent, canActivate: [authGuard] },
+    { path: 'questions', component: QuestionListComponent, canActivate: [authGuard] },
+    { path: 'articles/:id', component: ArticleDetailComponent, canActivate: [authGuard] },
+    { path: 'questions/:id', component: QuestionDetailComponent, canActivate: [authGuard] },
+    { path: 'profiles/:id', component: ProfileDetailComponent, canActivate: [authGuard] }
 ];
