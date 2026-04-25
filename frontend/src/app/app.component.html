@@ -1,1 +1,19 @@
-<router-outlet></router-outlet>
+@if (authenticationService.isAuthenticated()) {
+<app-header />
+
+<main class="flex h-[calc(100vh-64px)] overflow-hidden bg-[#0d1117]">
+    <app-left-bar />
+
+    <div class="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700">
+
+        <div class="mx-auto w-full max-w-[940px] p-6">
+            <router-outlet />
+        </div>
+
+    </div>
+
+    <app-left-bar />
+</main>
+} @else {
+<router-outlet />
+}

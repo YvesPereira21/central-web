@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from './shared/components/header/header.component';
 import { LeftBarComponent } from './shared/components/left-bar/left-bar.component';
+import { AuthenticationService } from './features/authentications/services/authentication.service';
 
 @Component({
   selector: 'app-root',
@@ -10,5 +11,7 @@ import { LeftBarComponent } from './shared/components/left-bar/left-bar.componen
   styleUrl: './app.component.css'
 })
 export class AppComponent {
+  authenticationService = inject(AuthenticationService);
+
   title = 'frontend';
 }

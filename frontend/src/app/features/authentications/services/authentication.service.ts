@@ -16,7 +16,7 @@ export class AuthenticationService {
   isAuthenticated = signal<boolean>(this.hasToken());
 
   login(loginData: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(this.apiUrl, loginData).pipe(
+    return this.http.post<LoginResponse>(`${this.apiUrl}/login`, loginData).pipe(
       tap((response) => {
         this.saveToken(response.token);
         this.isAuthenticated.set(true);

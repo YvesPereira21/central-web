@@ -1,4 +1,4 @@
-<article class="w-[940px] max-w-[940px] h-auto container mx-auto my-4 space-y-4">
+<article class="w-full space-y-4">
     <section class="rounded-lg bg-[#161B22] p-4 text-white shadow-md">
         <div class="flex flex-col items-center gap-4">
             <img alt="Avatar do usuário" src="https://img.daisyui.com/images/profile/demo/yellingcat@192.webp"
@@ -144,14 +144,14 @@
         <h1 class="text-xl font-semibold">Experiências</h1>
         @for (qualification of profile?.qualifications; track qualification.qualificationId) {
         <div class="mt-3 flex flex-col gap-1">
-            <span class="font-medium">qualification.jobTitle</span>
-            <span class="text-gray-300">qualification.experienceLevel</span>
-            <span class="text-gray-300">qualification.institution</span>
-            <span class="text-sm text-gray-400">qualification.startDate – qualification.endDate</span>
+            <span class="font-medium">{{ qualification.jobTitle }}</span>
+            <span class="text-gray-300">{{ qualification.experienceLevel }}</span>
+            <span class="text-gray-300">{{ qualification.institution }}</span>
+            <span class="text-sm text-gray-400">{{ qualification.startDate }} – {{ qualification.endDate }}</span>
         </div>
         <hr class="my-3 border-[#8B949E]" />
         } @empty {
-
+        <span class="text-gray-400 text-sm">Nenhuma experiência cadastrada.</span>
         }
     </section>
 </article>

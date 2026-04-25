@@ -11,6 +11,7 @@ import { QualificationCreateComponent } from './shared/components/qualification-
 import { HomePageComponent } from './shared/components/home-page/home-page.component';
 import { LoginComponent } from './shared/components/login/login.component';
 import { authGuard } from './core/guards/auth.guard';
+import { AppComponent } from './app.component';
 
 export const routes: Routes = [
     { path: '', component: HomePageComponent, canActivate: [authGuard] },
