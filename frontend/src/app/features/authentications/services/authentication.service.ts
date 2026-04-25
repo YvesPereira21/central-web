@@ -27,6 +27,7 @@ export class AuthenticationService {
   logout() {
     localStorage.removeItem('token');
     this.isAuthenticated.set(false);
+    this.router.navigate(['/login']);
   }
 
   private saveToken(token: string) {
