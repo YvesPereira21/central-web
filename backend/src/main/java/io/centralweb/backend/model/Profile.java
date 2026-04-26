@@ -25,7 +25,7 @@ public class Profile {
     @Column(name = "expertise")
     private String expertise;
     @Column(name = "level")
-    private String level = "iniciante";
+    private String level = "Iniciante";
     @Column(name = "reputation_score")
     private long reputationScore = 0;
     @Column(name = "professional")

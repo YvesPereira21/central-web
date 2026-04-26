@@ -11,6 +11,7 @@ import io.centralweb.backend.repository.ProfileRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.UUID;
 
 @Service
@@ -66,5 +67,24 @@ public class ProfileService {
                 .orElseThrow();
 
         profileRepository.delete(profile);
+    }
+
+    public void addPoints(UUID profileId, Long amountPoints) {
+        Profile profile = profileRepository.findById(profileId)
+                .orElseThrow();
+
+        long points = profile.getReputationScore() + amountPoints;
+        profile.setReputationScore(points);
+        profile.setLevel(updateLevel(points));
+        profileRepository.save(profile);
+    }
+
+    private String updateLevel(long score){
+        return switch (score) {
+            case long l when l >= 800L -> "Especialista";
+            case long l when l >= 300 -> "Esperto";
+            case long l when l >= 200 -> "Bom";
+            default -> "Iniciante";
+        };
     }
 }

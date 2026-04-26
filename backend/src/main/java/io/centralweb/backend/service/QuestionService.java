@@ -4,12 +4,14 @@ import io.centralweb.backend.dto.question.QuestionCreateDTO;
 import io.centralweb.backend.dto.question.QuestionListDTO;
 import io.centralweb.backend.dto.question.QuestionDTO;
 import io.centralweb.backend.dto.question.QuestionUpdateDTO;
+import io.centralweb.backend.events.QuestionCreateEvent;
 import io.centralweb.backend.mapper.QuestionMapper;
 import io.centralweb.backend.model.Profile;
 import io.centralweb.backend.model.Question;
 import io.centralweb.backend.repository.ProfileRepository;
 import io.centralweb.backend.repository.QuestionRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -23,27 +25,32 @@ public class QuestionService {
     private final QuestionMapper questionMapper;
     private final ProfileRepository profileRepository;
     private final TagService tagService;
+    private final ApplicationEventPublisher publisher;
 
-    public QuestionService(QuestionRepository questionRepository, QuestionMapper questionMapper, ProfileRepository profileRepository, TagService tagService) {
+    public QuestionService(QuestionRepository questionRepository, QuestionMapper questionMapper, ProfileRepository profileRepository, TagService tagService, ApplicationEventPublisher publisher) {
         this.questionRepository = questionRepository;
         this.questionMapper = questionMapper;
         this.profileRepository = profileRepository;
         this.tagService = tagService;
+        this.publisher = publisher;
     }
 
-    public QuestionDTO createQuestion(QuestionCreateDTO questionUniqueDTO, UUID userProfileId) {
+    public QuestionDTO createQuestion(QuestionCreateDTO questionDataDTO, UUID userProfileId) {
         Profile profile = profileRepository.findByUser_UserId(userProfileId)
                 .orElseThrow(() -> new EntityNotFoundException("Profile not found"));
 
-        Question question = new Question();
-        question.setTitle(questionUniqueDTO.title());
-        question.setContent(questionUniqueDTO.content());
-        question.setCreatedAt(LocalDate.now());
-        question.setTags(tagService.convertTechnologyNamesToTags(questionUniqueDTO.technologyNames()));
-        question.setPublished(true);
-        question.setProfile(profile);
+        Question newQuestion = new Question();
+        newQuestion.setTitle(questionDataDTO.title());
+        newQuestion.setContent(questionDataDTO.content());
+        newQuestion.setCreatedAt(LocalDate.now());
+        newQuestion.setTags(tagService.convertTechnologyNamesToTags(questionDataDTO.technologyNames()));
+        newQuestion.setPublished(true);
+        newQuestion.setProfile(profile);
 
-        return questionMapper.toQuestionDTO(questionRepository.save(question));
+        Question question = questionRepository.save(newQuestion);
+        publisher.publishEvent(new QuestionCreateEvent(profile.getProfileId()));
+
+        return questionMapper.toQuestionDTO(question);
     }
 
     public QuestionDTO getQuestionById(UUID questionId) {
@@ -94,7 +101,6 @@ public class QuestionService {
         }
 
         questionMapper.updateQuestionFromDTO(questionUpdated, question);
-
         if (questionUpdated.technologyNames() != null) {
             question.setTags(tagService.convertTechnologyNamesToTags(questionUpdated.technologyNames()));
         }
