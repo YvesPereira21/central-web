@@ -63,7 +63,7 @@ public class AnswerService {
                 .orElseThrow(() -> new ObjectNotFoundException("Resposta não encontrada"));
 
         if(answer.getProfile().getUser().getUserId().equals(userProfileId)) {
-            throw new RuntimeException();
+            throw new RuntimeException("Você não tem permissão para isso");
         }
 
         answer.setAccepted(true);

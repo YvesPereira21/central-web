@@ -20,16 +20,20 @@ import java.util.UUID;
 public class ProfileService {
     private final ProfileRepository profileRepository;
     private final ProfileMapper profileMapper;
+    private final UserService userService;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public ProfileService(ProfileRepository profileRepository, ProfileMapper profileMapper, BCryptPasswordEncoder bCryptPasswordEncoder) {
+    public ProfileService(ProfileRepository profileRepository, ProfileMapper profileMapper, UserService userService, BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.profileRepository = profileRepository;
         this.profileMapper = profileMapper;
+        this.userService = userService;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
     @Transactional(rollbackOn = Exception.class)
     public ProfileDTO createProfile(ProfileCreateDTO profile) {
+        userService.verifyUserAlreadyExists(profile.user().email());
+
         User user = new User();
         user.setEmail(profile.user().email());
         user.setPassword(bCryptPasswordEncoder.encode(profile.user().password()));
