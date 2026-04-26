@@ -29,7 +29,7 @@ public class Qualification {
     private LocalDate endDate;
     @Column(name = "verified")
     private boolean verified = false;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "profile_id")
     private Profile profile;
 

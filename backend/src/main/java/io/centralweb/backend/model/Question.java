@@ -28,17 +28,17 @@ public class Question {
     private boolean solutioned = false;
     @Column(name = "created_at")
     private LocalDate createdAt;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "profile_id")
     private Profile profile;
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "question_tags",
             joinColumns = @JoinColumn(name = "question_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
     private List<Tag> tags;
-    @OneToMany(mappedBy = "question")
+    @OneToMany(mappedBy = "question", fetch =  FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Answer> answers;
     @ManyToMany
     @JoinTable(

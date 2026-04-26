@@ -24,10 +24,10 @@ public class Answer {
     private boolean accepted = false;
     @Column(name = "created_at")
     private LocalDate createdAt;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "profile_id")
     private Profile profile;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id")
     private Question question;
     @ManyToMany

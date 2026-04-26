@@ -20,9 +20,9 @@ public class Tag {
     private String technologyName;
     @Column(name = "color")
     private String color;
-    @ManyToMany(mappedBy = "tags")
+    @ManyToMany(mappedBy = "tags", fetch = FetchType.LAZY)
     private List<Question> questions;
-    @ManyToMany(mappedBy = "tags")
+    @ManyToMany(mappedBy = "tags", fetch = FetchType.LAZY)
     private List<Article> articles;
 
     public Tag() {
