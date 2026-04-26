@@ -5,12 +5,13 @@ import io.centralweb.backend.dto.question.QuestionListDTO;
 import io.centralweb.backend.dto.question.QuestionDTO;
 import io.centralweb.backend.dto.question.QuestionUpdateDTO;
 import io.centralweb.backend.events.QuestionCreateEvent;
+import io.centralweb.backend.exception.ObjectNotFoundException;
 import io.centralweb.backend.mapper.QuestionMapper;
 import io.centralweb.backend.model.Profile;
 import io.centralweb.backend.model.Question;
 import io.centralweb.backend.repository.ProfileRepository;
 import io.centralweb.backend.repository.QuestionRepository;
-import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -35,9 +36,10 @@ public class QuestionService {
         this.publisher = publisher;
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public QuestionDTO createQuestion(QuestionCreateDTO questionDataDTO, UUID userProfileId) {
         Profile profile = profileRepository.findByUser_UserId(userProfileId)
-                .orElseThrow(() -> new EntityNotFoundException("Profile not found"));
+                .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
 
         Question newQuestion = new Question();
         newQuestion.setTitle(questionDataDTO.title());
@@ -56,7 +58,7 @@ public class QuestionService {
     public QuestionDTO getQuestionById(UUID questionId) {
         Question question = questionRepository
                 .findById(questionId)
-                .orElseThrow();
+                .orElseThrow(() -> new ObjectNotFoundException("Pergunta não encontrada"));
         return questionMapper.toQuestionDTO(question);
     }
 
@@ -94,10 +96,10 @@ public class QuestionService {
 
     public QuestionDTO updateQuestion(UUID questionId, QuestionUpdateDTO questionUpdated, UUID userProfileId) {
         Question question = questionRepository.findById(questionId)
-                .orElseThrow();
+                .orElseThrow(() -> new ObjectNotFoundException("Pergunta não encontrada"));
 
         if(!question.getProfile().getUser().getUserId().equals(userProfileId)) {
-            throw new RuntimeException();
+            throw new RuntimeException("Você não tem permissão para isso");
         }
 
         questionMapper.updateQuestionFromDTO(questionUpdated, question);
@@ -111,7 +113,7 @@ public class QuestionService {
     public void deleteQuestionById(UUID questionId) {
         Question question = questionRepository
                 .findById(questionId)
-                .orElseThrow();
+                .orElseThrow(() -> new ObjectNotFoundException("Pergunta não encontrada"));
 
         questionRepository.delete(question);
     }

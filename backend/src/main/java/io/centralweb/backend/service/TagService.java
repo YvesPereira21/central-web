@@ -2,9 +2,12 @@ package io.centralweb.backend.service;
 
 import io.centralweb.backend.dto.tag.TagDTO;
 import io.centralweb.backend.dto.tag.TagUpdateDTO;
+import io.centralweb.backend.exception.ObjectAlreadyExistsException;
+import io.centralweb.backend.exception.ObjectNotFoundException;
 import io.centralweb.backend.mapper.TagMapper;
 import io.centralweb.backend.model.Tag;
 import io.centralweb.backend.repository.TagRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -22,11 +25,12 @@ public class TagService {
         this.tagMapper = tagMapper;
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public TagDTO createTag(TagDTO tagDTO) {
         boolean tagExists = tagRepository.
                 existsByTechnologyName(tagDTO.technologyName());
         if (tagExists) {
-            throw new RuntimeException();
+            throw new ObjectAlreadyExistsException("Tag com esse nome já existe");
         }
 
         Tag newTag = new Tag();
@@ -39,7 +43,7 @@ public class TagService {
     public TagDTO getTagByTechnologyName(String technologyName) {
         Tag tag = tagRepository
                 .findByTechnologyNameContainingIgnoreCase(technologyName)
-                .orElseThrow();
+                .orElseThrow(() -> new ObjectNotFoundException("Tag não encontrada"));
 
         return tagMapper.toDTO(tag);
     }
@@ -52,7 +56,7 @@ public class TagService {
 
     public TagDTO updateTag(UUID tagId, TagUpdateDTO tagUpdated) {
         Tag tag = tagRepository.findById(tagId)
-                .orElseThrow();
+                .orElseThrow(() -> new ObjectNotFoundException("Tag não encontrada"));
 
         tagMapper.updateTagFromDTO(tagUpdated, tag);
 
@@ -62,17 +66,18 @@ public class TagService {
     public void deleteTagByTechnologyName(String technologyName) {
         Tag tag = tagRepository
                 .findByTechnologyNameContainingIgnoreCase(technologyName)
-                .orElseThrow();
+                .orElseThrow(() -> new ObjectNotFoundException("Tag não encontrada"));
 
         tagRepository.delete(tag);
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public List<Tag> convertTechnologyNamesToTags(List<String> technologyNames) {
         List<Tag> tags = new ArrayList<>();
         for(String technologyName : technologyNames) {
             Tag tag = tagRepository
                     .findByTechnologyName(technologyName)
-                    .orElseThrow();
+                    .orElseThrow(() -> new ObjectNotFoundException("Tag " + technologyName + " não encontrada"));
             tags.add(tag);
         }
         return tags;

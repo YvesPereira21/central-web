@@ -4,12 +4,14 @@ import io.centralweb.backend.dto.article.ArticleCreateDTO;
 import io.centralweb.backend.dto.article.ArticleDTO;
 import io.centralweb.backend.dto.article.ArticleUpdateDTO;
 import io.centralweb.backend.events.ArticleCreateEvent;
+import io.centralweb.backend.exception.ObjectNotFoundException;
 import io.centralweb.backend.mapper.ArticleMapper;
 import io.centralweb.backend.model.Article;
 import io.centralweb.backend.model.Profile;
 import io.centralweb.backend.repository.ArticleRepository;
 import io.centralweb.backend.repository.ProfileRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -34,9 +36,10 @@ public class ArticleService {
         this.publisher = publisher;
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public ArticleDTO createArticle(ArticleCreateDTO articleData, UUID userProfileId) {
         Profile profile = profileRepository.findByUser_UserId(userProfileId)
-                .orElseThrow(() -> new EntityNotFoundException("Profile not found"));
+                .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
 
         Article newArticle = new Article();
         newArticle.setTitle(articleData.title());
@@ -54,7 +57,7 @@ public class ArticleService {
 
     public ArticleDTO getArticleById(UUID articleId) {
         Article article = articleRepository.findById(articleId)
-                .orElseThrow();
+                .orElseThrow(() -> new ObjectNotFoundException("Artigo não encontrado"));
 
         return articleMapper.toDTO(article);
     }
@@ -93,10 +96,10 @@ public class ArticleService {
 
     public ArticleDTO updateArticle(UUID articleId, ArticleUpdateDTO articleUpdated, UUID userProfileId) {
         Article article = articleRepository.findById(articleId)
-                .orElseThrow();
+                .orElseThrow(() -> new ObjectNotFoundException("Artigo não encontrado"));
 
         if(!article.getProfile().getUser().getUserId().equals(userProfileId)) {
-            throw new RuntimeException();
+            throw new RuntimeException("Você não tem permissão para isso");
         }
 
         articleMapper.updateArticleFromDTO(articleUpdated, article);
@@ -110,7 +113,7 @@ public class ArticleService {
 
     public void deleteArticleById(UUID articleId) {
         Article article = articleRepository.findById(articleId)
-                .orElseThrow();
+                .orElseThrow(() -> new ObjectNotFoundException("Artigo não encontrado"));
 
         articleRepository.delete(article);
     }

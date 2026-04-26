@@ -4,10 +4,12 @@ import io.centralweb.backend.dto.profile.ProfileCreateDTO;
 import io.centralweb.backend.dto.profile.ProfileDTO;
 import io.centralweb.backend.dto.profile.ProfileUpdateDTO;
 import io.centralweb.backend.enums.UserRole;
+import io.centralweb.backend.exception.ObjectNotFoundException;
 import io.centralweb.backend.mapper.ProfileMapper;
 import io.centralweb.backend.model.Profile;
 import io.centralweb.backend.model.User;
 import io.centralweb.backend.repository.ProfileRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +28,7 @@ public class ProfileService {
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public ProfileDTO createProfile(ProfileCreateDTO profile) {
         User user = new User();
         user.setEmail(profile.user().email());
@@ -44,17 +47,17 @@ public class ProfileService {
 
     public ProfileDTO getProfileById(UUID profileId) {
         Profile profile = profileRepository.findById(profileId)
-                .orElseThrow();
+                .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
 
         return profileMapper.toProfileUniqueDTO(profile);
     }
 
     public ProfileDTO updateProfile(UUID profileId, ProfileUpdateDTO profileUpdated, UUID userProfileId) {
         Profile profile = profileRepository.findById(profileId)
-                .orElseThrow();
+                .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
 
         if(!profile.getUser().getUserId().equals(userProfileId)) {
-            throw new RuntimeException();
+            throw new RuntimeException("Você não tem permissão para isso");
         }
 
         profileMapper.updateProfileFromDTO(profileUpdated, profile);
@@ -64,14 +67,15 @@ public class ProfileService {
 
     public void deleteProfileById(UUID profileId) {
         Profile profile = profileRepository.findById(profileId)
-                .orElseThrow();
+                .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
 
         profileRepository.delete(profile);
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public void addPoints(UUID profileId, Long amountPoints) {
         Profile profile = profileRepository.findById(profileId)
-                .orElseThrow();
+                .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
 
         long points = profile.getReputationScore() + amountPoints;
         profile.setReputationScore(points);

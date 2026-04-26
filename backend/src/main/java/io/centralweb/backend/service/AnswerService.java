@@ -3,6 +3,7 @@ package io.centralweb.backend.service;
 import io.centralweb.backend.dto.answer.AnswerAcceptedDTO;
 import io.centralweb.backend.dto.answer.AnswerCreateDTO;
 import io.centralweb.backend.dto.answer.AnswerDTO;
+import io.centralweb.backend.exception.ObjectNotFoundException;
 import io.centralweb.backend.mapper.AnswerMapper;
 import io.centralweb.backend.model.Answer;
 import io.centralweb.backend.model.Profile;
@@ -10,7 +11,7 @@ import io.centralweb.backend.model.Question;
 import io.centralweb.backend.repository.AnswerRepository;
 import io.centralweb.backend.repository.ProfileRepository;
 import io.centralweb.backend.repository.QuestionRepository;
-import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -32,11 +33,12 @@ public class AnswerService {
         this.profileRepository = profileRepository;
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public AnswerDTO createAnswer(AnswerCreateDTO answer, UUID userProfileId) {
         Question question = questionRepository.findById(answer.questionId())
-                .orElseThrow();
+                .orElseThrow(() -> new ObjectNotFoundException("Pergunta não encontrada"));
         Profile profile = profileRepository.findByUser_UserId(userProfileId)
-                .orElseThrow(() -> new EntityNotFoundException("Profile not found"));
+                .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
 
         Answer newAnswer = new Answer();
         newAnswer.setContent(answer.content());
@@ -55,9 +57,10 @@ public class AnswerService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public void acceptAnswer(AnswerAcceptedDTO answerAccepted, UUID userProfileId) {
         Answer answer = answerRepository.findById(answerAccepted.answerId())
-                .orElseThrow();
+                .orElseThrow(() -> new ObjectNotFoundException("Resposta não encontrada"));
 
         if(answer.getProfile().getUser().getUserId().equals(userProfileId)) {
             throw new RuntimeException();
@@ -69,7 +72,7 @@ public class AnswerService {
 
     public void deleteAnswerById(UUID answerId) {
         Answer answer = answerRepository.findById(answerId)
-                .orElseThrow();
+                .orElseThrow(() -> new ObjectNotFoundException("Resposta não encontrada"));
 
         answerRepository.delete(answer);
     }
