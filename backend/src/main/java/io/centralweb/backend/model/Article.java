@@ -120,6 +120,14 @@ public class Article {
         this.articleLikes = articleLikes;
     }
 
+    public void addLike(Profile profile){
+        this.articleLikes.add(profile);
+    }
+
+    public void removeLike(Profile profile){
+        this.articleLikes.remove(profile);
+    }
+
     public Long getArticleTotalLikes() {
         return articleTotalLikes == null ? 0 : articleTotalLikes;
     }

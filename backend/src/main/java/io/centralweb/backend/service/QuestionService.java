@@ -110,6 +110,21 @@ public class QuestionService {
         return questionMapper.toQuestionDTO(questionRepository.save(question));
     }
 
+    public void toggleQuestionLike(UUID questionId, UUID userProfileId) {
+        Profile profile = profileRepository.findByUser_UserId(userProfileId)
+                .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new ObjectNotFoundException("Pergunta não encontrada"));
+
+        if(question.getQuestionLikes().contains(profile)) {
+            question.removeLike(profile);
+        } else {
+            question.addLike(profile);
+        }
+
+        questionRepository.save(question);
+    }
+
     public void deleteQuestionById(UUID questionId) {
         Question question = questionRepository
                 .findById(questionId)

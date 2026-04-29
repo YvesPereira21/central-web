@@ -105,6 +105,14 @@ public class Answer {
         this.answerLikes = answerLikes;
     }
 
+    public void addLike(Profile profile){
+        this.answerLikes.add(profile);
+    }
+
+    public void removeLike(Profile profile){
+        this.answerLikes.remove(profile);
+    }
+
     public Long getAnswerTotalLikes(){
         return answerTotalLikes == null ? 0 : answerTotalLikes;
     }

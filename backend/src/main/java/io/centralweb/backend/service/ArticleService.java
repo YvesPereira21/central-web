@@ -10,7 +10,6 @@ import io.centralweb.backend.model.Article;
 import io.centralweb.backend.model.Profile;
 import io.centralweb.backend.repository.ArticleRepository;
 import io.centralweb.backend.repository.ProfileRepository;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -109,6 +108,20 @@ public class ArticleService {
         }
 
         return articleMapper.toDTO(articleRepository.save(article));
+    }
+
+    public void toggleArticleLike(UUID articleId, UUID userProfileId) {
+        Profile profile = profileRepository.findByUser_UserId(userProfileId)
+                .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
+        Article article = articleRepository.findById(articleId)
+                .orElseThrow(() -> new ObjectNotFoundException("Artigo não encontrado"));
+
+        if(article.getArticleLikes().contains(profile)) {
+            article.removeLike(profile);
+        } else {
+            article.addLike(profile);
+        }
+        articleRepository.save(article);
     }
 
     public void deleteArticleById(UUID articleId) {

@@ -3,7 +3,6 @@ package io.centralweb.backend.controller;
 import io.centralweb.backend.dto.article.ArticleCreateDTO;
 import io.centralweb.backend.dto.article.ArticleDTO;
 import io.centralweb.backend.dto.article.ArticleUpdateDTO;
-import io.centralweb.backend.model.User;
 import io.centralweb.backend.security.SecurityConfigurations;
 import io.centralweb.backend.service.ArticleService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -118,6 +117,26 @@ public class ArticleController {
             @AuthenticationPrincipal(expression = "userId") UUID userId
     ) {
         return ResponseEntity.ok(articleService.updateArticle(articleId, articleUpdated, userId));
+    }
+
+    @PatchMapping("/{articleId}/like")
+    @Operation(
+            summary = "Adiciona/Remove curtida",
+            description = "Adiciona/Remove uma curtida para um artigo existente."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Like realizado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Requisição inválida"),
+            @ApiResponse(responseCode = "404", description = "Artigo não encontrado"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado. Usuário não está autenticado")
+    })
+    public ResponseEntity<Void> toggleArticleLike(
+            @PathVariable UUID articleId,
+            @AuthenticationPrincipal(expression = "userId")
+            UUID userId
+    ) {
+        articleService.toggleArticleLike(articleId, userId);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{articleId}")

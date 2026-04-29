@@ -70,6 +70,20 @@ public class AnswerService {
         answerRepository.save(answer);
     }
 
+    public void toggleAnswerLike(UUID answerId, UUID userProfileId){
+        Profile profile = profileRepository.findByUser_UserId(userProfileId)
+                .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
+        Answer answer = answerRepository.findById(answerId)
+                .orElseThrow(() -> new ObjectNotFoundException("Resposta não encontrada"));
+
+        if(answer.getAnswerLikes().contains(profile)) {
+            answer.removeLike(profile);
+        }else {
+            answer.addLike(profile);
+        }
+        answerRepository.save(answer);
+    }
+
     public void deleteAnswerById(UUID answerId) {
         Answer answer = answerRepository.findById(answerId)
                 .orElseThrow(() -> new ObjectNotFoundException("Resposta não encontrada"));

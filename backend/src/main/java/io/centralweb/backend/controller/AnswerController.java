@@ -3,7 +3,6 @@ package io.centralweb.backend.controller;
 import io.centralweb.backend.dto.answer.AnswerAcceptedDTO;
 import io.centralweb.backend.dto.answer.AnswerCreateDTO;
 import io.centralweb.backend.dto.answer.AnswerDTO;
-import io.centralweb.backend.model.User;
 import io.centralweb.backend.security.SecurityConfigurations;
 import io.centralweb.backend.service.AnswerService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -74,6 +73,26 @@ public class AnswerController {
             @AuthenticationPrincipal(expression = "userId") UUID userId
     ) {
         answerService.acceptAnswer(answerAccepted, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/{answerId}/like")
+    @Operation(
+            summary = "Adiciona/Remove curtida",
+            description = "Adiciona/Remove uma curtida para uma resposta existente."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Like realizado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Requisição inválida"),
+            @ApiResponse(responseCode = "404", description = "Resposta não encontrado"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado. Usuário não está autenticado")
+    })
+    public ResponseEntity<Void> toggleAnswerLike(
+            @PathVariable UUID answerId,
+            @AuthenticationPrincipal(expression = "userId")
+            UUID userId
+    ) {
+        answerService.toggleAnswerLike(answerId, userId);
         return ResponseEntity.ok().build();
     }
 

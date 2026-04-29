@@ -1,8 +1,8 @@
 package io.centralweb.backend.enums;
 
 public enum UserRole {
-    ADMIN("admin"),
-    PERSON("person");
+    ADMIN("Admin"),
+    PERSON("Pessoa");
 
     private final String role;
 

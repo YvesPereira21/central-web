@@ -142,6 +142,14 @@ public class Question {
         this.questionLikes = questionLikes;
     }
 
+    public void addLike(Profile profile){
+        this.questionLikes.add(profile);
+    }
+
+    public void removeLike(Profile profile){
+        this.questionLikes.add(profile);
+    }
+
     public Long getQuestionTotalLikes() {
         return questionTotalLikes == null ? 0 : questionTotalLikes;
     }

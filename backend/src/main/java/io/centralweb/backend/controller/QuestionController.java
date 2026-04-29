@@ -126,7 +126,27 @@ public class QuestionController {
             @Parameter(hidden = true)
             @AuthenticationPrincipal(expression = "userId") UUID userId
     ) {
-        return ResponseEntity.ok(questionService.updateQuestion(questionId, question, userId));
+        return ResponseEntity.status(HttpStatus.OK).body(questionService.updateQuestion(questionId, question, userId));
+    }
+
+    @PatchMapping("/{questionId}/like")
+    @Operation(
+            summary = "Adiciona/Remove curtida",
+            description = "Adiciona/Remove uma curtida para uma pergunta existente."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Like realizado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Requisição inválida"),
+            @ApiResponse(responseCode = "404", description = "Pergunta não encontrada"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado. Usuário não está autenticado")
+    })
+    public ResponseEntity<Void> toggleQuestionLike(
+            @PathVariable UUID questionId,
+            @AuthenticationPrincipal(expression = "userId")
+            UUID userId
+    ) {
+        questionService.toggleQuestionLike(questionId, userId);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{questionId}")
