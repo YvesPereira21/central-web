@@ -89,7 +89,7 @@ public class ProfileService {
 
     private String updateLevel(long score){
         return switch (score) {
-            case long l when l >= 800L -> "Especialista";
+            case long l when l >= 800 -> "Especialista";
             case long l when l >= 300 -> "Esperto";
             case long l when l >= 200 -> "Bom";
             default -> "Iniciante";

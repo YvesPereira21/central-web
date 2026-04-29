@@ -62,7 +62,7 @@ public class AnswerService {
         Answer answer = answerRepository.findById(answerAccepted.answerId())
                 .orElseThrow(() -> new ObjectNotFoundException("Resposta não encontrada"));
 
-        if(answer.getProfile().getUser().getUserId().equals(userProfileId)) {
+        if(!answer.getQuestion().getProfile().getUser().getUserId().equals(userProfileId)) {
             throw new RuntimeException("Você não tem permissão para isso");
         }
 

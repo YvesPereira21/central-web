@@ -60,7 +60,7 @@ public class QualificationController {
         return ResponseEntity.ok(qualificationService.getAllQualificationsVerified());
     }
 
-    @GetMapping("/notVerified")
+    @GetMapping("/not-verified")
     @Operation(summary = "Lista qualificações não verificadas", description = "Retorna todas as qualificações que ainda não foram verificadas")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de qualificações não verificadas")
@@ -81,7 +81,7 @@ public class QualificationController {
         return ResponseEntity.ok(qualificationService.getAllProfileVerifiedQualifications(profileId));
     }
 
-    @GetMapping("/{profileId}/notVerified")
+    @GetMapping("/{profileId}/not-verified")
     @Operation(summary = "Qualificações não verificadas de um perfil", description = "Retorna as qualificações não verificadas de um perfil específico")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de qualificações não verificadas do perfil"),

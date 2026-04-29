@@ -5,4 +5,3 @@ public record ProfileUpdateDTO(
         String bio,
         String expertise
 ) {}
-

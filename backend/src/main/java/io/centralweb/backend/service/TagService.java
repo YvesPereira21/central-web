@@ -58,6 +58,12 @@ public class TagService {
         Tag tag = tagRepository.findById(tagId)
                 .orElseThrow(() -> new ObjectNotFoundException("Tag não encontrada"));
 
+        boolean tagExists = tagRepository
+                .existsByTechnologyName(tagUpdated.technologyName());
+        if (tagExists){
+            throw new ObjectAlreadyExistsException("Tag com esse nome já existe");
+        }
+
         tagMapper.updateTagFromDTO(tagUpdated, tag);
 
         return tagMapper.toDTO(tagRepository.save(tag));
@@ -65,7 +71,7 @@ public class TagService {
 
     public void deleteTagByTechnologyName(String technologyName) {
         Tag tag = tagRepository
-                .findByTechnologyNameContainingIgnoreCase(technologyName)
+                .findByTechnologyName(technologyName)
                 .orElseThrow(() -> new ObjectNotFoundException("Tag não encontrada"));
 
         tagRepository.delete(tag);

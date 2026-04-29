@@ -105,7 +105,7 @@ public class QuestionController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de perguntas com resposta aceita")
     })
-    public ResponseEntity<List<QuestionListDTO>> getQuestionsWithAcceptedAnswers() {
+    public ResponseEntity<List<QuestionListDTO>> getQuestionsWithAcceptedAnswer() {
         return ResponseEntity.ok(questionService.getAllPublishedQuestionWithAcceptedAnswer());
     }
 
