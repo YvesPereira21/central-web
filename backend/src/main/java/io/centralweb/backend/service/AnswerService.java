@@ -1,6 +1,5 @@
 package io.centralweb.backend.service;
 
-import io.centralweb.backend.dto.answer.AnswerAcceptedDTO;
 import io.centralweb.backend.dto.answer.AnswerCreateDTO;
 import io.centralweb.backend.dto.answer.AnswerDTO;
 import io.centralweb.backend.exception.ObjectNotFoundException;
@@ -58,8 +57,8 @@ public class AnswerService {
     }
 
     @Transactional(rollbackOn = Exception.class)
-    public void acceptAnswer(AnswerAcceptedDTO answerAccepted, UUID userProfileId) {
-        Answer answer = answerRepository.findById(answerAccepted.answerId())
+    public void acceptAnswer(UUID answerId, UUID userProfileId) {
+        Answer answer = answerRepository.findById(answerId)
                 .orElseThrow(() -> new ObjectNotFoundException("Resposta não encontrada"));
 
         if(!answer.getQuestion().getProfile().getUser().getUserId().equals(userProfileId)) {

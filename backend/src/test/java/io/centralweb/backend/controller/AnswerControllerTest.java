@@ -1,6 +1,5 @@
 package io.centralweb.backend.controller;
 
-import io.centralweb.backend.dto.answer.AnswerAcceptedDTO;
 import io.centralweb.backend.dto.answer.AnswerCreateDTO;
 import io.centralweb.backend.enums.UserRole;
 import io.centralweb.backend.model.*;
@@ -146,17 +145,14 @@ public class AnswerControllerTest {
 
     @Test
     public void shouldAcceptAnswer(){
-        AnswerAcceptedDTO answerAccepted = new AnswerAcceptedDTO(
-                answerId1,
-                true
-        );
+        UUID answerId = answerId1;
 
         given()
                 .header("Authorization", "Bearer " + token1)
                 .contentType(ContentType.JSON)
-                .body(answerAccepted)
+                .body(answerId)
         .when()
-                .patch("/answers")
+                .patch("/answers/" + answerId)
         .then()
                 .statusCode(HttpStatus.OK.value());
     }
@@ -232,32 +228,24 @@ public class AnswerControllerTest {
     @Test
     public void shouldNotAcceptAnswerNonExistent(){
         UUID answerId = UUID.randomUUID();
-        AnswerAcceptedDTO answerAccepted = new AnswerAcceptedDTO(
-                answerId,
-                true
-        );
 
         given()
                 .header("Authorization", "Bearer " + token1)
                 .contentType(ContentType.JSON)
-                .body(answerAccepted)
         .when()
-                .patch("/answers")
+                .patch("/answers/" + answerId)
         .then()
                 .statusCode(HttpStatus.NOT_FOUND.value());
     }
 
     @Test
     public void shouldNotAcceptAnswerFromQuestionWhereProfileIsNotOwner(){
-        AnswerAcceptedDTO answerAccepted = new AnswerAcceptedDTO(
-                answerId1,
-                true
-        );
+        UUID answerId = answerId1;
 
         given()
                 .header("Authorization", "Bearer " + token2)
                 .contentType(ContentType.JSON)
-                .body(answerAccepted)
+                .body(answerId)
         .when()
                 .patch("/answers")
         .then()

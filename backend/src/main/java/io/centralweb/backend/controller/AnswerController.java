@@ -1,6 +1,5 @@
 package io.centralweb.backend.controller;
 
-import io.centralweb.backend.dto.answer.AnswerAcceptedDTO;
 import io.centralweb.backend.dto.answer.AnswerCreateDTO;
 import io.centralweb.backend.dto.answer.AnswerDTO;
 import io.centralweb.backend.security.SecurityConfigurations;
@@ -59,7 +58,7 @@ public class AnswerController {
         return ResponseEntity.ok(answerService.getAllAnswersFromQuestion(questionId));
     }
 
-    @PatchMapping("")
+    @PatchMapping("/{answerId}")
     @Operation(summary = "Aceita uma resposta", description = "Marca uma resposta como aceita para uma pergunta")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Resposta aceita com sucesso"),
@@ -68,11 +67,11 @@ public class AnswerController {
             @ApiResponse(responseCode = "404", description = "Resposta ou pergunta não encontrada")
     })
     public ResponseEntity<Void> acceptAnswer(
-            @RequestBody @Valid AnswerAcceptedDTO answerAccepted,
+            @PathVariable UUID answerId,
             @Parameter(hidden = true)
             @AuthenticationPrincipal(expression = "userId") UUID userId
     ) {
-        answerService.acceptAnswer(answerAccepted, userId);
+        answerService.acceptAnswer(answerId, userId);
         return ResponseEntity.ok().build();
     }
 
