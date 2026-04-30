@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +34,7 @@ public class AnswerController {
         this.answerService = answerService;
     }
 
+    @PreAuthorize("hasRole('PERSON')")
     @PostMapping("")
     @Operation(summary = "Cria uma resposta", description = "Cria uma nova resposta associada ao usuário autenticado")
     @ApiResponses(value = {
@@ -58,6 +60,7 @@ public class AnswerController {
         return ResponseEntity.ok(answerService.getAllAnswersFromQuestion(questionId));
     }
 
+    @PreAuthorize("hasRole('PERSON')")
     @PatchMapping("/{answerId}")
     @Operation(summary = "Aceita uma resposta", description = "Marca uma resposta como aceita para uma pergunta")
     @ApiResponses(value = {
@@ -75,6 +78,7 @@ public class AnswerController {
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize("hasRole('PERSON')")
     @PatchMapping("/{answerId}/like")
     @Operation(
             summary = "Adiciona/Remove curtida",
@@ -101,8 +105,12 @@ public class AnswerController {
             @ApiResponse(responseCode = "204", description = "Resposta removida com sucesso"),
             @ApiResponse(responseCode = "404", description = "Resposta não encontrada")
     })
-    public ResponseEntity<Void> deleteAnswer(@PathVariable UUID answerId) {
-        answerService.deleteAnswerById(answerId);
+    public ResponseEntity<Void> deleteAnswer(
+            @PathVariable UUID answerId,
+            @AuthenticationPrincipal(expression = "userId")
+            UUID userProfileId
+    ) {
+        answerService.deleteAnswerById(answerId, userProfileId);
         return ResponseEntity.noContent().build();
     }
 }

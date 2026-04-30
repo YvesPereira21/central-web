@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,6 +31,7 @@ public class TagController {
         this.tagService = tagService;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("")
     @Operation(summary = "Cria uma nova tag", description = "Cria uma tag a partir dos dados fornecidos")
     @ApiResponses(value = {
@@ -41,6 +43,7 @@ public class TagController {
         return ResponseEntity.status(HttpStatus.CREATED).body(newTag);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'PERSON')")
     @GetMapping("")
     @Operation(summary = "Lista todas as tags", description = "Retorna a lista completa de tags cadastradas no sistema")
     @ApiResponses(value = {
@@ -52,6 +55,7 @@ public class TagController {
         return ResponseEntity.status(HttpStatus.OK).body(tags);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{tagId}")
     @Operation(summary = "Atualiza uma tag existente", description = "Atualiza os dados de uma tag identificada pelo UUID")
     @ApiResponses(value = {
@@ -67,6 +71,7 @@ public class TagController {
         return ResponseEntity.status(HttpStatus.OK).body(tag);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{technologyName}")
     @Operation(summary = "Remove uma tag pelo nome", description = "Exclui a tag correspondente ao nome de tecnologia informado")
     @ApiResponses(value = {

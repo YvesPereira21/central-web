@@ -4,13 +4,17 @@ import io.centralweb.backend.dto.question.QuestionCreateDTO;
 import io.centralweb.backend.dto.question.QuestionListDTO;
 import io.centralweb.backend.dto.question.QuestionDTO;
 import io.centralweb.backend.dto.question.QuestionUpdateDTO;
+import io.centralweb.backend.enums.UserRole;
 import io.centralweb.backend.events.QuestionCreateEvent;
 import io.centralweb.backend.exception.ObjectNotFoundException;
+import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
 import io.centralweb.backend.mapper.QuestionMapper;
 import io.centralweb.backend.model.Profile;
 import io.centralweb.backend.model.Question;
+import io.centralweb.backend.model.User;
 import io.centralweb.backend.repository.ProfileRepository;
 import io.centralweb.backend.repository.QuestionRepository;
+import io.centralweb.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -24,13 +28,15 @@ import java.util.stream.Collectors;
 public class QuestionService {
     private final QuestionRepository questionRepository;
     private final QuestionMapper questionMapper;
+    private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
     private final TagService tagService;
     private final ApplicationEventPublisher publisher;
 
-    public QuestionService(QuestionRepository questionRepository, QuestionMapper questionMapper, ProfileRepository profileRepository, TagService tagService, ApplicationEventPublisher publisher) {
+    public QuestionService(QuestionRepository questionRepository, QuestionMapper questionMapper, UserRepository userRepository, ProfileRepository profileRepository, TagService tagService, ApplicationEventPublisher publisher) {
         this.questionRepository = questionRepository;
         this.questionMapper = questionMapper;
+        this.userRepository = userRepository;
         this.profileRepository = profileRepository;
         this.tagService = tagService;
         this.publisher = publisher;
@@ -99,7 +105,7 @@ public class QuestionService {
                 .orElseThrow(() -> new ObjectNotFoundException("Pergunta não encontrada"));
 
         if(!question.getProfile().getUser().getUserId().equals(userProfileId)) {
-            throw new RuntimeException("Você não tem permissão para isso");
+            throw new ProfileIsNotTheOwnerException("Você não tem permissão para isso");
         }
 
         questionMapper.updateQuestionFromDTO(questionUpdated, question);
@@ -125,10 +131,16 @@ public class QuestionService {
         questionRepository.save(question);
     }
 
-    public void deleteQuestionById(UUID questionId) {
-        Question question = questionRepository
-                .findById(questionId)
+    public void deleteQuestionById(UUID questionId, UUID userProfileId) {
+        User user = userRepository.findById(userProfileId)
+                .orElseThrow(() -> new ObjectNotFoundException("Usuário não existe"));
+        Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new ObjectNotFoundException("Pergunta não encontrada"));
+
+        if(!question.getProfile().getUser().getUserId().equals(userProfileId) ||
+                !user.getRole().equals(UserRole.ADMIN)) {
+            throw new ProfileIsNotTheOwnerException("Você não tem permissão para isso");
+        }
 
         questionRepository.delete(question);
     }

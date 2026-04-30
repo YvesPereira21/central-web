@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -34,6 +35,7 @@ public class ArticleController {
         this.articleService = articleService;
     }
 
+    @PreAuthorize("hasRole('PERSON')")
     @PostMapping("")
     @Operation(summary = "Cria um artigo", description = "Cria um novo artigo associado ao usuário autenticado")
     @ApiResponses(value = {
@@ -102,6 +104,7 @@ public class ArticleController {
         return ResponseEntity.ok(articleService.getAllPublishedArticlesByProfile(profileId));
     }
 
+    @PreAuthorize("hasRole('PERSON')")
     @PutMapping("/{articleId}")
     @Operation(summary = "Atualiza um artigo", description = "Atualiza um artigo existente. Apenas o autor pode alterá-lo.")
     @ApiResponses(value = {
@@ -119,6 +122,7 @@ public class ArticleController {
         return ResponseEntity.ok(articleService.updateArticle(articleId, articleUpdated, userId));
     }
 
+    @PreAuthorize("hasRole('PERSON')")
     @PatchMapping("/{articleId}/like")
     @Operation(
             summary = "Adiciona/Remove curtida",
@@ -145,8 +149,12 @@ public class ArticleController {
             @ApiResponse(responseCode = "204", description = "Artigo removido com sucesso"),
             @ApiResponse(responseCode = "404", description = "Artigo não encontrado")
     })
-    public ResponseEntity<Void> deleteArticle(@PathVariable UUID articleId) {
-        articleService.deleteArticleById(articleId);
+    public ResponseEntity<Void> deleteArticle(
+            @PathVariable UUID articleId,
+            @AuthenticationPrincipal(expression = "userId")
+            UUID userProfileId
+    ) {
+        articleService.deleteArticleById(articleId, userProfileId);
         return ResponseEntity.noContent().build();
     }
 }

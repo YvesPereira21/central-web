@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -34,6 +35,7 @@ public class QualificationController {
         this.qualificationService = qualificationService;
     }
 
+    @PreAuthorize("hasRole('PERSON')")
     @PostMapping("")
     @Operation(summary = "Cria uma qualificação", description = "Cria uma nova qualificação associada ao usuário autenticado")
     @ApiResponses(value = {
@@ -51,6 +53,7 @@ public class QualificationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(newQualification);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/verified")
     @Operation(summary = "Lista qualificações verificadas", description = "Retorna todas as qualificações que foram verificadas")
     @ApiResponses(value = {
@@ -60,6 +63,7 @@ public class QualificationController {
         return ResponseEntity.ok(qualificationService.getAllQualificationsVerified());
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/not-verified")
     @Operation(summary = "Lista qualificações não verificadas", description = "Retorna todas as qualificações que ainda não foram verificadas")
     @ApiResponses(value = {
@@ -69,6 +73,7 @@ public class QualificationController {
         return ResponseEntity.ok(qualificationService.getAllNotVerifiedQualifications());
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{profileId}/verified")
     @Operation(summary = "Qualificações verificadas de um perfil", description = "Retorna as qualificações verificadas de um perfil específico")
     @ApiResponses(value = {
@@ -81,6 +86,7 @@ public class QualificationController {
         return ResponseEntity.ok(qualificationService.getAllProfileVerifiedQualifications(profileId));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{profileId}/not-verified")
     @Operation(summary = "Qualificações não verificadas de um perfil", description = "Retorna as qualificações não verificadas de um perfil específico")
     @ApiResponses(value = {
@@ -93,6 +99,7 @@ public class QualificationController {
         return ResponseEntity.ok(qualificationService.getAllProfileNotVerifiedQualifications(profileId));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{qualificationId}")
     public ResponseEntity<Void> updateVerifiedToTrue(
             @PathVariable UUID qualificationId
@@ -107,8 +114,12 @@ public class QualificationController {
             @ApiResponse(responseCode = "204", description = "Qualificação removida com sucesso"),
             @ApiResponse(responseCode = "404", description = "Qualificação não encontrada")
     })
-    public ResponseEntity<Void> deleteQualification(@PathVariable UUID qualificationId) {
-        qualificationService.deleteQualificationById(qualificationId);
+    public ResponseEntity<Void> deleteQualification(
+            @PathVariable UUID qualificationId,
+            @AuthenticationPrincipal(expression = "userId")
+            UUID userProfileId
+    ) {
+        qualificationService.deleteQualificationById(qualificationId, userProfileId);
         return ResponseEntity.noContent().build();
     }
 }

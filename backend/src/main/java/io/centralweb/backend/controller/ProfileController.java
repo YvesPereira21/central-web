@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -53,6 +54,7 @@ public class ProfileController {
         return ResponseEntity.ok(profileService.getProfileById(profileId));
     }
 
+    @PreAuthorize("hasRole('PERSON')")
     @PutMapping("/{profileId}")
     @Operation(summary = "Atualiza um perfil", description = "Atualiza os dados de um perfil existente. Apenas o próprio usuário pode alterar seu perfil.")
     @ApiResponses(value = {
@@ -76,8 +78,12 @@ public class ProfileController {
             @ApiResponse(responseCode = "204", description = "Perfil removido com sucesso"),
             @ApiResponse(responseCode = "404", description = "Perfil não encontrado")
     })
-    public ResponseEntity<Void> deleteProfile(@PathVariable UUID profileId) {
-        profileService.deleteProfileById(profileId);
+    public ResponseEntity<Void> deleteProfile(
+            @PathVariable UUID profileId,
+            @AuthenticationPrincipal(expression = "userId")
+            UUID userProfileId
+    ) {
+        profileService.deleteProfileById(profileId, userProfileId);
         return ResponseEntity.noContent().build();
     }
 }

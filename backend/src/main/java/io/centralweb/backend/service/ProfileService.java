@@ -5,10 +5,12 @@ import io.centralweb.backend.dto.profile.ProfileDTO;
 import io.centralweb.backend.dto.profile.ProfileUpdateDTO;
 import io.centralweb.backend.enums.UserRole;
 import io.centralweb.backend.exception.ObjectNotFoundException;
+import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
 import io.centralweb.backend.mapper.ProfileMapper;
 import io.centralweb.backend.model.Profile;
 import io.centralweb.backend.model.User;
 import io.centralweb.backend.repository.ProfileRepository;
+import io.centralweb.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,12 +20,14 @@ import java.util.UUID;
 
 @Service
 public class ProfileService {
+    private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
     private final ProfileMapper profileMapper;
     private final UserService userService;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public ProfileService(ProfileRepository profileRepository, ProfileMapper profileMapper, UserService userService, BCryptPasswordEncoder bCryptPasswordEncoder) {
+    public ProfileService(UserRepository userRepository, ProfileRepository profileRepository, ProfileMapper profileMapper, UserService userService, BCryptPasswordEncoder bCryptPasswordEncoder) {
+        this.userRepository = userRepository;
         this.profileRepository = profileRepository;
         this.profileMapper = profileMapper;
         this.userService = userService;
@@ -61,7 +65,7 @@ public class ProfileService {
                 .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
 
         if(!profile.getUser().getUserId().equals(userProfileId)) {
-            throw new RuntimeException("Você não tem permissão para isso");
+            throw new ProfileIsNotTheOwnerException("Você não tem permissão para isso");
         }
 
         profileMapper.updateProfileFromDTO(profileUpdated, profile);
@@ -69,9 +73,16 @@ public class ProfileService {
         return profileMapper.toProfileUniqueDTO(profileRepository.save(profile));
     }
 
-    public void deleteProfileById(UUID profileId) {
+    public void deleteProfileById(UUID profileId, UUID userProfileId) {
+        User user = userRepository.findById(userProfileId)
+                .orElseThrow(() -> new ObjectNotFoundException("Usuário não existe"));
         Profile profile = profileRepository.findById(profileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
+
+        if(!profile.getUser().getUserId().equals(userProfileId) ||
+                !user.getRole().equals(UserRole.ADMIN)) {
+            throw new ProfileIsNotTheOwnerException("Você não tem permissão para isso");
+        }
 
         profileRepository.delete(profile);
     }

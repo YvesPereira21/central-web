@@ -2,14 +2,18 @@ package io.centralweb.backend.service;
 
 import io.centralweb.backend.dto.answer.AnswerCreateDTO;
 import io.centralweb.backend.dto.answer.AnswerDTO;
+import io.centralweb.backend.enums.UserRole;
 import io.centralweb.backend.exception.ObjectNotFoundException;
+import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
 import io.centralweb.backend.mapper.AnswerMapper;
 import io.centralweb.backend.model.Answer;
 import io.centralweb.backend.model.Profile;
 import io.centralweb.backend.model.Question;
+import io.centralweb.backend.model.User;
 import io.centralweb.backend.repository.AnswerRepository;
 import io.centralweb.backend.repository.ProfileRepository;
 import io.centralweb.backend.repository.QuestionRepository;
+import io.centralweb.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -23,12 +27,14 @@ public class AnswerService {
     private final AnswerRepository answerRepository;
     private final AnswerMapper answerMapper;
     private final QuestionRepository questionRepository;
+    private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
 
-    public AnswerService(AnswerRepository answerRepository, AnswerMapper answerMapper, QuestionRepository questionRepository, ProfileRepository profileRepository) {
+    public AnswerService(AnswerRepository answerRepository, AnswerMapper answerMapper, QuestionRepository questionRepository, UserRepository userRepository, ProfileRepository profileRepository) {
         this.answerRepository = answerRepository;
         this.answerMapper = answerMapper;
         this.questionRepository = questionRepository;
+        this.userRepository = userRepository;
         this.profileRepository = profileRepository;
     }
 
@@ -61,8 +67,8 @@ public class AnswerService {
         Answer answer = answerRepository.findById(answerId)
                 .orElseThrow(() -> new ObjectNotFoundException("Resposta não encontrada"));
 
-        if(!answer.getQuestion().getProfile().getUser().getUserId().equals(userProfileId)) {
-            throw new RuntimeException("Você não tem permissão para isso");
+        if(answer.getProfile().getUser().getUserId().equals(userProfileId)) {
+            throw new ProfileIsNotTheOwnerException("Você não tem permissão para isso");
         }
 
         answer.setAccepted(true);
@@ -83,9 +89,16 @@ public class AnswerService {
         answerRepository.save(answer);
     }
 
-    public void deleteAnswerById(UUID answerId) {
+    public void deleteAnswerById(UUID answerId, UUID userProfileId) {
+        User user = userRepository.findById(userProfileId)
+                .orElseThrow(() -> new ObjectNotFoundException("Usuário não existe"));
         Answer answer = answerRepository.findById(answerId)
                 .orElseThrow(() -> new ObjectNotFoundException("Resposta não encontrada"));
+
+        if(!answer.getProfile().getUser().getUserId().equals(userProfileId) ||
+                !user.getRole().equals(UserRole.ADMIN)){
+            throw new ProfileIsNotTheOwnerException("Você não tem permissão para isso");
+        }
 
         answerRepository.delete(answer);
     }

@@ -85,4 +85,16 @@ public class GlobalHandlerException {
                 .build();
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
+
+    @ExceptionHandler(ProfileIsNotTheOwnerException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseEntity<ApiError> profileIsNotTheOwnerException(ProfileIsNotTheOwnerException e) {
+        ApiError error = ApiError.builder()
+                .timestamp(LocalDateTime.now())
+                .code(HttpStatus.UNAUTHORIZED.value())
+                .status(HttpStatus.UNAUTHORIZED.name())
+                .errors(List.of(e.getMessage()))
+                .build();
+        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+    }
 }

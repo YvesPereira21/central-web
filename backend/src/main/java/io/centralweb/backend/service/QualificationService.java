@@ -2,12 +2,16 @@ package io.centralweb.backend.service;
 
 import io.centralweb.backend.dto.qualification.QualificationCreateDTO;
 import io.centralweb.backend.dto.qualification.QualificationDTO;
+import io.centralweb.backend.enums.UserRole;
 import io.centralweb.backend.exception.ObjectNotFoundException;
+import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
 import io.centralweb.backend.mapper.QualificationMapper;
 import io.centralweb.backend.model.Profile;
 import io.centralweb.backend.model.Qualification;
+import io.centralweb.backend.model.User;
 import io.centralweb.backend.repository.ProfileRepository;
 import io.centralweb.backend.repository.QualificationRepository;
+import io.centralweb.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -18,11 +22,13 @@ import java.util.UUID;
 public class QualificationService {
     private final QualificationRepository qualificationRepository;
     private final QualificationMapper qualificationMapper;
+    private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
 
-    public QualificationService(QualificationRepository qualificationRepository, QualificationMapper qualificationMapper, ProfileRepository profileRepository) {
+    public QualificationService(QualificationRepository qualificationRepository, QualificationMapper qualificationMapper, UserRepository userRepository, ProfileRepository profileRepository) {
         this.qualificationRepository = qualificationRepository;
         this.qualificationMapper = qualificationMapper;
+        this.userRepository = userRepository;
         this.profileRepository = profileRepository;
     }
 
@@ -78,9 +84,16 @@ public class QualificationService {
         qualificationRepository.save(qualification);
     }
 
-    public void deleteQualificationById(UUID qualificationId){
+    public void deleteQualificationById(UUID qualificationId, UUID userProfileId){
+        User user = userRepository.findById(userProfileId)
+                .orElseThrow(() -> new ObjectNotFoundException("Usuário não existe"));
         Qualification qualification = qualificationRepository.findById(qualificationId)
                 .orElseThrow(() -> new ObjectNotFoundException("Currículo não encontrado"));
+
+        if(!qualification.getProfile().getUser().getUserId().equals(userProfileId) ||
+                !user.getRole().equals(UserRole.ADMIN)) {
+            throw new ProfileIsNotTheOwnerException("Você não tem permissão para isso");
+        }
 
         qualificationRepository.delete(qualification);
     }

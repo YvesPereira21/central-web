@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +36,7 @@ public class QuestionController {
         this.questionService = questionService;
     }
 
+    @PreAuthorize("hasRole('PERSON')")
     @PostMapping("")
     @Operation(summary = "Cria uma nova pergunta", description = "Cria uma pergunta associada ao usuário autenticado")
     @ApiResponses(value = {
@@ -109,6 +111,7 @@ public class QuestionController {
         return ResponseEntity.ok(questionService.getAllPublishedQuestionWithAcceptedAnswer());
     }
 
+    @PreAuthorize("hasRole('PERSON')")
     @PutMapping("/{questionId}")
     @Operation(
             summary = "Atualiza uma pergunta",
@@ -129,6 +132,7 @@ public class QuestionController {
         return ResponseEntity.status(HttpStatus.OK).body(questionService.updateQuestion(questionId, question, userId));
     }
 
+    @PreAuthorize("hasRole('PERSON')")
     @PatchMapping("/{questionId}/like")
     @Operation(
             summary = "Adiciona/Remove curtida",
@@ -156,9 +160,11 @@ public class QuestionController {
             @ApiResponse(responseCode = "404", description = "Pergunta não encontrada")
     })
     public ResponseEntity<Void> deleteQuestion(
-            @PathVariable UUID questionId
+            @PathVariable UUID questionId,
+            @AuthenticationPrincipal(expression = "userId")
+            UUID userProfileId
     ) {
-        questionService.deleteQuestionById(questionId);
+        questionService.deleteQuestionById(questionId, userProfileId);
         return ResponseEntity.noContent().build();
     }
 }
