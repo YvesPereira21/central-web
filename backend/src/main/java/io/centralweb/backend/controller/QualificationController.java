@@ -12,6 +12,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -59,8 +63,11 @@ public class QualificationController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de qualificações verificadas")
     })
-    public ResponseEntity<List<QualificationDTO>> getVerifiedQualifications() {
-        return ResponseEntity.ok(qualificationService.getAllQualificationsVerified());
+    public ResponseEntity<Page<QualificationDTO>> getVerifiedQualifications(
+            @PageableDefault(page = 0, size = 10, sort = "institution", direction = Sort.Direction.ASC)
+            Pageable pageable
+    ) {
+        return ResponseEntity.ok(qualificationService.getAllQualificationsVerified(pageable));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -69,8 +76,11 @@ public class QualificationController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de qualificações não verificadas")
     })
-    public ResponseEntity<List<QualificationDTO>> getNotVerifiedQualifications() {
-        return ResponseEntity.ok(qualificationService.getAllNotVerifiedQualifications());
+    public ResponseEntity<Page<QualificationDTO>> getNotVerifiedQualifications(
+            @PageableDefault(page = 0, size = 10, sort = "institution", direction = Sort.Direction.ASC)
+            Pageable pageable
+    ) {
+        return ResponseEntity.ok(qualificationService.getAllNotVerifiedQualifications(pageable));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -80,10 +90,12 @@ public class QualificationController {
             @ApiResponse(responseCode = "200", description = "Lista de qualificações verificadas do perfil"),
             @ApiResponse(responseCode = "404", description = "Perfil não encontrado")
     })
-    public ResponseEntity<List<QualificationDTO>> getProfileVerifiedQualifications(
-            @PathVariable UUID profileId
+    public ResponseEntity<Page<QualificationDTO>> getProfileVerifiedQualifications(
+            @PathVariable UUID profileId,
+            @PageableDefault(page = 0, size = 10, sort = "institution", direction = Sort.Direction.ASC)
+            Pageable pageable
     ) {
-        return ResponseEntity.ok(qualificationService.getAllProfileVerifiedQualifications(profileId));
+        return ResponseEntity.ok(qualificationService.getAllProfileVerifiedQualifications(profileId, pageable));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -93,10 +105,12 @@ public class QualificationController {
             @ApiResponse(responseCode = "200", description = "Lista de qualificações não verificadas do perfil"),
             @ApiResponse(responseCode = "404", description = "Perfil não encontrado")
     })
-    public ResponseEntity<List<QualificationDTO>> getProfileNotVerifiedQualifications(
-            @PathVariable UUID profileId
+    public ResponseEntity<Page<QualificationDTO>> getProfileNotVerifiedQualifications(
+            @PathVariable UUID profileId,
+            @PageableDefault(page = 0, size = 10, sort = "institution", direction = Sort.Direction.ASC)
+            Pageable pageable
     ) {
-        return ResponseEntity.ok(qualificationService.getAllProfileNotVerifiedQualifications(profileId));
+        return ResponseEntity.ok(qualificationService.getAllProfileNotVerifiedQualifications(profileId, pageable));
     }
 
     @PreAuthorize("hasRole('ADMIN')")

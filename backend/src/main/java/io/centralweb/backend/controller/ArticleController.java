@@ -12,6 +12,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -66,8 +70,11 @@ public class ArticleController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de artigos retornada com sucesso")
     })
-    public ResponseEntity<List<ArticleDTO>> getAllPublishedArticles() {
-        return ResponseEntity.ok(articleService.getAllPublishedArticles());
+    public ResponseEntity<Page<ArticleDTO>> getAllPublishedArticles(
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable
+    ) {
+        return ResponseEntity.ok(articleService.getAllPublishedArticles(pageable));
     }
 
     @GetMapping("/{title}/title")
@@ -75,10 +82,12 @@ public class ArticleController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de artigos correspondentes")
     })
-    public ResponseEntity<List<ArticleDTO>> getArticlesByTitle(
-            @PathVariable("title") String title
+    public ResponseEntity<Page<ArticleDTO>> getArticlesByTitle(
+            @PathVariable("title") String title,
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable
     ) {
-        return ResponseEntity.ok(articleService.getAllPublishedArticlesByTitle(title));
+        return ResponseEntity.ok(articleService.getAllPublishedArticlesByTitle(title, pageable));
     }
 
     @GetMapping("/{technologyName}/tag")
@@ -86,10 +95,12 @@ public class ArticleController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de artigos filtrados pela tecnologia")
     })
-    public ResponseEntity<List<ArticleDTO>> getArticlesByTag(
-            @PathVariable String technologyName
+    public ResponseEntity<Page<ArticleDTO>> getArticlesByTag(
+            @PathVariable String technologyName,
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable
     ) {
-        return ResponseEntity.ok(articleService.getAllPublishedArticlesByTechnologyName(technologyName));
+        return ResponseEntity.ok(articleService.getAllPublishedArticlesByTechnologyName(technologyName, pageable));
     }
 
     @GetMapping("/{profileId}/profile")
@@ -98,10 +109,12 @@ public class ArticleController {
             @ApiResponse(responseCode = "200", description = "Lista de artigos do perfil"),
             @ApiResponse(responseCode = "404", description = "Perfil não encontrado")
     })
-    public ResponseEntity<List<ArticleDTO>> getProfileArticles(
-            @PathVariable UUID profileId
+    public ResponseEntity<Page<ArticleDTO>> getProfileArticles(
+            @PathVariable UUID profileId,
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable
     ) {
-        return ResponseEntity.ok(articleService.getAllPublishedArticlesByProfile(profileId));
+        return ResponseEntity.ok(articleService.getAllPublishedArticlesByProfile(profileId, pageable));
     }
 
     @PreAuthorize("hasRole('PERSON')")

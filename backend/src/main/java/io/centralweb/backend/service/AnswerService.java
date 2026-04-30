@@ -15,12 +15,12 @@ import io.centralweb.backend.repository.ProfileRepository;
 import io.centralweb.backend.repository.QuestionRepository;
 import io.centralweb.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class AnswerService {
@@ -54,12 +54,10 @@ public class AnswerService {
         return answerMapper.toDTO(answerRepository.save(newAnswer));
     }
 
-    public List<AnswerDTO> getAllAnswersFromQuestion(UUID questionId) {
+    public Page<AnswerDTO> getAllAnswersFromQuestion(UUID questionId, Pageable pageable) {
         return answerRepository
-                .findAllByQuestionIdAndQuestionPublished(questionId)
-                .stream()
-                .map(answerMapper::toDTO)
-                .collect(Collectors.toList());
+                .findAllByQuestionIdAndQuestionPublished(questionId, pageable)
+                .map(answerMapper::toDTO);
     }
 
     @Transactional(rollbackOn = Exception.class)

@@ -13,6 +13,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -70,8 +74,11 @@ public class QuestionController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de perguntas retornada com sucesso")
     })
-    public ResponseEntity<List<QuestionListDTO>> getAllPublishedQuestions() {
-        return ResponseEntity.ok(questionService.getAllPublishedQuestions());
+    public ResponseEntity<Page<QuestionListDTO>> getAllPublishedQuestions(
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable
+    ) {
+        return ResponseEntity.ok(questionService.getAllPublishedQuestions(pageable));
     }
 
     @GetMapping("/{title}/title")
@@ -79,10 +86,14 @@ public class QuestionController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de perguntas correspondentes")
     })
-    public ResponseEntity<List<QuestionListDTO>> getQuestionsByTitle(
-            @PathVariable("title") String title
+    public ResponseEntity<Page<QuestionListDTO>> getQuestionsByTitle(
+            @PathVariable("title") String title,
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable
     ) {
-        return ResponseEntity.ok(questionService.getAllPublishedQuestionsByTitle(title));
+        return ResponseEntity.ok(questionService.getAllPublishedQuestionsByTitle(
+                title, pageable
+        ));
     }
 
     @GetMapping("/{technologyName}/tag")
@@ -93,10 +104,14 @@ public class QuestionController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de perguntas filtradas pela tecnologia")
     })
-    public ResponseEntity<List<QuestionListDTO>> getQuestionsByTag(
-            @PathVariable String technologyName
+    public ResponseEntity<Page<QuestionListDTO>> getQuestionsByTag(
+            @PathVariable String technologyName,
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable
     ) {
-        return ResponseEntity.ok(questionService.getAllPublishedQuestionsByTechnologyName(technologyName));
+        return ResponseEntity.ok(questionService.getAllPublishedQuestionsByTechnologyName(
+                technologyName, pageable
+        ));
     }
 
     @GetMapping("/accepteds-answers")
@@ -107,8 +122,13 @@ public class QuestionController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de perguntas com resposta aceita")
     })
-    public ResponseEntity<List<QuestionListDTO>> getQuestionsWithAcceptedAnswer() {
-        return ResponseEntity.ok(questionService.getAllPublishedQuestionWithAcceptedAnswer());
+    public ResponseEntity<Page<QuestionListDTO>> getQuestionsWithAcceptedAnswer(
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable
+    ) {
+        return ResponseEntity.ok(questionService.getAllPublishedQuestionWithAcceptedAnswer(
+                pageable
+        ));
     }
 
     @PreAuthorize("hasRole('PERSON')")

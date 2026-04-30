@@ -17,12 +17,12 @@ import io.centralweb.backend.repository.QuestionRepository;
 import io.centralweb.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class QuestionService {
@@ -68,36 +68,35 @@ public class QuestionService {
         return questionMapper.toQuestionDTO(question);
     }
 
-    public List<QuestionListDTO> getAllPublishedQuestions(){
-        return questionRepository.findAllByPublishedIsTrue().stream()
-                .map(questionMapper::toQuestionListDTO)
-                .collect(Collectors.toList());
+    public Page<QuestionListDTO> getAllPublishedQuestions(Pageable pageable){
+        return questionRepository.findAllByPublishedIsTrue(pageable)
+                .map(questionMapper::toQuestionListDTO);
     }
 
-    public List<QuestionListDTO> getAllPublishedQuestionsByTitle(String title){
-        return questionRepository
-                .findAllByTitleContainingIgnoreCaseAndPublishedIsTrue(title)
-                .stream()
-                .map(questionMapper::toQuestionListDTO)
-                .collect(Collectors.toList());
-    }
-
-    public List<QuestionListDTO> getAllPublishedQuestionsByTechnologyName(
-            String technologyName
+    public Page<QuestionListDTO> getAllPublishedQuestionsByTitle(
+            String title,
+            Pageable pageable
     ) {
         return questionRepository
-                .findAllByTags_TechnologyNameAndPublishedIsTrue(technologyName)
-                .stream()
-                .map(questionMapper::toQuestionListDTO)
-                .toList();
+                .findAllByTitleContainingIgnoreCaseAndPublishedIsTrue(title, pageable)
+                .map(questionMapper::toQuestionListDTO);
     }
 
-    public List<QuestionListDTO> getAllPublishedQuestionWithAcceptedAnswer(){
+    public Page<QuestionListDTO> getAllPublishedQuestionsByTechnologyName(
+            String technologyName,
+            Pageable pageable
+    ) {
         return questionRepository
-                .findPublishedQuestionsWithAcceptedAnswers()
-                .stream()
-                .map(questionMapper::toQuestionListDTO)
-                .toList();
+                .findAllByTags_TechnologyNameAndPublishedIsTrue(technologyName, pageable)
+                .map(questionMapper::toQuestionListDTO);
+    }
+
+    public Page<QuestionListDTO> getAllPublishedQuestionWithAcceptedAnswer(
+            Pageable pageable
+    ){
+        return questionRepository
+                .findPublishedQuestionsWithAcceptedAnswers(pageable)
+                .map(questionMapper::toQuestionListDTO);
     }
 
     public QuestionDTO updateQuestion(UUID questionId, QuestionUpdateDTO questionUpdated, UUID userProfileId) {

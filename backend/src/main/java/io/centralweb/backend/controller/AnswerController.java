@@ -11,6 +11,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,7 +22,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -56,8 +59,12 @@ public class AnswerController {
             @ApiResponse(responseCode = "200", description = "Lista de respostas retornada"),
             @ApiResponse(responseCode = "404", description = "Pergunta não encontrada")
     })
-    public ResponseEntity<List<AnswerDTO>> getAllAnswersFromQuestion(@PathVariable UUID questionId) {
-        return ResponseEntity.ok(answerService.getAllAnswersFromQuestion(questionId));
+    public ResponseEntity<Page<AnswerDTO>> getAllAnswersFromQuestion(
+            @PathVariable UUID questionId,
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable
+    ) {
+        return ResponseEntity.ok(answerService.getAllAnswersFromQuestion(questionId, pageable));
     }
 
     @PreAuthorize("hasRole('PERSON')")

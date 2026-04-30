@@ -13,9 +13,10 @@ import io.centralweb.backend.repository.ProfileRepository;
 import io.centralweb.backend.repository.QualificationRepository;
 import io.centralweb.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -45,35 +46,32 @@ public class QualificationService {
         newQualification.setEndDate(qualification.endDate());
         newQualification.setProfile(profile);
 
-        return qualificationMapper.toDTO(qualificationRepository.save(newQualification));
+        return qualificationMapper
+                .toDTO(qualificationRepository.save(newQualification));
     }
 
-    public List<QualificationDTO> getAllQualificationsVerified() {
-        return qualificationRepository.findAllByVerifiedIsTrue()
-                .stream()
-                .map(qualificationMapper::toDTO)
-                .toList();
+    public Page<QualificationDTO> getAllQualificationsVerified(Pageable pageable) {
+        return qualificationRepository
+                .findAllByVerifiedIsTrue(pageable)
+                .map(qualificationMapper::toDTO);
     }
 
-    public List<QualificationDTO> getAllNotVerifiedQualifications() {
-        return qualificationRepository.findAllByVerifiedIsFalse()
-                .stream()
-                .map(qualificationMapper::toDTO)
-                .toList();
+    public Page<QualificationDTO> getAllNotVerifiedQualifications(Pageable pageable) {
+        return qualificationRepository
+                .findAllByVerifiedIsFalse(pageable)
+                .map(qualificationMapper::toDTO);
     }
 
-    public List<QualificationDTO> getAllProfileVerifiedQualifications(UUID profileId){
-        return qualificationRepository.findAllByProfile_ProfileIdAndVerifiedIsTrue(profileId)
-                .stream()
-                .map(qualificationMapper::toDTO)
-                .toList();
+    public Page<QualificationDTO> getAllProfileVerifiedQualifications(UUID profileId, Pageable pageable){
+        return qualificationRepository
+                .findAllByProfile_ProfileIdAndVerifiedIsTrue(profileId, pageable)
+                .map(qualificationMapper::toDTO);
     }
 
-    public List<QualificationDTO> getAllProfileNotVerifiedQualifications(UUID profileId){
-        return qualificationRepository.findAllByProfile_ProfileIdAndVerifiedIsFalse(profileId)
-                .stream()
-                .map(qualificationMapper::toDTO)
-                .toList();
+    public Page<QualificationDTO> getAllProfileNotVerifiedQualifications(UUID profileId, Pageable pageable){
+        return qualificationRepository
+                .findAllByProfile_ProfileIdAndVerifiedIsFalse(profileId, pageable)
+                .map(qualificationMapper::toDTO);
     }
 
     public void updateVerifiedToTrue(UUID qualificationId) {

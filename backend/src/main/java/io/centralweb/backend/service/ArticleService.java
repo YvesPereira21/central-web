@@ -16,12 +16,12 @@ import io.centralweb.backend.repository.ProfileRepository;
 import io.centralweb.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class ArticleService {
@@ -67,36 +67,27 @@ public class ArticleService {
         return articleMapper.toDTO(article);
     }
 
-    public List<ArticleDTO> getAllPublishedArticles(){
-        return articleRepository.findAllByPublishedIsTrue().stream()
-                .map(articleMapper::toDTO)
-                .collect(Collectors.toList());
+    public Page<ArticleDTO> getAllPublishedArticles(Pageable pageable){
+        return articleRepository.findAllByPublishedIsTrue(pageable)
+                .map(articleMapper::toDTO);
     }
 
-    public List<ArticleDTO> getAllPublishedArticlesByTitle(String title){
+    public Page<ArticleDTO> getAllPublishedArticlesByTitle(String title, Pageable pageable) {
         return articleRepository
-                .findAllByTitleContainingIgnoreCaseAndPublishedIsTrue(title)
-                .stream()
-                .map(articleMapper::toDTO)
-                .collect(Collectors.toList());
+                .findAllByTitleContainingIgnoreCaseAndPublishedIsTrue(title, pageable)
+                .map(articleMapper::toDTO);
     }
 
-    public List<ArticleDTO> getAllPublishedArticlesByTechnologyName(
-            String technologyName
-    ) {
+    public Page<ArticleDTO> getAllPublishedArticlesByTechnologyName(String technologyName, Pageable pageable) {
         return articleRepository
-                .findAllByTags_TechnologyNameAndPublishedIsTrue(technologyName)
-                .stream()
-                .map(articleMapper::toDTO)
-                .toList();
+                .findAllByTags_TechnologyNameAndPublishedIsTrue(technologyName, pageable)
+                .map(articleMapper::toDTO);
     }
 
-    public List<ArticleDTO> getAllPublishedArticlesByProfile(UUID profileId) {
+    public Page<ArticleDTO> getAllPublishedArticlesByProfile(UUID profileId, Pageable pageable) {
         return articleRepository
-                .findAllByProfile_ProfileIdAndPublishedIsTrue(profileId)
-                .stream()
-                .map(articleMapper::toDTO)
-                .toList();
+                .findAllByProfile_ProfileIdAndPublishedIsTrue(profileId, pageable)
+                .map(articleMapper::toDTO);
     }
 
     public ArticleDTO updateArticle(UUID articleId, ArticleUpdateDTO articleUpdated, UUID userProfileId) {
