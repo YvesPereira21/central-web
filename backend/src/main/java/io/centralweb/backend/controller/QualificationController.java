@@ -93,6 +93,14 @@ public class QualificationController {
         return ResponseEntity.ok(qualificationService.getAllProfileNotVerifiedQualifications(profileId));
     }
 
+    @PatchMapping("/{qualificationId}")
+    public ResponseEntity<Void> updateVerifiedToTrue(
+            @PathVariable UUID qualificationId
+    ){
+        qualificationService.updateVerifiedToTrue(qualificationId);
+        return ResponseEntity.ok().build();
+    }
+
     @DeleteMapping("/{qualificationId}")
     @Operation(summary = "Exclui uma qualificação", description = "Remove uma qualificação existente")
     @ApiResponses(value = {

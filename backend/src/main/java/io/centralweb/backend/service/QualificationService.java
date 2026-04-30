@@ -70,6 +70,14 @@ public class QualificationService {
                 .toList();
     }
 
+    public void updateVerifiedToTrue(UUID qualificationId) {
+        Qualification qualification = qualificationRepository.findById(qualificationId)
+                .orElseThrow(() -> new ObjectNotFoundException("Currículo não encontrado"));
+
+        qualification.setVerified(true);
+        qualificationRepository.save(qualification);
+    }
+
     public void deleteQualificationById(UUID qualificationId){
         Qualification qualification = qualificationRepository.findById(qualificationId)
                 .orElseThrow(() -> new ObjectNotFoundException("Currículo não encontrado"));
