@@ -30,6 +30,8 @@ public class AnswerControllerTest {
     @Autowired
     private TokenService tokenService;
     @Autowired
+    private UserRepository userRepository;
+    @Autowired
     private ProfileRepository profileRepository;
     @Autowired
     private TagRepository tagRepository;
@@ -37,10 +39,11 @@ public class AnswerControllerTest {
     private QuestionRepository questionRepository;
     @Autowired
     private AnswerRepository answerRepository;
+    private String tokenAdmin;
+    private String tokenPerson1;
+    private String tokenPerson2;
     private UUID question1Id;
     private UUID answerId1;
-    private String token1;
-    private String token2;
 
     @BeforeEach
     public void setUp(){
@@ -51,27 +54,34 @@ public class AnswerControllerTest {
         questionRepository.deleteAll();
         tagRepository.deleteAll();
         profileRepository.deleteAll();
+        userRepository.deleteAll();
 
         User user1 = new User();
         user1.setEmail("testcentraldev@gmail.com");
         user1.setPassword("password");
-        user1.setRole(UserRole.PERSON);
+        user1.setRole(UserRole.ADMIN);
+        userRepository.save(user1);
 
         User user2 = new User();
         user2.setEmail("testcentralweb@gmail.com");
         user2.setPassword("password");
         user2.setRole(UserRole.PERSON);
 
+        User user3 = new User();
+        user3.setEmail("testcentraljunior@gmail.com");
+        user3.setPassword("password");
+        user3.setRole(UserRole.PERSON);
+
         Profile profile1 = new Profile();
         profile1.setName("Usuário Teste1");
         profile1.setBio("Sou um programador de testes");
-        profile1.setUser(user1);
+        profile1.setUser(user2);
         profileRepository.save(profile1);
 
         Profile profile2 = new Profile();
         profile2.setName("Usuário Teste2");
         profile2.setBio("Sou um QA em desenvolvimento");
-        profile2.setUser(user2);
+        profile2.setUser(user3);
         profileRepository.save(profile2);
 
         Tag tagGo = new Tag();
@@ -102,23 +112,23 @@ public class AnswerControllerTest {
         Answer answerSaved1 = answerRepository.save(answer1);
         answerId1 = answerSaved1.getAnswerId();
 
-        token1 = tokenService.generateToken(user1);
-        token2 = tokenService.generateToken(user2);
+        tokenAdmin = tokenService.generateToken(user1);
+        tokenPerson1 = tokenService.generateToken(user2);
+        tokenPerson2 = tokenService.generateToken(user3);
     }
 
     // -----------------------HAPPY PATH------------------------------
 
     @Test
-    public void shouldCreateAnswer(){
+    public void shouldCreateAnswerWhenUserIsPerson(){
         UUID questionId = question1Id;
-
         AnswerCreateDTO answer = new AnswerCreateDTO(
                 "Content response",
                 questionId
         );
 
         given()
-                .header("Authorization", "Bearer " + token2)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
                 .body(answer)
         .when()
@@ -130,25 +140,25 @@ public class AnswerControllerTest {
     }
 
     @Test
-    public void shouldGetAllAnswersFromQuestion(){
+    public void shouldReturnAnswersFromQuestion(){
         UUID questionId = question1Id;
 
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
         .when()
                 .get("/answers/" + questionId)
         .then()
                 .statusCode(HttpStatus.OK.value())
-                .body("size()", is(1));
+                .body("numberOfElements", is(1));
     }
 
     @Test
-    public void shouldAcceptAnswer(){
+    public void shouldAcceptAnswerWhenUserIsOwner(){
         UUID answerId = answerId1;
 
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
                 .body(answerId)
         .when()
@@ -158,11 +168,36 @@ public class AnswerControllerTest {
     }
 
     @Test
-    public void shouldDeleteAnswer(){
+    public void shouldToggleLikeWhenUserIsPerson(){
         UUID answerId = answerId1;
 
         given()
-                .header("Authorization", "Bearer " + token2)
+                .header("Authorization", "Bearer " + tokenPerson1)
+        .when()
+                .patch("/answers/" + answerId + "/like")
+        .then()
+                .statusCode(HttpStatus.OK.value());
+    }
+
+    @Test
+    public void shouldDeleteAnswerWhenUserIsOwner(){
+        UUID answerId = answerId1;
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson2)
+                .contentType(ContentType.JSON)
+        .when()
+                .delete("/answers/" + answerId)
+        .then()
+                .statusCode(HttpStatus.NO_CONTENT.value());
+    }
+
+    @Test
+    public void shouldDeleteAnswerWhenUserIsAdmin(){
+        UUID answerId = answerId1;
+
+        given()
+                .header("Authorization", "Bearer " + tokenAdmin)
                 .contentType(ContentType.JSON)
         .when()
                 .delete("/answers/" + answerId)
@@ -173,9 +208,8 @@ public class AnswerControllerTest {
     // -----------------------UNHAPPY PATH------------------------------
 
     @Test
-    public void shouldNotCreateAnswerNotBeingAuthenticated(){
+    public void shouldNotCreateAnswerWhenUserIsNotAuthenticated(){
         UUID questionId = question1Id;
-
         AnswerCreateDTO answer = new AnswerCreateDTO(
                 "Content response",
                 questionId
@@ -188,6 +222,24 @@ public class AnswerControllerTest {
                 .post("/answers")
         .then()
                 .statusCode(HttpStatus.FORBIDDEN.value());
+    }
+
+    @Test
+    public void shouldNotCreateAnswerWhenUserIsAdmin(){
+        UUID questionId = question1Id;
+        AnswerCreateDTO answer = new AnswerCreateDTO(
+                "Content response",
+                questionId
+        );
+
+        given()
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .contentType(ContentType.JSON)
+                .body(answer)
+        .when()
+                .post("/answers")
+        .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
     }
 
     @Test
@@ -198,7 +250,7 @@ public class AnswerControllerTest {
         );
 
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenPerson2)
                 .contentType(ContentType.JSON)
                 .body(answer)
         .when()
@@ -208,7 +260,7 @@ public class AnswerControllerTest {
     }
 
     @Test
-    public void shouldNotCreateAnswerWithNonExistentQuestion(){
+    public void shouldNotCreateAnswerWhenQuestionDoesNotExist(){
         UUID questionId = UUID.randomUUID();
         AnswerCreateDTO answer = new AnswerCreateDTO(
                 "Content response",
@@ -216,7 +268,7 @@ public class AnswerControllerTest {
         );
 
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenPerson2)
                 .contentType(ContentType.JSON)
                 .body(answer)
         .when()
@@ -226,11 +278,11 @@ public class AnswerControllerTest {
     }
 
     @Test
-    public void shouldNotAcceptAnswerNonExistent(){
+    public void shouldNotAcceptAnswerWhenDoesNotExist(){
         UUID answerId = UUID.randomUUID();
 
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
         .when()
                 .patch("/answers/" + answerId)
@@ -239,21 +291,59 @@ public class AnswerControllerTest {
     }
 
     @Test
-    public void shouldNotAcceptAnswerFromQuestionWhereProfileIsNotOwner(){
+    public void shouldNotAcceptAnswerWhenUserIsAdmin(){
         UUID answerId = answerId1;
 
         given()
-                .header("Authorization", "Bearer " + token2)
+                .header("Authorization", "Bearer " + tokenAdmin)
                 .contentType(ContentType.JSON)
                 .body(answerId)
         .when()
-                .patch("/answers")
+                .patch("/answers/" + answerId)
         .then()
                 .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
     }
 
     @Test
-    public void shouldNotDeleteAnswerNotBeingAuthenticated(){
+    public void shouldNotAcceptAnswerWhenUserIsNotOwner(){
+        UUID answerId = answerId1;
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson2)
+                .contentType(ContentType.JSON)
+                .body(answerId)
+        .when()
+                .patch("/answers/" + answerId)
+        .then()
+                .statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @Test
+    public void shouldNotToggleLikeWhenAnswerDoesNotExist(){
+        UUID answerId = UUID.randomUUID();
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson1)
+        .when()
+                .patch("/answers/" + answerId + "/like")
+        .then()
+                .statusCode(HttpStatus.NOT_FOUND.value());
+    }
+
+    @Test
+    public void shouldNotToggleLikeWhenUserIsAdmin(){
+        UUID answerId = answerId1;
+
+        given()
+                .header("Authorization", "Bearer " + tokenAdmin)
+        .when()
+                .patch("/answers/" + answerId + "/like")
+        .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+    }
+
+    @Test
+    public void shouldNotDeleteAnswerWhenUserIsNotAuthenticated(){
         UUID answerId = answerId1;
 
         given()
@@ -265,15 +355,28 @@ public class AnswerControllerTest {
     }
 
     @Test
-    public void shouldNotDeleteAnswerNonExistent(){
+    public void shouldNotDeleteAnswerWhenDoesNotExist(){
         UUID answerId = UUID.randomUUID();
 
         given()
-                .header("Authorization", "Bearer " + token2)
+                .header("Authorization", "Bearer " + tokenPerson2)
                 .contentType(ContentType.JSON)
         .when()
                 .delete("/answers/" + answerId)
         .then()
                 .statusCode(HttpStatus.NOT_FOUND.value());
+    }
+
+    @Test
+    public void shouldNotDeleteAnswerWhenUserIsNotOwnerOrIsNotAdmin(){
+        UUID answerId = answerId1;
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson1)
+                .contentType(ContentType.JSON)
+        .when()
+                .delete("/answers/" + answerId)
+        .then()
+                .statusCode(HttpStatus.UNAUTHORIZED.value());
     }
 }

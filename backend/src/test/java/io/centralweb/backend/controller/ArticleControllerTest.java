@@ -10,6 +10,7 @@ import io.centralweb.backend.model.User;
 import io.centralweb.backend.repository.ArticleRepository;
 import io.centralweb.backend.repository.ProfileRepository;
 import io.centralweb.backend.repository.TagRepository;
+import io.centralweb.backend.repository.UserRepository;
 import io.centralweb.backend.security.TokenService;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -36,13 +37,16 @@ public class ArticleControllerTest {
     @Autowired
     private TokenService tokenService;
     @Autowired
+    private UserRepository userRepository;
+    @Autowired
     private ProfileRepository profileRepository;
     @Autowired
     private TagRepository tagRepository;
     @Autowired
     private ArticleRepository articleRepository;
-    private String token1;
-    private String token2;
+    private String tokenAdmin;
+    private String tokenPerson1;
+    private String tokenPerson2;
     private UUID article1Id;
     private UUID profile3Id;
 
@@ -54,11 +58,13 @@ public class ArticleControllerTest {
         articleRepository.deleteAll();
         tagRepository.deleteAll();
         profileRepository.deleteAll();
+        userRepository.deleteAll();
 
         User user1 = new User();
         user1.setEmail("testcentraldev@gmail.com");
         user1.setPassword("password");
-        user1.setRole(UserRole.PERSON);
+        user1.setRole(UserRole.ADMIN);
+        userRepository.save(user1);
 
         User user2 = new User();
         user2.setEmail("testcentralweb@gmail.com");
@@ -73,20 +79,14 @@ public class ArticleControllerTest {
         Profile profile1 = new Profile();
         profile1.setName("Usuário Teste");
         profile1.setBio("Sou um programador de testes");
-        profile1.setUser(user1);
+        profile1.setUser(user2);
         profileRepository.save(profile1);
 
         Profile profile2 = new Profile();
         profile2.setName("Usuário Teste");
-        profile2.setBio("Sou um programador de testes");
-        profile2.setUser(user2);
-        profileRepository.save(profile2);
-
-        Profile profile3 = new Profile();
-        profile3.setName("Usuário Teste");
-        profile3.setBio("Sou um programador de QA");
-        profile3.setUser(user3);
-        Profile profileSaved3 = profileRepository.save(profile3);
+        profile2.setBio("Sou um programador de QA");
+        profile2.setUser(user3);
+        Profile profileSaved3 = profileRepository.save(profile2);
         profile3Id = profileSaved3.getProfileId();
 
         Tag tagJava = new Tag();
@@ -110,7 +110,7 @@ public class ArticleControllerTest {
         article1.setCreatedAt(LocalDate.now());
         article1.setPublished(true);
         article1.setTags(List.of(tagJava, tagPython));
-        article1.setProfile(profile2);
+        article1.setProfile(profile1);
         Article articleSaved1 = articleRepository.save(article1);
         article1Id = articleSaved1.getArticleId();
 
@@ -120,7 +120,7 @@ public class ArticleControllerTest {
         article2.setCreatedAt(LocalDate.now());
         article2.setPublished(true);
         article2.setTags(List.of(tagSpring));
-        article2.setProfile(profile3);
+        article2.setProfile(profile2);
         articleRepository.save(article2);
 
         Article article3 = new Article();
@@ -129,17 +129,18 @@ public class ArticleControllerTest {
         article3.setCreatedAt(LocalDate.now());
         article3.setPublished(true);
         article3.setTags(List.of(tagPython));
-        article3.setProfile(profile3);
+        article3.setProfile(profile2);
         articleRepository.save(article3);
 
-        token1 = tokenService.generateToken(user1);
-        token2 = tokenService.generateToken(user2);
+        tokenAdmin = tokenService.generateToken(user1);
+        tokenPerson1 = tokenService.generateToken(user2);
+        tokenPerson2 = tokenService.generateToken(user3);
     }
 
     // -----------------------HAPPY PATH------------------------------
 
     @Test
-    public void shouldCreateArticle(){
+    public void shouldCreateArticleWhenUserIsPerson(){
         ArticleCreateDTO payload = new ArticleCreateDTO(
                 "Teste de integração",
                 "Conteúdo extenso do artigo para passar na validação...",
@@ -147,7 +148,7 @@ public class ArticleControllerTest {
         );
 
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
                 .body(payload)
         .when()
@@ -165,7 +166,7 @@ public class ArticleControllerTest {
         UUID articleId = article1Id;
 
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
         .when()
                 .get("/articles/" + articleId)
@@ -178,61 +179,61 @@ public class ArticleControllerTest {
     }
 
     @Test
-    public void shouldReturnAllArticlesPublished(){
+    public void shouldReturnArticlesPublished(){
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
         .when()
                 .get("/articles")
         .then()
                 .statusCode(HttpStatus.OK.value())
-                .body("size()", is(3));
+                .body("numberOfElements", is(3));
     }
 
     @Test
-    public void shouldReturnAllArticlesPublishedWithCertainTitle(){
+    public void shouldReturnArticlesPublishedWithGivenTitle(){
         String title = "implementar index";
 
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
         .when()
                 .get("/articles/" + title + "/title")
         .then()
                 .statusCode(HttpStatus.OK.value())
-                .body("size()", is(1));
+                .body("numberOfElements", is(1));
     }
 
     @Test
-    public void shouldReturnAllArticlesPublishedWithCertainTechnologyName(){
+    public void shouldReturnArticlesPublishedWithGivenTechnologyName(){
         String technologyName = "Python";
 
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
                 .when()
                 .get("/articles/" + technologyName + "/tag")
                 .then()
                 .statusCode(HttpStatus.OK.value())
-                .body("size()", is(2));
+                .body("numberOfElements", is(2));
     }
 
     @Test
-    public void shouldReturnAllArticlesPublishedByCertainProfile(){
+    public void shouldReturnArticlesPublishedByCertainProfile(){
         UUID profileId = profile3Id;
 
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
                 .when()
                 .get("/articles/" + profileId + "/profile")
                 .then()
                 .statusCode(HttpStatus.OK.value())
-                .body("size()", is(2));
+                .body("numberOfElements", is(2));
     }
 
     @Test
-    public void shouldUpdateArticle(){
+    public void shouldUpdateArticleWhenUserIsOwner(){
         UUID articleId = article1Id;
         ArticleUpdateDTO payload = new ArticleUpdateDTO(
                 "Teste de integração 123",
@@ -241,7 +242,7 @@ public class ArticleControllerTest {
         );
 
         given()
-                .header("Authorization", "Bearer " + token2)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
                 .body(payload)
         .when()
@@ -255,12 +256,35 @@ public class ArticleControllerTest {
     }
 
     @Test
-    public void shouldDeleteArticle(){
+    public void shouldToggleLikeWhenUserIsPerson(){
         UUID articleId = article1Id;
 
         given()
-                .header("Authorization", "Bearer " + token2)
-                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenPerson2)
+        .when()
+                .patch("/articles/" + articleId + "/like")
+        .then()
+                .statusCode(HttpStatus.OK.value());
+    }
+
+    @Test
+    public void shouldDeleteArticleWhenUserIsOwner(){
+        UUID articleId = article1Id;
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson1)
+        .when()
+                .delete("/articles/" + articleId)
+        .then()
+                .statusCode(HttpStatus.NO_CONTENT.value());
+    }
+
+    @Test
+    public void shouldDeleteArticleWhenUserIsAdmin(){
+        UUID articleId = article1Id;
+
+        given()
+                .header("Authorization", "Bearer " + tokenAdmin)
         .when()
                 .delete("/articles/" + articleId)
         .then()
@@ -270,7 +294,7 @@ public class ArticleControllerTest {
     // -----------------------UNHAPPY PATH------------------------------
 
     @Test
-    public void shouldNotCreateArticleNotBeingAuthenticated(){
+    public void shouldNotCreateArticleWhenUserIsNotAuthenticated(){
         ArticleCreateDTO article = new ArticleCreateDTO(
                 "Como fazer partição de lista",
                 "Para isso você consegue fazer na linguagem Python dessa forma...",
@@ -287,6 +311,24 @@ public class ArticleControllerTest {
     }
 
     @Test
+    public void shouldNotCreateArticleWhenUserIsAdmin(){
+        ArticleCreateDTO article = new ArticleCreateDTO(
+                "Como fazer partição de lista",
+                "Para isso você consegue fazer na linguagem Python dessa forma...",
+                List.of("Python")
+        );
+
+        given()
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .contentType(ContentType.JSON)
+                .body(article)
+        .when()
+                .post("/articles")
+        .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+    }
+
+    @Test
     public void shouldNotCreateArticleWithMissingData(){
         ArticleCreateDTO article = new ArticleCreateDTO(
                 "Como integrar o backend com o front",
@@ -295,7 +337,7 @@ public class ArticleControllerTest {
         );
 
         given()
-                .header("Authorization", "Bearer " + token2)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
                 .body(article)
         .when()
@@ -305,7 +347,7 @@ public class ArticleControllerTest {
     }
 
     @Test
-    public void shouldNotCreateArticleWithNonExistentTechnologyName(){
+    public void shouldNotCreateArticleWhenTechnologyNameDoesNotExist(){
         ArticleCreateDTO article = new ArticleCreateDTO(
                 "Como fazer partição de lista",
                 "Para isso você consegue fazer na linguagem Rust desse jeito...",
@@ -313,7 +355,7 @@ public class ArticleControllerTest {
         );
 
         given()
-                .header("Authorization", "Bearer " + token2)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
                 .body(article)
         .when()
@@ -323,7 +365,7 @@ public class ArticleControllerTest {
     }
 
     @Test
-    public void shouldNotUpdateArticleNotBeingAuthenticated(){
+    public void shouldNotUpdateArticleWhenUserIsNotAuthenticated(){
         UUID articleId = article1Id;
         ArticleUpdateDTO article = new ArticleUpdateDTO(
                 "Frameworks Python para web",
@@ -334,14 +376,14 @@ public class ArticleControllerTest {
         given()
                 .contentType(ContentType.JSON)
                 .body(article)
-                .when()
+        .when()
                 .put("/articles/" + articleId)
-                .then()
+        .then()
                 .statusCode(HttpStatus.FORBIDDEN.value());
     }
 
     @Test
-    public void shouldNotUpdateArticleNonExistent(){
+    public void shouldNotUpdateArticleWhenDoesNotExist(){
         UUID articleId = UUID.randomUUID();
         ArticleUpdateDTO article = new ArticleUpdateDTO(
                 "Como criar um dicionário no Python",
@@ -350,7 +392,7 @@ public class ArticleControllerTest {
         );
 
         given()
-                .header("Authorization", "Bearer " + token2)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
                 .body(article)
         .when()
@@ -360,7 +402,26 @@ public class ArticleControllerTest {
     }
 
     @Test
-    public void shouldNotUpdateArticleWithNonExistentTechnologyName(){
+    public void shouldNotUpdateArticleWheUserIsNotOwner(){
+        UUID articleId = article1Id;
+        ArticleUpdateDTO article = new ArticleUpdateDTO(
+                "Como criar um dicionário no Python",
+                "Para você criar um dicionário no python, é preciso fazer isso...",
+                List.of("Python")
+        );
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson2)
+                .contentType(ContentType.JSON)
+                .body(article)
+        .when()
+                .put("/articles/" + articleId)
+        .then()
+                .statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @Test
+    public void shouldNotUpdateArticleWhenTechnologyNameDoesNotExist(){
         UUID articleId = article1Id;
         ArticleUpdateDTO article = new ArticleUpdateDTO(
                 "CPython usando Rust",
@@ -369,7 +430,7 @@ public class ArticleControllerTest {
         );
 
         given()
-                .header("Authorization", "Bearer " + token2)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
                 .body(article)
         .when()
@@ -379,7 +440,31 @@ public class ArticleControllerTest {
     }
 
     @Test
-    public void shouldNotDeleteArticleNotBeingAuthenticated(){
+    public void shouldNotToggleLikeWhenArticleDoesNotExist(){
+        UUID articleId = UUID.randomUUID();
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson1)
+        .when()
+                .patch("/articles/" + articleId + "/like")
+        .then()
+                .statusCode(HttpStatus.NOT_FOUND.value());
+    }
+
+    @Test
+    public void shouldNotToggleLikeWhenUserIsAdmin(){
+        UUID articleId = article1Id;
+
+        given()
+                .header("Authorization", "Bearer " + tokenAdmin)
+        .when()
+                .patch("/articles/" + articleId + "/like")
+        .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+    }
+
+    @Test
+    public void shouldNotDeleteArticleWhenUserIsNotAuthenticated(){
         UUID articleId = article1Id;
 
         given()
@@ -391,15 +476,27 @@ public class ArticleControllerTest {
     }
 
     @Test
-    public void shouldNotDeleteArticleNonExistent(){
+    public void shouldNotDeleteArticleWhenDoesNotExist(){
         UUID articleId = UUID.randomUUID();
 
         given()
-                .header("Authorization", "Bearer " + token2)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
         .when()
                 .delete("/articles/" + articleId)
         .then()
                 .statusCode(HttpStatus.NOT_FOUND.value());
+    }
+
+    @Test
+    public void shouldNotDeleteArticleWhenUserIsNotOwnerOrIsNotAdmin(){
+        UUID articleId = article1Id;
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson2)
+        .when()
+                .delete("/articles/" + articleId)
+        .then()
+                .statusCode(HttpStatus.UNAUTHORIZED.value());
     }
 }

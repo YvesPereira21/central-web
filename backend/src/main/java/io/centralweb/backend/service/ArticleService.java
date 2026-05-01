@@ -127,7 +127,7 @@ public class ArticleService {
         Article article = articleRepository.findById(articleId)
                 .orElseThrow(() -> new ObjectNotFoundException("Artigo não encontrado"));
 
-        if(!article.getProfile().getUser().getUserId().equals(userProfileId) ||
+        if(!article.getProfile().getUser().getUserId().equals(userProfileId) &&
                 !user.getRole().equals(UserRole.ADMIN)){
             throw new ProfileIsNotTheOwnerException("Você não tem permissão para isso");
         }

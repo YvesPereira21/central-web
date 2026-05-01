@@ -8,6 +8,7 @@ import io.centralweb.backend.enums.UserRole;
 import io.centralweb.backend.model.Profile;
 import io.centralweb.backend.model.User;
 import io.centralweb.backend.repository.ProfileRepository;
+import io.centralweb.backend.repository.UserRepository;
 import io.centralweb.backend.security.TokenService;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -32,9 +33,12 @@ public class ProfileControllerTest {
     @Autowired
     private TokenService tokenService;
     @Autowired
+    private UserRepository userRepository;
+    @Autowired
     private ProfileRepository profileRepository;
-    private String token1;
-    private String token2;
+    private String tokenAdmin;
+    private String tokenPerson1;
+    private String tokenPerson2;
     private UUID profile1Id;
 
     @BeforeEach
@@ -43,16 +47,23 @@ public class ProfileControllerTest {
         RestAssured.baseURI = "http://localhost";
 
         profileRepository.deleteAll();
+        userRepository.deleteAll();
 
         User user1 = new User();
-        user1.setEmail("testcentraldev@gmail.com");
+        user1.setEmail("testcentraldevadmin@gmail.com");
         user1.setPassword("password");
-        user1.setRole(UserRole.PERSON);
+        user1.setRole(UserRole.ADMIN);
+        userRepository.save(user1);
 
         User user2 = new User();
-        user2.setEmail("testcentralweb@gmail.com");
+        user2.setEmail("testcentraldev@gmail.com");
         user2.setPassword("password");
         user2.setRole(UserRole.PERSON);
+
+        User user3 = new User();
+        user3.setEmail("testcentralweb@gmail.com");
+        user3.setPassword("password");
+        user3.setRole(UserRole.PERSON);
 
         Profile profile1 = new Profile();
         profile1.setName("Usuário Teste1");
@@ -61,7 +72,7 @@ public class ProfileControllerTest {
         profile1.setExpertise("Desenvolvedor Fullstack");
         profile1.setLevel("Especialista");
         profile1.setReputationScore(1200);
-        profile1.setUser(user1);
+        profile1.setUser(user2);
         Profile profileSaved1 = profileRepository.save(profile1);
         profile1Id = profileSaved1.getProfileId();
 
@@ -73,11 +84,12 @@ public class ProfileControllerTest {
         profile2.setLevel("Especialista");
         profile2.setReputationScore(2760);
         profile2.setProfessional(true);
-        profile2.setUser(user2);
+        profile2.setUser(user3);
         profileRepository.save(profile2);
 
-        token1 = tokenService.generateToken(user1);
-        token2 = tokenService.generateToken(user2);
+        tokenAdmin = tokenService.generateToken(user1);
+        tokenPerson1 = tokenService.generateToken(user2);
+        tokenPerson2 = tokenService.generateToken(user3);
     }
 
     // -----------------------HAPPY PATH------------------------------
@@ -117,7 +129,7 @@ public class ProfileControllerTest {
         UUID profileId = profile1Id;
 
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
         .when()
                 .get("/profiles/" + profileId)
@@ -133,7 +145,7 @@ public class ProfileControllerTest {
     }
 
     @Test
-    public void shouldUpdateProfile(){
+    public void shouldUpdateProfileWhenUserIsPersonAndIsOwner(){
         UUID profileId = profile1Id;
         ProfileUpdateDTO profileUpdated = new ProfileUpdateDTO(
                 "Galego",
@@ -142,7 +154,7 @@ public class ProfileControllerTest {
         );
 
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
                 .body(profileUpdated)
         .when()
@@ -155,11 +167,24 @@ public class ProfileControllerTest {
     }
 
     @Test
-    public void shouldDeleteProfile(){
+    public void shouldDeleteProfileWhenUserIsOwner(){
         UUID profileId = profile1Id;
 
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenPerson1)
+                .contentType(ContentType.JSON)
+        .when()
+                .delete("/profiles/" + profileId)
+        .then()
+                .statusCode(HttpStatus.NO_CONTENT.value());
+    }
+
+    @Test
+    public void shouldDeleteProfileWhenUserIsAdmin(){
+        UUID profileId = profile1Id;
+
+        given()
+                .header("Authorization", "Bearer " + tokenAdmin)
                 .contentType(ContentType.JSON)
         .when()
                 .delete("/profiles/" + profileId)
@@ -194,7 +219,7 @@ public class ProfileControllerTest {
     }
 
     @Test
-    public void shouldNotCreateProfileWithEmailAlreadyRegistered(){
+    public void shouldNotCreateProfileWhenEmailAlreadyExists(){
         UserDTO user = new UserDTO(
                 "testcentraldev@gmail.com",
                 "password"
@@ -218,7 +243,7 @@ public class ProfileControllerTest {
     }
 
     @Test
-    public void shouldNotCreateProfileWithInvalidEmail(){
+    public void shouldNotCreateProfileWhenEmailIsInvalid(){
         UserDTO user = new UserDTO(
                 "test.htmail@com",
                 "password"
@@ -242,7 +267,7 @@ public class ProfileControllerTest {
     }
 
     @Test
-    public void shouldNotUpdateProfileNotBeingAuthenticated(){
+    public void shouldNotUpdateProfileWhenUserIsNotAuthenticated(){
         UUID profileId = profile1Id;
         ProfileUpdateDTO profileUpdated = new ProfileUpdateDTO(
                 "Galego",
@@ -260,7 +285,7 @@ public class ProfileControllerTest {
     }
 
     @Test
-    public void shouldNotUpdateProfileWhereProfileIsNotOwner(){
+    public void shouldNotUpdateProfileWhenUserIsNotOwner(){
         UUID profileId = profile1Id;
         ProfileUpdateDTO profileUpdated = new ProfileUpdateDTO(
                 "Galego",
@@ -269,21 +294,20 @@ public class ProfileControllerTest {
         );
 
         given()
-                .header("Authorization", "Bearer " + token2)
+                .header("Authorization", "Bearer " + tokenPerson2)
                 .contentType(ContentType.JSON)
                 .body(profileUpdated)
         .when()
                 .put("/profiles/" + profileId)
         .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+                .statusCode(HttpStatus.UNAUTHORIZED.value());
     }
 
     @Test
-    public void shouldNotDeleteProfileNotBeingAuthenticated(){
+    public void shouldNotDeleteProfileWhenUserIsNotAuthenticated(){
         UUID profileId = profile1Id;
 
         given()
-                .contentType(ContentType.JSON)
         .when()
                 .delete("/profiles/" + profileId)
         .then()
@@ -291,15 +315,26 @@ public class ProfileControllerTest {
     }
 
     @Test
-    public void shouldNotDeleteProfileNonExistent(){
+    public void shouldNotDeleteProfileWhenDoesNotExist(){
         UUID profileId = UUID.randomUUID();
 
         given()
-                .header("Authorization", "Bearer " + token1)
-                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenPerson1)
         .when()
                 .delete("/profiles/" + profileId)
         .then()
                 .statusCode(HttpStatus.NOT_FOUND.value());
+    }
+
+    @Test
+    public void shouldNotDeleteProfileWhenUserIsNotOwnerOrIsNotAdmin(){
+        UUID profileId = profile1Id;
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson2)
+        .when()
+                .delete("/profiles/" + profileId)
+        .then()
+                .statusCode(HttpStatus.UNAUTHORIZED.value());
     }
 }

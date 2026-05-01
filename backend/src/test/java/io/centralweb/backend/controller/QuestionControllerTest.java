@@ -1,7 +1,5 @@
 package io.centralweb.backend.controller;
 
-import io.centralweb.backend.dto.article.ArticleCreateDTO;
-import io.centralweb.backend.dto.article.ArticleUpdateDTO;
 import io.centralweb.backend.dto.question.QuestionCreateDTO;
 import io.centralweb.backend.dto.question.QuestionUpdateDTO;
 import io.centralweb.backend.enums.UserRole;
@@ -33,6 +31,8 @@ public class QuestionControllerTest {
     @Autowired
     private TokenService tokenService;
     @Autowired
+    private UserRepository userRepository;
+    @Autowired
     private ProfileRepository profileRepository;
     @Autowired
     private TagRepository tagRepository;
@@ -40,8 +40,9 @@ public class QuestionControllerTest {
     private QuestionRepository questionRepository;
     @Autowired
     private AnswerRepository answerRepository;
-    private String token1;
-    private String token2;
+    private String tokenAdmin;
+    private String tokenPerson1;
+    private String tokenPerson2;
     private UUID question1id;
 
     @BeforeEach
@@ -53,11 +54,13 @@ public class QuestionControllerTest {
         questionRepository.deleteAll();
         tagRepository.deleteAll();
         profileRepository.deleteAll();
+        userRepository.deleteAll();
 
         User user1 = new User();
         user1.setEmail("testcentraldev@gmail.com");
         user1.setPassword("password");
-        user1.setRole(UserRole.PERSON);
+        user1.setRole(UserRole.ADMIN);
+        userRepository.save(user1);
 
         User user2 = new User();
         user2.setEmail("testcentralweb@gmail.com");
@@ -72,20 +75,14 @@ public class QuestionControllerTest {
         Profile profile1 = new Profile();
         profile1.setName("Usuário Teste");
         profile1.setBio("Sou um programador de testes");
-        profile1.setUser(user1);
+        profile1.setUser(user2);
         profileRepository.save(profile1);
 
         Profile profile2 = new Profile();
         profile2.setName("Usuário Teste");
-        profile2.setBio("Sou um programador de testes");
-        profile2.setUser(user2);
+        profile2.setBio("Sou um programador de QA");
+        profile2.setUser(user3);
         profileRepository.save(profile2);
-
-        Profile profile3 = new Profile();
-        profile3.setName("Usuário Teste");
-        profile3.setBio("Sou um programador de QA");
-        profile3.setUser(user3);
-        profileRepository.save(profile3);
 
         Tag tagJava = new Tag();
         tagJava.setTechnologyName("Java");
@@ -108,7 +105,7 @@ public class QuestionControllerTest {
         question1.setCreatedAt(LocalDate.now());
         question1.setPublished(true);
         question1.setTags(List.of(tagJava, tagPython));
-        question1.setProfile(profile2);
+        question1.setProfile(profile1);
         Question questionSaved1 = questionRepository.save(question1);
         question1id = questionSaved1.getQuestionId();
 
@@ -118,7 +115,7 @@ public class QuestionControllerTest {
         question2.setCreatedAt(LocalDate.now());
         question2.setPublished(true);
         question2.setTags(List.of(tagSpring));
-        question2.setProfile(profile3);
+        question2.setProfile(profile2);
         questionRepository.save(question2);
 
         Question question3 = new Question();
@@ -127,7 +124,7 @@ public class QuestionControllerTest {
         question3.setCreatedAt(LocalDate.now());
         question3.setPublished(true);
         question3.setTags(List.of(tagPython));
-        question3.setProfile(profile3);
+        question3.setProfile(profile2);
         questionRepository.save(question3);
 
         Answer answer1 = new Answer();
@@ -145,14 +142,15 @@ public class QuestionControllerTest {
         answer2.setProfile(profile2);
         answerRepository.save(answer2);
 
-        token1 = tokenService.generateToken(user1);
-        token2 = tokenService.generateToken(user2);
+        tokenAdmin = tokenService.generateToken(user1);
+        tokenPerson1 = tokenService.generateToken(user2);
+        tokenPerson2 = tokenService.generateToken(user3);
     }
 
     // -----------------------HAPPY PATH------------------------------
 
     @Test
-    public void shouldCreateQuestion(){
+    public void shouldCreateQuestionWhenUserIsPerson(){
         QuestionCreateDTO question = new QuestionCreateDTO(
                 "Teste de integração",
                 "Conteúdo extenso do artigo para passar na validação...",
@@ -160,7 +158,7 @@ public class QuestionControllerTest {
         );
 
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
                 .body(question)
         .when()
@@ -178,7 +176,7 @@ public class QuestionControllerTest {
         UUID questionId = question1id;
 
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
         .when()
                 .get("/questions/" + questionId)
@@ -191,59 +189,59 @@ public class QuestionControllerTest {
     }
 
     @Test
-    public void shouldReturnAllQuestionsPublished(){
+    public void shouldReturnQuestionsPublished(){
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
         .when()
                 .get("/questions")
         .then()
                 .statusCode(HttpStatus.OK.value())
-                .body("size()", is(3));
+                .body("numberOfElements", is(3));
     }
 
     @Test
-    public void shouldReturnAllQuestionsPublishedWithCertainTitle(){
+    public void shouldReturnPublishedQuestionsWithGivenTitle(){
         String title = "implementar index";
 
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
         .when()
                 .get("/questions/" + title + "/title")
         .then()
                 .statusCode(HttpStatus.OK.value())
-                .body("size()", is(1));
+                .body("numberOfElements", is(1));
     }
 
     @Test
-    public void shouldReturnAllQuestionsPublishedWithCertainTechnologyName(){
+    public void shouldReturnAllQuestionsPublishedWithGivenTechnologyName(){
         String technologyName = "Python";
 
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenAdmin)
                 .contentType(ContentType.JSON)
         .when()
                 .get("/questions/" + technologyName + "/tag")
         .then()
                 .statusCode(HttpStatus.OK.value())
-                .body("size()", is(2));
+                .body("numberOfElements", is(2));
     }
 
     @Test
-    public void shouldReturnAllQuestionsWithAcceptedAnswers(){
+    public void shouldReturnOnlyQuestionsWithAcceptedAnswers(){
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
         .when()
                 .get("/questions/accepteds-answers")
         .then()
                 .statusCode(HttpStatus.OK.value())
-                .body("size()", is(1));
+                .body("numberOfElements", is(1));
     }
 
     @Test
-    public void shouldUpdateQuestions(){
+    public void shouldUpdateQuestionWhenUserIsOwnerAndIsPerson(){
         UUID questionId = question1id;
         QuestionUpdateDTO questionUpdated = new QuestionUpdateDTO(
                 "Teste de integração 123",
@@ -252,7 +250,7 @@ public class QuestionControllerTest {
         );
 
         given()
-                .header("Authorization", "Bearer " + token2)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
                 .body(questionUpdated)
         .when()
@@ -266,11 +264,23 @@ public class QuestionControllerTest {
     }
 
     @Test
-    public void shouldDeleteQuestion(){
+    public void shouldToggleLikeWhenUserIsPerson(){
         UUID questionId = question1id;
 
         given()
-                .header("Authorization", "Bearer " + token2)
+                .header("Authorization", "Bearer " + tokenPerson2)
+        .when()
+                .patch("/questions/" + questionId + "/like")
+        .then()
+                .statusCode(HttpStatus.OK.value());
+    }
+
+    @Test
+    public void shouldDeleteQuestionWhenUserIsOwner(){
+        UUID questionId = question1id;
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
         .when()
                 .delete("/questions/" + questionId)
@@ -279,7 +289,22 @@ public class QuestionControllerTest {
     }
 
     @Test
-    public void shouldNotCreateQuestionNotBeingAuthenticated(){
+    public void shouldDeleteQuestionWhenUserIsAdmin(){
+        UUID questionId = question1id;
+
+        given()
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .contentType(ContentType.JSON)
+        .when()
+                .delete("/questions/" + questionId)
+        .then()
+                .statusCode(HttpStatus.NO_CONTENT.value());
+    }
+
+    // -----------------------UNHAPPY PATH------------------------------
+
+    @Test
+    public void shouldNotCreateQuestionWhenUserIsNotAuthenticated(){
         QuestionCreateDTO question = new QuestionCreateDTO(
                 "Como fazer partição de lista",
                 "Para isso você consegue fazer na linguagem Python dessa forma...",
@@ -296,6 +321,24 @@ public class QuestionControllerTest {
     }
 
     @Test
+    public void shouldNotCreateQuestionWhenUserIsNotPerson(){
+        QuestionCreateDTO question = new QuestionCreateDTO(
+                "Como fazer partição de lista",
+                "Para isso você consegue fazer na linguagem Python dessa forma...",
+                List.of("Python")
+        );
+
+        given()
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .contentType(ContentType.JSON)
+                .body(question)
+        .when()
+                .post("/questions")
+        .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+    }
+
+    @Test
     public void shouldNotCreateQuestionWithMissingData(){
         QuestionCreateDTO question = new QuestionCreateDTO(
                 "",
@@ -304,7 +347,7 @@ public class QuestionControllerTest {
         );
 
         given()
-                .header("Authorization", "Bearer " + token2)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
                 .body(question)
         .when()
@@ -314,7 +357,7 @@ public class QuestionControllerTest {
     }
 
     @Test
-    public void shouldNotCreateQuestionWithNonExistentTechnologyName(){
+    public void shouldNotCreateQuestionWhenTechnologyNameDoesNotExist(){
         QuestionCreateDTO question = new QuestionCreateDTO(
                 "Como fazer partição de lista",
                 "Para isso você consegue fazer na linguagem Rust desse jeito...",
@@ -322,7 +365,7 @@ public class QuestionControllerTest {
         );
 
         given()
-                .header("Authorization", "Bearer " + token2)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
                 .body(question)
         .when()
@@ -332,7 +375,7 @@ public class QuestionControllerTest {
     }
 
     @Test
-    public void shouldNotUpdateQuestionNotBeingAuthenticated(){
+    public void shouldNotUpdateQuestionWhenUserIsNotAuthenticated(){
         UUID questionId = question1id;
         QuestionUpdateDTO question = new QuestionUpdateDTO(
                 "Frameworks Python para web",
@@ -350,7 +393,45 @@ public class QuestionControllerTest {
     }
 
     @Test
-    public void shouldNotUpdateQuestionNonExistent(){
+    public void shouldNotUpdateQuestionWhenUserIsAdmin(){
+        UUID questionId = question1id;
+        QuestionUpdateDTO question = new QuestionUpdateDTO(
+                "Frameworks Python para web",
+                "Existem vários frameworks web para Python que são muito utilizados...",
+                List.of("Python")
+        );
+
+        given()
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .contentType(ContentType.JSON)
+                .body(question)
+        .when()
+                .put("/questions/" + questionId)
+        .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+    }
+
+    @Test
+    public void shouldNotUpdateQuestionWhenUserIsNotOwner(){
+        UUID questionId = question1id;
+        QuestionUpdateDTO question = new QuestionUpdateDTO(
+                "Frameworks Python para web",
+                "Existem vários frameworks web para Python que são muito utilizados...",
+                List.of("Python")
+        );
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson2)
+                .contentType(ContentType.JSON)
+                .body(question)
+        .when()
+                .put("/questions/" + questionId)
+        .then()
+                .statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @Test
+    public void shouldNotUpdateQuestionWhenItDoesNotExist(){
         UUID questionId = UUID.randomUUID();
         QuestionUpdateDTO questionUpdated = new QuestionUpdateDTO(
                 "Como criar um dicionário no Python",
@@ -359,7 +440,7 @@ public class QuestionControllerTest {
         );
 
         given()
-                .header("Authorization", "Bearer " + token2)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
                 .body(questionUpdated)
         .when()
@@ -369,7 +450,7 @@ public class QuestionControllerTest {
     }
 
     @Test
-    public void shouldNotUpdateQuestionWithNonExistentTechnologyName(){
+    public void shouldNotUpdateQuestionWhenTechnologyNameDoesNotExist(){
         UUID questionId = question1id;
         QuestionUpdateDTO questionUpdated = new QuestionUpdateDTO(
                 "CPython usando Rust",
@@ -378,7 +459,7 @@ public class QuestionControllerTest {
         );
 
         given()
-                .header("Authorization", "Bearer " + token2)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
                 .body(questionUpdated)
         .when()
@@ -387,14 +468,35 @@ public class QuestionControllerTest {
                 .statusCode(HttpStatus.NOT_FOUND.value());
     }
 
-    // -----------------------UNHAPPY PATH------------------------------
+    @Test
+    public void shouldNotToggleLikeWhenQuestionDoesNotExist(){
+        UUID questionId = UUID.randomUUID();
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson1)
+        .when()
+                .patch("/questions/" + questionId + "/like")
+        .then()
+                .statusCode(HttpStatus.NOT_FOUND.value());
+    }
 
     @Test
-    public void shouldNotDeleteQuestionNotBeingAuthenticated(){
+    public void shouldNotToggleLikeWhenUserIsAdmin(){
         UUID questionId = question1id;
 
         given()
-                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenAdmin)
+        .when()
+                .patch("/questions/" + questionId + "/like")
+        .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+    }
+
+    @Test
+    public void shouldNotDeleteQuestionWhenUserIsNotAuthenticated(){
+        UUID questionId = question1id;
+
+        given()
         .when()
                 .delete("/questions/" + questionId)
         .then()
@@ -402,15 +504,26 @@ public class QuestionControllerTest {
     }
 
     @Test
-    public void shouldNotDeleteQuestionNonExistent(){
+    public void shouldNotDeleteQuestionWhenDoesNotExist(){
         UUID questionId = UUID.randomUUID();
 
         given()
-                .header("Authorization", "Bearer " + token2)
-                .contentType(ContentType.JSON)
-                .when()
+                .header("Authorization", "Bearer " + tokenPerson1)
+        .when()
                 .delete("/questions/" + questionId)
-                .then()
+        .then()
                 .statusCode(HttpStatus.NOT_FOUND.value());
+    }
+
+    @Test
+    public void shouldNotDeleteQuestionWhenUserIsNotOwnerOrIsNotAdmin(){
+        UUID questionId = question1id;
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson2)
+        .when()
+                .delete("/questions/" + questionId)
+        .then()
+                .statusCode(HttpStatus.UNAUTHORIZED.value());
     }
 }

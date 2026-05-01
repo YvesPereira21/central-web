@@ -93,7 +93,7 @@ public class AnswerService {
         Answer answer = answerRepository.findById(answerId)
                 .orElseThrow(() -> new ObjectNotFoundException("Resposta não encontrada"));
 
-        if(!answer.getProfile().getUser().getUserId().equals(userProfileId) ||
+        if(!answer.getProfile().getUser().getUserId().equals(userProfileId) &&
                 !user.getRole().equals(UserRole.ADMIN)){
             throw new ProfileIsNotTheOwnerException("Você não tem permissão para isso");
         }

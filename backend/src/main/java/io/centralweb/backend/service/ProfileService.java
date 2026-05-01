@@ -79,7 +79,7 @@ public class ProfileService {
         Profile profile = profileRepository.findById(profileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
 
-        if(!profile.getUser().getUserId().equals(userProfileId) ||
+        if(!profile.getUser().getUserId().equals(userProfileId) &&
                 !user.getRole().equals(UserRole.ADMIN)) {
             throw new ProfileIsNotTheOwnerException("Você não tem permissão para isso");
         }

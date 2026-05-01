@@ -8,6 +8,7 @@ import io.centralweb.backend.model.Qualification;
 import io.centralweb.backend.model.User;
 import io.centralweb.backend.repository.ProfileRepository;
 import io.centralweb.backend.repository.QualificationRepository;
+import io.centralweb.backend.repository.UserRepository;
 import io.centralweb.backend.security.TokenService;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -33,12 +34,16 @@ public class QualificationControllerTest {
     @Autowired
     private TokenService tokenService;
     @Autowired
+    private UserRepository userRepository;
+    @Autowired
     private ProfileRepository profileRepository;
     @Autowired
     private QualificationRepository qualificationRepository;
-    private String token1;
-    private String token2;
+    private String tokenAdmin;
+    private String tokenPerson1;
+    private String tokenPerson2;
     private UUID profile1Id;
+    private UUID profile2Id;
     private UUID qualification1Id;
 
     @BeforeEach
@@ -48,29 +53,37 @@ public class QualificationControllerTest {
 
         qualificationRepository.deleteAll();
         profileRepository.deleteAll();
+        userRepository.deleteAll();
 
         User user1 = new User();
-        user1.setEmail("testcentraldev@gmail.com");
+        user1.setEmail("testcentraldevadmin@gmail.com");
         user1.setPassword("password");
-        user1.setRole(UserRole.PERSON);
+        user1.setRole(UserRole.ADMIN);
+        userRepository.save(user1);
 
         User user2 = new User();
-        user2.setEmail("testcentralweb@gmail.com");
+        user2.setEmail("testcentraldev@gmail.com");
         user2.setPassword("password");
         user2.setRole(UserRole.PERSON);
+
+        User user3 = new User();
+        user3.setEmail("testcentralweb@gmail.com");
+        user3.setPassword("password");
+        user3.setRole(UserRole.PERSON);
 
         Profile profile1 = new Profile();
         profile1.setName("Usuário Teste");
         profile1.setBio("Sou um programador de testes");
-        profile1.setUser(user1);
+        profile1.setUser(user2);
         Profile profilesaved1 = profileRepository.save(profile1);
         profile1Id = profilesaved1.getProfileId();
 
         Profile profile2 = new Profile();
         profile2.setName("Usuário Teste");
         profile2.setBio("Sou um programador web");
-        profile2.setUser(user2);
-        profileRepository.save(profile2);
+        profile2.setUser(user3);
+        Profile profileSaved2 = profileRepository.save(profile2);
+        profile2Id = profileSaved2.getProfileId();
 
         Qualification qualification1 = new Qualification();
         qualification1.setJobTitle("Desenvolvedor Backend");
@@ -101,14 +114,15 @@ public class QualificationControllerTest {
         qualification3.setProfile(profile2);
         qualificationRepository.save(qualification3);
 
-        token1 = tokenService.generateToken(user1);
-        token2 = tokenService.generateToken(user2);
+        tokenAdmin = tokenService.generateToken(user1);
+        tokenPerson1 = tokenService.generateToken(user2);
+        tokenPerson2 = tokenService.generateToken(user3);
     }
 
     // -----------------------HAPPY PATH------------------------------
 
     @Test
-    public void shouldCreateQualification() {
+    public void shouldCreateQualificationWhenUserIsPerson() {
         QualificationCreateDTO qualification = new QualificationCreateDTO(
                 "Engenheiro de Software",
                 ExperienceLevel.MID,
@@ -118,7 +132,7 @@ public class QualificationControllerTest {
         );
 
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
                 .body(qualification)
         .when()
@@ -133,63 +147,88 @@ public class QualificationControllerTest {
     }
 
     @Test
-    public void shouldReturnAllVerifiedQualifications() {
+    public void shouldReturnVerifiedQualificationsWhenUserIsAdmin() {
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenAdmin)
                 .contentType(ContentType.JSON)
         .when()
                 .get("/qualifications/verified")
         .then()
                 .statusCode(HttpStatus.OK.value())
-                .body("size()", is(1));
+                .body("numberOfElements", is(1));
     }
 
     @Test
-    public void shouldReturnAllNotVerifiedQualifications() {
+    public void shouldReturnNotVerifiedQualificationsWhenUserIsAdmin() {
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenAdmin)
                 .contentType(ContentType.JSON)
         .when()
                 .get("/qualifications/not-verified")
         .then()
                 .statusCode(HttpStatus.OK.value())
-                .body("size()", is(2));
+                .body("numberOfElements", is(2));
     }
 
     @Test
-    public void shouldReturnAllProfileVerifiedQualifications() {
-        UUID profileId = profile1Id;
+    public void shouldReturnProfileVerifiedQualificationsWhenUserIsAdmin() {
+        UUID profileId = profile2Id;
 
         given()
-                .header("Authorization", "Bearer " + token2)
+                .header("Authorization", "Bearer " + tokenAdmin)
                 .contentType(ContentType.JSON)
         .when()
                 .get("/qualifications/" + profileId + "/verified")
         .then()
                 .statusCode(HttpStatus.OK.value())
-                .body("size()", is(0));
+                .body("numberOfElements", is(1));
     }
 
     @Test
-    public void shouldReturnAllProfileNotVerifiedQualifications() {
+    public void shouldReturnProfileNotVerifiedQualificationsWhenUserIsAdmin() {
         UUID profileId = profile1Id;
 
         given()
-                .header("Authorization", "Bearer " + token2)
+                .header("Authorization", "Bearer " + tokenAdmin)
                 .contentType(ContentType.JSON)
-                .when()
+        .when()
                 .get("/qualifications/" + profileId + "/not-verified")
-                .then()
+        .then()
                 .statusCode(HttpStatus.OK.value())
-                .body("size()", is(2));
+                .body("numberOfElements", is(2));
     }
 
     @Test
-    public void shouldDeleteQualification() {
+    public void shouldVerifyQualificationWhenUserIsAdmin() {
         UUID qualificationId = qualification1Id;
 
         given()
-                .header("Authorization", "Bearer " + token1)
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .when()
+                .patch("/qualifications/" + qualificationId)
+                .then()
+                .statusCode(HttpStatus.OK.value());
+    }
+
+    @Test
+    public void shouldDeleteQualificationWhenUserIsOwner() {
+        UUID qualificationId = qualification1Id;
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson1)
+                .contentType(ContentType.JSON)
+        .when()
+                .delete("/qualifications/" + qualificationId)
+        .then()
+                .statusCode(HttpStatus.NO_CONTENT.value());
+    }
+
+    @Test
+    public void shouldDeleteQualificationWhenUserIsAdmin() {
+        UUID qualificationId = qualification1Id;
+
+        given()
+                .header("Authorization", "Bearer " + tokenAdmin)
                 .contentType(ContentType.JSON)
         .when()
                 .delete("/qualifications/" + qualificationId)
@@ -219,6 +258,26 @@ public class QualificationControllerTest {
     }
 
     @Test
+    public void shouldNotCreateQualificationWhenUserIsAdmin() {
+        QualificationCreateDTO qualification = new QualificationCreateDTO(
+                "Engenheiro de Software",
+                ExperienceLevel.MID,
+                "Mercado Livre",
+                LocalDate.of(2023, 10, 1),
+                LocalDate.of(2024, 12, 6)
+        );
+
+        given()
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .contentType(ContentType.JSON)
+                .body(qualification)
+        .when()
+                .post("/qualifications")
+        .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+    }
+
+    @Test
     public void shouldNotCreateQualificationWithMissingData(){
         QualificationCreateDTO qualification = new QualificationCreateDTO(
                 "Engenheiro de Software",
@@ -229,7 +288,7 @@ public class QualificationControllerTest {
         );
 
         given()
-                .header("Authorization", "Bearer " + token2)
+                .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
                 .body(qualification)
          .when()
@@ -239,11 +298,22 @@ public class QualificationControllerTest {
     }
 
     @Test
-    public void shouldNotDeleteQualificationNotBeingAuthenticated(){
+    public void shouldNotVerifyQualificationWhenUserIsNotAdmin() {
         UUID qualificationId = qualification1Id;
 
         given()
-                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenPerson2)
+        .when()
+                .patch("/qualifications/" + qualificationId)
+        .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+    }
+
+    @Test
+    public void shouldNotDeleteQualificationWhenUserIsNotAuthenticated(){
+        UUID qualificationId = qualification1Id;
+
+        given()
         .when()
                 .delete("/qualifications/" + qualificationId)
         .then()
@@ -251,15 +321,26 @@ public class QualificationControllerTest {
     }
 
     @Test
-    public void shouldNotDeleteQuestionNonExistent(){
+    public void shouldNotDeleteQuestionWhenDoesNotExist(){
         UUID qualificationId = UUID.randomUUID();
 
         given()
-                .header("Authorization", "Bearer " + token2)
-                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenPerson1)
+                .when()
+                .delete("/qualifications/" + qualificationId)
+                .then()
+                .statusCode(HttpStatus.NOT_FOUND.value());
+    }
+
+    @Test
+    public void shouldNotDeleteQualificationWhenUserIsNotOwnerOrIsNotAdmin(){
+        UUID qualificationId = qualification1Id;
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson2)
         .when()
                 .delete("/qualifications/" + qualificationId)
         .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
+                .statusCode(HttpStatus.UNAUTHORIZED.value());
     }
 }

@@ -136,7 +136,9 @@ public class QuestionService {
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new ObjectNotFoundException("Pergunta não encontrada"));
 
-        if(!question.getProfile().getUser().getUserId().equals(userProfileId) ||
+        //bloquei se o usuário que está fazendo a requisição não for o proprietário
+        //E NEM o administrador
+        if(!question.getProfile().getUser().getUserId().equals(userProfileId) &&
                 !user.getRole().equals(UserRole.ADMIN)) {
             throw new ProfileIsNotTheOwnerException("Você não tem permissão para isso");
         }

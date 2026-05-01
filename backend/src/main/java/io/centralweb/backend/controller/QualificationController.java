@@ -115,10 +115,12 @@ public class QualificationController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{qualificationId}")
-    public ResponseEntity<Void> updateVerifiedToTrue(
-            @PathVariable UUID qualificationId
+    public ResponseEntity<Void> verify(
+            @PathVariable UUID qualificationId,
+            @AuthenticationPrincipal(expression = "userId")
+            UUID userId
     ){
-        qualificationService.updateVerifiedToTrue(qualificationId);
+        qualificationService.markAsVerified(qualificationId, userId);
         return ResponseEntity.ok().build();
     }
 
