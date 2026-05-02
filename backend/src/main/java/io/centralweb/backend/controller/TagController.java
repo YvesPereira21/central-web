@@ -10,6 +10,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -50,9 +54,11 @@ public class TagController {
             @ApiResponse(responseCode = "200", description = "Lista de tags retornada com sucesso"),
             @ApiResponse(responseCode = "204", description = "Nenhuma tag encontrada")
     })
-    public ResponseEntity<List<TagDTO>> getAllTags() {
-        List<TagDTO> tags = tagService.getAllTags();
-        return ResponseEntity.status(HttpStatus.OK).body(tags);
+    public ResponseEntity<Page<TagDTO>> getAllTags(
+            @PageableDefault(page = 0, size = 10, sort = "technologyName", direction = Sort.Direction.DESC)
+            Pageable pageable
+    ) {
+        return ResponseEntity.status(HttpStatus.OK).body(tagService.getAllTags(pageable));
     }
 
     @PreAuthorize("hasRole('ADMIN')")

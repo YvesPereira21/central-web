@@ -8,6 +8,8 @@ import io.centralweb.backend.mapper.TagMapper;
 import io.centralweb.backend.model.Tag;
 import io.centralweb.backend.repository.TagRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -48,11 +50,8 @@ public class TagService {
         return tagMapper.toDTO(tag);
     }
 
-    public List<TagDTO> getAllTags(){
-        return tagRepository.findAll().stream()
-                .map(tagMapper::toDTO)
-                .collect(Collectors.toList());
-    }
+    public Page<TagDTO> getAllTags(Pageable pageable) {
+        return tagRepository.findAll(pageable).map(tagMapper::toDTO);}
 
     public TagDTO updateTag(UUID tagId, TagUpdateDTO tagUpdated) {
         Tag tag = tagRepository.findById(tagId)

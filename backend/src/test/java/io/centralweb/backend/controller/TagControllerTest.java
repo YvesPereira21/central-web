@@ -3,8 +3,10 @@ package io.centralweb.backend.controller;
 import io.centralweb.backend.dto.tag.TagDTO;
 import io.centralweb.backend.dto.tag.TagUpdateDTO;
 import io.centralweb.backend.enums.UserRole;
+import io.centralweb.backend.model.Profile;
 import io.centralweb.backend.model.Tag;
 import io.centralweb.backend.model.User;
+import io.centralweb.backend.repository.ProfileRepository;
 import io.centralweb.backend.repository.TagRepository;
 import io.centralweb.backend.repository.UserRepository;
 import io.centralweb.backend.security.TokenService;
@@ -17,6 +19,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 
 import java.util.UUID;
 
@@ -25,6 +28,7 @@ import static org.hamcrest.Matchers.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
+@Sql(scripts = "/clean-db.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 public class TagControllerTest {
     @LocalServerPort
     private int port;
@@ -33,8 +37,11 @@ public class TagControllerTest {
     @Autowired
     private UserRepository userRepository;
     @Autowired
+    private ProfileRepository profileRepository;
+    @Autowired
     private TagRepository tagRepository;
-    private String token;
+    private String tokenAdmin;
+    private String tokenPerson;
     private UUID tag1Id;
     private String technologyName;
 
@@ -43,14 +50,22 @@ public class TagControllerTest {
         RestAssured.port = port;
         RestAssured.baseURI = "http://localhost";
 
-        userRepository.deleteAll();
-        tagRepository.deleteAll();
-
         User user1 = new User();
         user1.setEmail("testcentraldev@gmail.com");
         user1.setPassword("password");
-        user1.setRole(UserRole.PERSON);
+        user1.setRole(UserRole.ADMIN);
         userRepository.save(user1);
+
+        User user2 = new User();
+        user2.setEmail("testcentralweb@gmail.com");
+        user2.setPassword("password");
+        user2.setRole(UserRole.PERSON);
+
+        Profile profile1 = new Profile();
+        profile1.setName("Usuário Teste1");
+        profile1.setBio("Sou um programador de testes");
+        profile1.setUser(user2);
+        profileRepository.save(profile1);
 
         Tag tagJava = new Tag();
         tagJava.setTechnologyName("Java");
@@ -64,20 +79,21 @@ public class TagControllerTest {
         tagPython.setColor("#6DB33A");
         tagRepository.save(tagPython);
 
-        token = tokenService.generateToken(user1);
+        tokenAdmin = tokenService.generateToken(user1);
+        tokenPerson = tokenService.generateToken(user2);
     }
 
     // -----------------------HAPPY PATH------------------------------
 
     @Test
-    public void shouldCreateTag() {
+    public void shouldCreateTagWhenUserIsAdmin() {
         TagDTO tagRuby = new TagDTO(
                 "Ruby",
                 "#6DB33A"
         );
 
         given()
-                .header("Authorization", "Bearer " + token)
+                .header("Authorization", "Bearer " + tokenAdmin)
                 .contentType(ContentType.JSON)
                 .body(tagRuby)
         .when()
@@ -89,19 +105,19 @@ public class TagControllerTest {
     }
 
     @Test
-    public void shouldReturnAllTagsRegistered(){
+    public void shouldReturnTagsRegistered(){
         given()
-                .header("Authorization", "Bearer " + token)
+                .header("Authorization", "Bearer " + tokenPerson)
                 .contentType(ContentType.JSON)
         .when()
                 .get("/tags")
         .then()
                 .statusCode(HttpStatus.OK.value())
-                .body("size()", is(2));
+                .body("numberOfElements", is(2));
     }
 
     @Test
-    public void shouldUpdateTag() {
+    public void shouldUpdateTagWhenUserIsAdmin() {
         UUID tagId = tag1Id;
         TagUpdateDTO tagSwift = new TagUpdateDTO(
                 "Swift",
@@ -109,7 +125,7 @@ public class TagControllerTest {
         );
 
         given()
-                .header("Authorization", "Bearer " + token)
+                .header("Authorization", "Bearer " + tokenAdmin)
                 .contentType(ContentType.JSON)
                 .body(tagSwift)
         .when()
@@ -121,11 +137,11 @@ public class TagControllerTest {
     }
 
     @Test
-    public void shouldDeleteTag() {
+    public void shouldDeleteTagWhenUserIsAdmin() {
         String technName = technologyName;
 
         given()
-                .header("Authorization", "Bearer " + token)
+                .header("Authorization", "Bearer " + tokenAdmin)
         .when()
                 .delete("/tags/" + technName)
         .then()
@@ -135,7 +151,7 @@ public class TagControllerTest {
     // -----------------------UNHAPPY PATH------------------------------
 
     @Test
-    public void shouldNotCreateTagNotBeingAuthenticated(){
+    public void shouldNotCreateTagWhenUserIsNotAuthenticated(){
         TagDTO tagRuby = new TagDTO(
                 "Ruby",
                 "#6DB33A"
@@ -151,6 +167,23 @@ public class TagControllerTest {
     }
 
     @Test
+    public void shouldNotCreateTagWhenUserIsNotAdmin(){
+        TagDTO tagRuby = new TagDTO(
+                "Ruby",
+                "#6DB33A"
+        );
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson)
+                .contentType(ContentType.JSON)
+                .body(tagRuby)
+        .when()
+                .post("/tags")
+        .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+    }
+
+    @Test
     public void shouldNotCreateTagWithMissingData(){
         TagDTO tagJava = new TagDTO(
                 "",
@@ -158,7 +191,7 @@ public class TagControllerTest {
         );
 
         given()
-                .header("Authorization", "Bearer " + token)
+                .header("Authorization", "Bearer " + tokenAdmin)
                 .contentType(ContentType.JSON)
                 .body(tagJava)
         .when()
@@ -168,14 +201,14 @@ public class TagControllerTest {
     }
 
     @Test
-    public void shouldNotCreateTagWithTechnologyNameAlreadyExistent(){
+    public void shouldNotCreateTagWhenTechnologyNameAlreadyExist(){
         TagDTO tagJava = new TagDTO(
                 "Java",
                 "#6DB33A"
         );
 
         given()
-                .header("Authorization", "Bearer " + token)
+                .header("Authorization", "Bearer " + tokenAdmin)
                 .contentType(ContentType.JSON)
                 .body(tagJava)
         .when()
@@ -185,7 +218,7 @@ public class TagControllerTest {
     }
 
     @Test
-    public void shouldNotUpdateTagNotBeingAuthenticated(){
+    public void shouldNotUpdateTagWhenUserIsNotAuthenticated(){
         UUID tagId = tag1Id;
         TagUpdateDTO tagPerl = new TagUpdateDTO(
                 "Perl",
@@ -202,7 +235,25 @@ public class TagControllerTest {
     }
 
     @Test
-    public void shouldNotUpdateTagNotExistent(){
+    public void shouldNotUpdateTagWhenUserIsNotAdmin(){
+        UUID tagId = tag1Id;
+        TagUpdateDTO tagPerl = new TagUpdateDTO(
+                "Perl",
+                "#6DB33A"
+        );
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson)
+                .contentType(ContentType.JSON)
+                .body(tagPerl)
+        .when()
+                .put("/tags/" + tagId)
+        .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+    }
+
+    @Test
+    public void shouldNotUpdateTagWhenDoesNotExist(){
         UUID tagId = UUID.randomUUID();
         TagUpdateDTO tagErlang = new TagUpdateDTO(
                 "Erlang",
@@ -210,7 +261,7 @@ public class TagControllerTest {
         );
 
         given()
-                .header("Authorization", "Bearer " + token)
+                .header("Authorization", "Bearer " + tokenAdmin)
                 .contentType(ContentType.JSON)
                 .body(tagErlang)
         .when()
@@ -220,7 +271,7 @@ public class TagControllerTest {
     }
 
     @Test
-    public void shouldNotDeleteTagNotBeingAuthenticated(){
+    public void shouldNotDeleteTagWhenUserIsNotAuthenticated(){
         String techName = technologyName;
 
         given()
@@ -231,11 +282,23 @@ public class TagControllerTest {
     }
 
     @Test
-    public void shouldNotDeleteTagNonExistent(){
+    public void shouldNotDeleteTagWhenUserIsNotAdmin(){
+        String techName = technologyName;
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson)
+        .when()
+                .delete("/tags/" + techName)
+        .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+    }
+
+    @Test
+    public void shouldNotDeleteTagWhenDoesNotExist(){
         String techName = "Javascript";
 
         given()
-                .header("Authorization", "Bearer " + token)
+                .header("Authorization", "Bearer " + tokenAdmin)
         .when()
                 .delete("/tags/" + techName)
         .then()
