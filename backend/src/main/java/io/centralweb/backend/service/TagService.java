@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class TagService {
@@ -57,10 +56,9 @@ public class TagService {
         Tag tag = tagRepository.findById(tagId)
                 .orElseThrow(() -> new ObjectNotFoundException("Tag não encontrada"));
 
-        boolean tagExists = tagRepository
-                .existsByTechnologyName(tagUpdated.technologyName());
-        if (tagExists){
-            throw new ObjectAlreadyExistsException("Tag com esse nome já existe");
+        if (!tag.getTechnologyName().equals(tagUpdated.technologyName()) &&
+                tagRepository.existsByTechnologyName(tagUpdated.technologyName())) {
+            throw new ObjectAlreadyExistsException("Esse nome já está em uso por outra tag");
         }
 
         tagMapper.updateTagFromDTO(tagUpdated, tag);

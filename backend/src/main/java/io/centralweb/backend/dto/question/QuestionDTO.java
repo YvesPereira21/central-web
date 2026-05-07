@@ -20,4 +20,3 @@ public record QuestionDTO(
         List<AnswerDTO> answers,
         Long questionTotalLikes
 ) {}
-

@@ -1,6 +1,5 @@
 package io.centralweb.backend.dto.question;
 
-
 import io.centralweb.backend.dto.tag.TagDTO;
 import io.centralweb.backend.dto.profile.ProfileSimpleDTO;
 

@@ -38,7 +38,7 @@ public class AnswerController {
     }
 
     @PreAuthorize("hasRole('PERSON')")
-    @PostMapping("")
+    @PostMapping("/{questionId}")
     @Operation(summary = "Cria uma resposta", description = "Cria uma nova resposta associada ao usuário autenticado")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Resposta criada com sucesso"),
@@ -46,10 +46,11 @@ public class AnswerController {
     })
     public ResponseEntity<AnswerDTO> createAnswer(
             @RequestBody @Valid AnswerCreateDTO answer,
+            @PathVariable UUID questionId,
             @Parameter(hidden = true)
             @AuthenticationPrincipal(expression = "userId") UUID userId
     ) {
-        AnswerDTO newAwnser = answerService.createAnswer(answer, userId);
+        AnswerDTO newAwnser = answerService.createAnswer(questionId, answer, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(newAwnser);
     }
 

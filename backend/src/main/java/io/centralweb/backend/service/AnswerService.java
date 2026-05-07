@@ -39,8 +39,8 @@ public class AnswerService {
     }
 
     @Transactional(rollbackOn = Exception.class)
-    public AnswerDTO createAnswer(AnswerCreateDTO answer, UUID userProfileId) {
-        Question question = questionRepository.findById(answer.questionId())
+    public AnswerDTO createAnswer(UUID questionId, AnswerCreateDTO answer, UUID userProfileId) {
+        Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new ObjectNotFoundException("Pergunta não encontrada"));
         Profile profile = profileRepository.findByUser_UserId(userProfileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));

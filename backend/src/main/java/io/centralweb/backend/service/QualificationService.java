@@ -74,15 +74,9 @@ public class QualificationService {
                 .map(qualificationMapper::toDTO);
     }
 
-    public void markAsVerified(UUID qualificationId, UUID userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ObjectNotFoundException("Usuário não existe"));
+    public void markAsVerified(UUID qualificationId) {
         Qualification qualification = qualificationRepository.findById(qualificationId)
                 .orElseThrow(() -> new ObjectNotFoundException("Currículo não encontrado"));
-
-        if(!user.getRole().equals(UserRole.ADMIN)) {
-            throw new RuntimeException("Usuário não é admin");
-        }
 
         qualification.setVerified(true);
         qualificationRepository.save(qualification);

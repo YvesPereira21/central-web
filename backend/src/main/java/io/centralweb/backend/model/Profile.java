@@ -10,11 +10,12 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "profiles")
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 public class Profile {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @EqualsAndHashCode.Include
     @Column(name = "profile_id")
     private UUID profileId;
     @Column(name = "name")

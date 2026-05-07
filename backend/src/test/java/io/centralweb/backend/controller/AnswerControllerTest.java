@@ -125,8 +125,7 @@ public class AnswerControllerTest {
     public void shouldCreateAnswerWhenUserIsPerson(){
         UUID questionId = question1Id;
         AnswerCreateDTO answer = new AnswerCreateDTO(
-                "Content response",
-                questionId
+                "Content response"
         );
 
         given()
@@ -134,7 +133,7 @@ public class AnswerControllerTest {
                 .contentType(ContentType.JSON)
                 .body(answer)
         .when()
-                .post("/answers")
+                .post("/answers/" + questionId)
         .then()
                 .statusCode(HttpStatus.CREATED.value())
                 .body("content", equalTo("Content response"))
@@ -213,15 +212,14 @@ public class AnswerControllerTest {
     public void shouldNotCreateAnswerWhenUserIsNotAuthenticated(){
         UUID questionId = question1Id;
         AnswerCreateDTO answer = new AnswerCreateDTO(
-                "Content response",
-                questionId
+                "Content response"
         );
 
         given()
                 .contentType(ContentType.JSON)
                 .body(answer)
         .when()
-                .post("/answers")
+                .post("/answers/" + questionId)
         .then()
                 .statusCode(HttpStatus.FORBIDDEN.value());
     }
@@ -230,8 +228,7 @@ public class AnswerControllerTest {
     public void shouldNotCreateAnswerWhenUserIsAdmin(){
         UUID questionId = question1Id;
         AnswerCreateDTO answer = new AnswerCreateDTO(
-                "Content response",
-                questionId
+                "Content response"
         );
 
         given()
@@ -239,16 +236,16 @@ public class AnswerControllerTest {
                 .contentType(ContentType.JSON)
                 .body(answer)
         .when()
-                .post("/answers")
+                .post("/answers/" + questionId)
         .then()
                 .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
     }
 
     @Test
     public void shouldNotCreateAnswerWithMissingData(){
+        UUID questionId = question1Id;
         AnswerCreateDTO answer = new AnswerCreateDTO(
-                "Content response",
-                null
+                ""
         );
 
         given()
@@ -256,7 +253,7 @@ public class AnswerControllerTest {
                 .contentType(ContentType.JSON)
                 .body(answer)
         .when()
-                .post("/answers")
+                .post("/answers/" + questionId)
         .then()
                 .statusCode(HttpStatus.BAD_REQUEST.value());
     }
@@ -265,8 +262,7 @@ public class AnswerControllerTest {
     public void shouldNotCreateAnswerWhenQuestionDoesNotExist(){
         UUID questionId = UUID.randomUUID();
         AnswerCreateDTO answer = new AnswerCreateDTO(
-                "Content response",
-                questionId
+                "Content response"
         );
 
         given()
@@ -274,7 +270,7 @@ public class AnswerControllerTest {
                 .contentType(ContentType.JSON)
                 .body(answer)
         .when()
-                .post("/answers")
+                .post("/answers/" + questionId)
         .then()
                 .statusCode(HttpStatus.NOT_FOUND.value());
     }

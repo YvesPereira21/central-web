@@ -206,9 +206,9 @@ public class QualificationControllerTest {
 
         given()
                 .header("Authorization", "Bearer " + tokenAdmin)
-                .when()
+        .when()
                 .patch("/qualifications/" + qualificationId)
-                .then()
+        .then()
                 .statusCode(HttpStatus.OK.value());
     }
 

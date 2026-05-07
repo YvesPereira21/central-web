@@ -11,11 +11,12 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "questions")
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 public class Question {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @EqualsAndHashCode.Include
     @Column(name = "question_id")
     private UUID questionId;
     @Column(name = "title")
@@ -147,7 +148,7 @@ public class Question {
     }
 
     public void removeLike(Profile profile){
-        this.questionLikes.add(profile);
+        this.questionLikes.remove(profile);
     }
 
     public Long getQuestionTotalLikes() {
