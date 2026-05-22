@@ -1,8 +1,9 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Article, ArticleCreate, ArticleUpdate } from '../../models/article';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { Page } from '../../models/page';
 
 @Injectable({
   providedIn: 'root'
@@ -19,20 +20,36 @@ export class ArticleService {
     return this.http.get<Article>(`${this.apiUrl}/${articleId}`);
   }
 
-  getAllPublishedArticles(): Observable<Article[]> {
-    return this.http.get<Article[]>(this.apiUrl);
+  getAllPublishedArticles(page: number, size: number): Observable<Page<Article>> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    return this.http.get<Page<Article>>(this.apiUrl, { params });
   }
 
-  getArticlesByTitle(title: string): Observable<Article[]> {
-    return this.http.get<Article[]>(`${this.apiUrl}/${title}/title`);
+  getArticlesByTitle(title: string, page: number, size: number): Observable<Page<Article>> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    return this.http.get<Page<Article>>(`${this.apiUrl}/${title}/title`, { params });
   }
 
-  getArticlesByTag(technologyName: string): Observable<Article[]> {
-    return this.http.get<Article[]>(`${this.apiUrl}/${technologyName}/tag`);
+  getArticlesByTag(technologyName: string, page: number, size: number): Observable<Page<Article>> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    return this.http.get<Page<Article>>(`${this.apiUrl}/${technologyName}/tag`, { params });
   }
 
-  getProfileArticles(profileId: string): Observable<Article[]> {
-    return this.http.get<Article[]>(`${this.apiUrl}/${profileId}/profile`);
+  getProfileArticles(profileId: string, page: number, size: number): Observable<Page<Article>> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    return this.http.get<Page<Article>>(`${this.apiUrl}/${profileId}/profile`, { params });
   }
 
   updateArticle(articleId: string, articleUpdated: ArticleUpdate): Observable<Article> {

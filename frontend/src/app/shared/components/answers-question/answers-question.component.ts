@@ -1,19 +1,20 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { QuestionService } from '../../../features/questions/services/question.service';
-import { QuestionList } from '../../../features/models/question';
-import { RouterLink } from "@angular/router";
+import { Component, inject, Input, signal } from '@angular/core';
+import { AnswerService } from '../../../features/answers/services/answer.service';
+import { Answer } from '../../../features/models/answer';
 import { PaginationComponent } from '../pagination/pagination.component';
 
 @Component({
-  selector: 'app-question-list',
-  imports: [RouterLink, PaginationComponent],
-  templateUrl: './question-list.component.html',
-  styleUrl: './question-list.component.css'
+  selector: 'app-answers-question',
+  imports: [PaginationComponent],
+  templateUrl: './answers-question.component.html',
+  styleUrl: './answers-question.component.css'
 })
-export class QuestionListComponent implements OnInit {
-  private questionService = inject(QuestionService);
+export class AnswersQuestionComponent {
+  private answerService = inject(AnswerService);
 
-  questions = signal<QuestionList[]>([]);
+  @Input({ required: true }) questionId!: string;
+
+  answers = signal<Answer[]>([]);
 
   isEmpty = signal<boolean>(false);
   isFirst = signal<boolean>(true);
@@ -25,13 +26,13 @@ export class QuestionListComponent implements OnInit {
   totalPages = signal<number>(0);
 
   ngOnInit(): void {
-    this.loadAllQuestions(0, 1);
+    this.loadAnswersFromQuestion(0, 15);
   }
 
-  loadAllQuestions(page: number, size: number) {
-    this.questionService.getAllPublishedQuestions(page, size).subscribe({
+  loadAnswersFromQuestion(page: number, size: number) {
+    this.answerService.getAllAnswersFromQuestion(this.questionId, page, size).subscribe({
       next: (response) => {
-        this.questions.set(response.content);
+        this.answers.set(response.content);
         this.isEmpty.set(response.empty);
         this.isFirst.set(response.first);
         this.isLast.set(response.last);

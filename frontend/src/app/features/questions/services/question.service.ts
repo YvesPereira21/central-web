@@ -1,8 +1,9 @@
 import { inject, Injectable } from '@angular/core';
 import { Question, QuestionCreate, QuestionUpdate } from '../../models/question';
 import { Observable } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { Page } from '../../models/page';
 
 @Injectable({
   providedIn: 'root'
@@ -19,20 +20,36 @@ export class QuestionService {
     return this.http.get<Question>(`${this.apiUrl}/${questionId}`);
   }
 
-  getAllPublishedQuestions(): Observable<Question[]> {
-    return this.http.get<Question[]>(this.apiUrl);
+  getAllPublishedQuestions(page: number, size: number): Observable<Page<Question>> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    return this.http.get<Page<Question>>(this.apiUrl, { params });
   }
 
-  getQuestionsByTitle(title: string): Observable<Question[]> {
-    return this.http.get<Question[]>(`${this.apiUrl}/${title}/title`);
+  getQuestionsByTitle(title: string, page: number, size: number): Observable<Page<Question>> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    return this.http.get<Page<Question>>(`${this.apiUrl}/${title}/title`, { params });
   }
 
-  getQuestionsByTag(technologyName: string): Observable<Question[]> {
-    return this.http.get<Question[]>(`${this.apiUrl}/${technologyName}/tag`);
+  getQuestionsByTag(technologyName: string, page: number, size: number): Observable<Page<Question>> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    return this.http.get<Page<Question>>(`${this.apiUrl}/${technologyName}/tag`, { params });
   }
 
-  getQuestionsWithAcceptedAnswers(): Observable<Question[]> {
-    return this.http.get<Question[]>(`${this.apiUrl}/accepteds-answers`);
+  getQuestionsWithAcceptedAnswers(page: number, size: number): Observable<Page<Question>> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    return this.http.get<Page<Question>>(`${this.apiUrl}/accepteds-answers`, { params });
   }
 
   updateQuestion(questionId: string, questionUpdated: QuestionUpdate): Observable<Question> {

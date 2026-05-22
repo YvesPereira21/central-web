@@ -11,7 +11,6 @@ import { QualificationCreateComponent } from './shared/components/qualification-
 import { HomePageComponent } from './shared/components/home-page/home-page.component';
 import { LoginComponent } from './shared/components/login/login.component';
 import { authGuard } from './core/guards/auth.guard';
-import { AppComponent } from './app.component';
 
 export const routes: Routes = [
     { path: '', component: HomePageComponent, canActivate: [authGuard] },
@@ -21,6 +20,7 @@ export const routes: Routes = [
     { path: 'create-question', component: QuestionCreateComponent, canActivate: [authGuard] },
     { path: 'create-qualification', component: QualificationCreateComponent, canActivate: [authGuard] },
     { path: 'articles', component: ArticleListComponent, canActivate: [authGuard] },
+    { path: 'articles/:id/profile', component: ArticleListComponent, canActivate: [authGuard] },
     { path: 'questions', component: QuestionListComponent, canActivate: [authGuard] },
     { path: 'articles/:id', component: ArticleDetailComponent, canActivate: [authGuard] },
     { path: 'questions/:id', component: QuestionDetailComponent, canActivate: [authGuard] },

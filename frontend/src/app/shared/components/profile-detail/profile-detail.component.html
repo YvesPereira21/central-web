@@ -54,86 +54,10 @@
             </a>
         </div>
 
-        <!-- Card -->
-        @for (article of profile?.articles; track article.articleId) {
-        <div class="grid grid-cols-2 justify-items-center">
-            <article class="w-full max-w-[450px] rounded-md bg-[#21262D] text-white shadow-md">
-                <section class="flex h-[70px] gap-4 px-3 py-2">
-                    <a href="#">
-                        <div tabindex="0" role="button" class="avatar btn btn-circle btn-ghost">
-                            <div class="w-12 rounded-full">
-                                <img alt="Avatar do usuário"
-                                    src="https://img.daisyui.com/images/profile/demo/yellingcat@192.webp" />
-                            </div>
-                        </div>
-                    </a>
-                    <div class="flex flex-col gap-1 font-inter">
-                        <span> {{ profile?.name }} </span>
-                        <div
-                            class="w-fit rounded-full border-2 border-[#3FB950]/30 bg-[#3FB950]/15 px-3 text-center text-sm text-[#3FB950]">
-                            {{ profile?.level }}
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Content -->
-                <section class="px-4 py-2">
-                    <h1 class="font-inter text-xl font-bold text-[#C9D1D9]">
-                        {{ article.title }}
-                    </h1>
-                    @for (tag of article.tags; track tag.technologyName) {
-                    <div class="mt-1 flex flex-wrap gap-2">
-                        <span
-                            class="rounded-md border border-[#30363d] bg-[#0d1117] px-3 py-1 text-xs font-medium text-gray-400">
-                            {{ tag.technologyName }}
-                        </span>
-                    </div>
-                    }
-                    <p class="mt-3 line-clamp-6 font-lora font-semibold 
-                      text-sm text-justify leading-relaxed text-[#8B949E]">
-                        {{ article.content }}
-                    </p>
-                    <hr class="mt-1 border-[#8B949E]" />
-                </section>
-
-                <!-- Article actions -->
-                <section class="flex items-center justify-between px-5 py-2">
-                    <div class="flex items-center gap-5">
-                        <!-- Like button -->
-                        <button class="group flex items-center gap-1 py-1 transition-all
-                             hover:text-red-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
-                                class="size-5 fill-current transition-transform group-hover:scale-110">
-                                <path
-                                    d="M241 87.1l15 20.7 15-20.7C296 52.5 336.2 32 378.9 32 452.4 32 512 91.6 512 165.1l0 2.6c0 112.2-139.9 242.5-212.9 298.2-12.4 9.4-27.6 14.1-43.1 14.1s-30.8-4.6-43.1-14.1C139.9 410.2 0 279.9 0 167.7l0-2.6C0 91.6 59.6 32 133.1 32 175.8 32 216 52.5 241 87.1z" />
-                            </svg>
-                            <span class="text-sm font-medium">{{ article.articleTotalLikes }}</span>
-                        </button>
-
-                        <!-- Save button -->
-                        <button class="group flex items-center gap-1 py-1 transition-all 
-                             hover:text-emerald-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"
-                                class="size-5 fill-current transition-transform group-hover:scale-110">
-                                <path
-                                    d="M64 0C28.7 0 0 28.7 0 64L0 480c0 11.5 6.2 22.2 16.2 27.8s22.3 5.5 32.2-.4L192 421.3 335.5 507.4c9.9 5.9 22.2 6.1 32.2 .4S384 491.5 384 480l0-416c0-35.3-28.7-64-64-64L64 0z" />
-                            </svg>
-                            <span class="text-sm font-medium">Salvar</span>
-                        </button>
-                    </div>
-
-                    <!-- Link to see the article entire content -->
-                    <a [routerLink]="['/articles', article.articleId]" class="group flex items-center gap-1 text-sm font-medium 
-                               hover:text-[#3FB950]">
-                        Veja mais
-                    </a>
-                </section>
-            </article>
-        </div>
-        }
+        <app-article-list [profileId]="profileId()" [showPagination]="false"></app-article-list>
 
         <!-- Link to all articles written by the profile -->
-        <a href="#"
+        <a [routerLink]="['/articles', profileId(), 'profile']"
             class="block w-full rounded-md bg-[#30363D] p-3 text-center text-white shadow-sm transition hover:bg-[#3c444d]">
             Mostrar todos os artigos do perfil
         </a>

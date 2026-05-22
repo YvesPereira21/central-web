@@ -84,3 +84,8 @@
 
 </article>
 }
+
+<app-pagination [isEmpty]="isEmpty()" [isFirst]="isFirst()" [isLast]="isLast()" [pageSize]="pageSize()"
+    [currentPage]="currentPage()" [numberOfElements]="numberOfElements()" [totalElements]="totalElements()"
+    [totalPages]="totalPages()" (pageChange)="loadAllQuestions($event, pageSize())">
+</app-pagination>

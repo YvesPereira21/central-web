@@ -78,3 +78,10 @@
 @empty {
 
 }
+
+@if (showPagination) {
+<app-pagination [isEmpty]="isEmpty()" [isFirst]="isFirst()" [isLast]="isLast()" [pageSize]="pageSize()"
+    [currentPage]="currentPage()" [numberOfElements]="numberOfElements()" [totalElements]="totalElements()"
+    [totalPages]="totalPages()" (pageChange)="loadData($event, pageSize())">
+</app-pagination>
+}
