@@ -6,7 +6,8 @@ export interface Answer {
     accepted: boolean,
     createdAt: string,
     profile: ProfileSimple,
-    answerTotalLikes: number
+    answerTotalLikes: number,
+    liked: boolean
 }
 
 export interface AnswerCreate {

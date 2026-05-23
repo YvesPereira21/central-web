@@ -8,7 +8,8 @@ export interface Article {
     createdAt: string,
     tags: Tag[],
     profile: ProfileSimple,
-    articleTotalLikes: number
+    articleTotalLikes: number,
+    liked: boolean
 }
 
 export interface ArticleCreate {
@@ -28,5 +29,6 @@ export interface ArticleSimple {
     title: string,
     content: string,
     tags: Tag[],
-    articleTotalLikes: number
+    articleTotalLikes: number,
+    liked: boolean
 }

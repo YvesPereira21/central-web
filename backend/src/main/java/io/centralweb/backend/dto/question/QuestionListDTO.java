@@ -16,5 +16,6 @@ public record QuestionListDTO(
         LocalDate createdAt,
         ProfileSimpleDTO profile,
         List<TagDTO> tags,
-        Long questionTotalLikes
+        Long questionTotalLikes,
+        boolean liked
 ) {}

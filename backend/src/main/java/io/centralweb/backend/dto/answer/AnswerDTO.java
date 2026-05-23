@@ -11,6 +11,6 @@ public record AnswerDTO(
         boolean accepted,
         LocalDate createdAt,
         ProfileSimpleDTO profile,
-        Long answerTotalLikes
+        Long answerTotalLikes,
+        boolean liked
 ) {}
-

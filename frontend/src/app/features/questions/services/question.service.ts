@@ -56,6 +56,10 @@ export class QuestionService {
     return this.http.put<Question>(`${this.apiUrl}/${questionId}`, questionUpdated);
   }
 
+  toggleQuestionLike(questionId: string): Observable<void> {
+    return this.http.patch<void>(`${this.apiUrl}/${questionId}/like`, null);
+  }
+
   deleteQuestion(questionId: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${questionId}`);
   }

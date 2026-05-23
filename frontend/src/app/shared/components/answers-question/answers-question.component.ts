@@ -2,10 +2,11 @@ import { Component, inject, Input, signal } from '@angular/core';
 import { AnswerService } from '../../../features/answers/services/answer.service';
 import { Answer } from '../../../features/models/answer';
 import { PaginationComponent } from '../pagination/pagination.component';
+import { RouterLink } from "@angular/router";
 
 @Component({
   selector: 'app-answers-question',
-  imports: [PaginationComponent],
+  imports: [RouterLink, PaginationComponent],
   templateUrl: './answers-question.component.html',
   styleUrl: './answers-question.component.css'
 })
@@ -44,6 +45,32 @@ export class AnswersQuestionComponent {
       },
       error: (error) => {
         alert("Não foi possível encontrar todos os pontos");
+      }
+    })
+  }
+
+  toggleAnswerLike(answerId: string) {
+    this.answerService.toggleAnswerLike(answerId).subscribe({
+      next: () => {
+        this.answers.update(answers =>
+          answers.map(
+            currentAnswer => {
+              if (currentAnswer.answerId === answerId) {
+                const willLike = !currentAnswer.liked
+
+                return {
+                  ...currentAnswer,
+                  liked: willLike,
+                  answerTotalLikes: currentAnswer.answerTotalLikes + (willLike ? 1 : -1)
+                };
+              }
+              return currentAnswer
+            },
+          ),
+        )
+      },
+      error: (erro) => {
+        alert('Não foi possível processar essa curtida. Tente novamente')
       }
     })
   }

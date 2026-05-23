@@ -14,6 +14,6 @@ public record ArticleDTO(
         LocalDate createdAt,
         List<TagDTO> tags,
         ProfileSimpleDTO profile,
-        Long articleTotalLikes
+        Long articleTotalLikes,
+        boolean liked
 ) {}
-

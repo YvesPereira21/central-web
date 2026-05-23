@@ -1,7 +1,7 @@
 <article class="w-full max-w-[940px] h-auto container mx-auto my-4 rounded-md bg-[#161B22] text-white shadow-md">
     <!-- profile -->
     <section class="flex gap-4 px-3 py-2 h-[70px]">
-        <a href="">
+        <a [routerLink]="['/profiles', question()?.profile?.profileId]">
             <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
                 <div class="w-12 rounded-full">
                     <img alt="Avatar do usuário"
@@ -11,28 +11,28 @@
         </a>
         <div class="flex flex-col gap-1 font-inter">
             <span class="font-semibold">
-                {{ question?.profile?.name }}
+                {{ question()?.profile?.name }}
             </span>
             <div
                 class="w-fit px-3 text-[#3FB950] text-sm text-center bg-[#3FB950]/15 rounded-full border-2 border-[#3FB950]/30">
-                {{ question?.profile?.level }}
+                {{ question()?.profile?.level }}
             </div>
         </div>
     </section>
 
     <section class="px-4 py-2">
         <h1 class="text-[#C9D1D9] text-xl font-inter font-bold">
-            {{ question?.title }}
+            {{ question()?.title }}
         </h1>
 
         <p class="py-1 break-words text-[#8B949E] text-justify leading-relaxed font-lora font-semibold">
-            {{ question?.content }}
+            {{ question()?.content }}
         </p>
     </section>
 
     <section class="px-4">
         <div class="flex flex-wrap gap-2">
-            @for (tag of question?.tags; track tag.technologyName) {
+            @for (tag of question()?.tags; track tag.technologyName) {
             <div class="px-3 py-1 text-xs font-medium text-gray-400 bg-[#0d1117] border border-[#30363d] rounded-md">
                 {{ tag.technologyName }}
             </div>
@@ -43,13 +43,14 @@
 
     <section class="flex h-[50px] items-center justify-between px-5 py-3">
         <div class="flex items-center gap-5">
-            <button class="group flex items-center gap-1 py-1 transition-all hover:text-red-400">
+            <button (click)="toggleQuestionLike(questionId())" class="group flex items-center gap-1 py-1 transition-all"
+                [class.text-[#3FB950]]="question()?.liked" [class.hover:text-[#3FB950]]="question()?.liked">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
                     class="size-6 fill-current transition-transform group-hover:scale-110">
                     <path
                         d="M241 87.1l15 20.7 15-20.7C296 52.5 336.2 32 378.9 32 452.4 32 512 91.6 512 165.1l0 2.6c0 112.2-139.9 242.5-212.9 298.2-12.4 9.4-27.6 14.1-43.1 14.1s-30.8-4.6-43.1-14.1C139.9 410.2 0 279.9 0 167.7l0-2.6C0 91.6 59.6 32 133.1 32 175.8 32 216 52.5 241 87.1z" />
                 </svg>
-                <span class="text-sm font-medium">{{ question?.questionTotalLikes }}</span>
+                <span class="text-sm font-medium">{{ question()?.questionTotalLikes }}</span>
             </button>
             <button class="group flex items-center gap-1 py-1 transition-all hover:text-emerald-400">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"
@@ -63,4 +64,4 @@
     </section>
 </article>
 
-<app-answers-question [questionId]="idRoute()"></app-answers-question>
+<app-answers-question [questionId]="questionId()"></app-answers-question>

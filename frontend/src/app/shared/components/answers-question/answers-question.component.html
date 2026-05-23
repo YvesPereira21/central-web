@@ -8,7 +8,7 @@
     @for (answer of answers(); track answer.answerId) {
     <li>
         <section class="flex gap-3 px-3 pt-3 h-[70px] text-xs">
-            <a href="">
+            <a [routerLink]="['/profiles', answer?.profile?.profileId]">
                 <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
                     <div class="w-12 rounded-full">
                         <img alt="Avatar do usuário"
@@ -32,7 +32,9 @@
                 {{ answer.content }}
             </p>
             <div class="flex flex-row items-center mt-2 gap-2">
-                <button class="group flex items-center gap-1 py-1 transition-all hover:text-red-400">
+                <button (click)="toggleAnswerLike(answer.answerId)"
+                    class="group flex items-center gap-1 py-1 transition-all" [class.text-[#3FB950]]="answer.liked"
+                    [class.hover:text-[#3FB950]]="answer.liked">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
                         class="size-6 fill-current transition-transform group-hover:scale-110">
                         <path

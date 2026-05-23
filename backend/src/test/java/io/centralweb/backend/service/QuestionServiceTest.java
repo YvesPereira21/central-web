@@ -150,7 +150,8 @@ class QuestionServiceTest {
                 profileSimpleDTO,
                 List.of(tagJavaDTO, tagRustDTO),
                 new ArrayList<>(),
-                0L
+                0L,
+                false
         );
 
         questionListDTO = new QuestionListDTO(
@@ -162,7 +163,8 @@ class QuestionServiceTest {
                 question1.getCreatedAt(),
                 profileSimpleDTO,
                 List.of(tagJavaDTO, tagRustDTO),
-                0L
+                0L,
+                false
         );
     }
 
@@ -335,7 +337,8 @@ class QuestionServiceTest {
                 profileSimpleDTO,
                 List.of(tagJavaDTO),
                 new ArrayList<>(),
-                0L
+                0L,
+                false
         );
 
         when(questionRepository.findById(questionId)).thenReturn(Optional.of(question1));

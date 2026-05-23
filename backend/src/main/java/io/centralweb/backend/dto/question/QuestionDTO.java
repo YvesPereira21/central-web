@@ -18,5 +18,6 @@ public record QuestionDTO(
         ProfileSimpleDTO profile,
         List<TagDTO> tags,
         List<AnswerDTO> answers,
-        Long questionTotalLikes
+        Long questionTotalLikes,
+        boolean liked
 ) {}

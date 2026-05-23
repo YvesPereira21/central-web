@@ -56,6 +56,10 @@ export class ArticleService {
     return this.http.put<Article>(`${this.apiUrl}/${articleId}`, articleUpdated);
   }
 
+  toggleArticleLike(articleId: string): Observable<void> {
+    return this.http.patch<void>(`${this.apiUrl}/${articleId}/like`, null);
+  }
+
   deleteArticle(articleId: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${articleId}`)
   }

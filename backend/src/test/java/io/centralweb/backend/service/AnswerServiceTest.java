@@ -137,7 +137,8 @@ class AnswerServiceTest {
                 answer1.isAccepted(),
                 answer1.getCreatedAt(),
                 profileSimpleDTO,
-                0L
+                0L,
+                false
         );
     }
 

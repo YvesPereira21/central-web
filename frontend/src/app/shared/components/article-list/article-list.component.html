@@ -44,8 +44,9 @@
         <!-- Like and amount like, save article, etc. -->
         <div class="flex items-center gap-5">
             <!-- Like button -->
-            <button class="group flex items-center gap-1 transition-all
-                             hover:text-red-400">
+            <button (click)="toggleArticleLike(article.articleId)"
+                class="group flex items-center gap-1 py-1 transition-all" [class.text-[#3FB950]]="article.liked"
+                [class.hover:text-[#3FB950]]="article.liked">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
                     class="size-5 fill-current transition-transform group-hover:scale-110">
                     <path

@@ -46,4 +46,32 @@ export class QuestionListComponent implements OnInit {
       }
     })
   }
+
+  toggleQuestionLike(questionId: string) {
+    if (!questionId) return;
+
+    this.questionService.toggleQuestionLike(questionId).subscribe({
+      next: () => {
+        this.questions.update(questions =>
+          questions.map(
+            currentQuestion => {
+              if (currentQuestion.questionId == questionId) {
+                const willLike = !currentQuestion.liked;
+
+                return {
+                  ...currentQuestion,
+                  liked: willLike,
+                  questionTotalLikes: currentQuestion.questionTotalLikes + (willLike ? 1 : -1)
+                };
+              }
+              return currentQuestion
+            }
+          )
+        );
+      },
+      error: () => {
+        alert("Não foi possível processar a curtida. Tente novamente.");
+      }
+    });
+  }
 }

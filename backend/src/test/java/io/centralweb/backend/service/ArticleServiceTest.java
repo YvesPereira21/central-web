@@ -141,7 +141,8 @@ class ArticleServiceTest {
                 article1.getCreatedAt(),
                 List.of(tagJavaDTO, tagRustDTO),
                 profileSimpleDTO,
-                0L
+                0L,
+                false
         );
     }
 
@@ -304,7 +305,8 @@ class ArticleServiceTest {
                 article1.getCreatedAt(),
                 List.of(tagJavaDTO),
                 profileSimpleDTO,
-                0L
+                0L,
+                false
         );
 
         when(articleRepository.findById(articleId)).thenReturn(Optional.of(article1));

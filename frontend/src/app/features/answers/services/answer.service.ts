@@ -28,6 +28,10 @@ export class AnswerService {
     return this.http.put<Answer>(this.apiUrl, answerAccepted);
   }
 
+  toggleAnswerLike(answerId: string): Observable<void> {
+    return this.http.patch<void>(`${this.apiUrl}/${answerId}/like`, null);
+  }
+
   deleteAnswer(answerId: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${answerId}`);
   }

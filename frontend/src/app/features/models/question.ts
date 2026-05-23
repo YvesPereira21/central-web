@@ -12,7 +12,8 @@ export interface Question {
     profile: ProfileSimple,
     tags: Tag[],
     answers: Answer[],
-    questionTotalLikes: number
+    questionTotalLikes: number,
+    liked: boolean
 }
 
 export interface QuestionCreate {
@@ -30,7 +31,8 @@ export interface QuestionList {
     createdAt: string,
     profile: ProfileSimple,
     tags: Tag[],
-    questionTotalLikes: number
+    questionTotalLikes: number,
+    liked: boolean
 }
 
 export interface QuestionUpdate {

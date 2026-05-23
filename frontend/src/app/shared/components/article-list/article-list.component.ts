@@ -86,4 +86,32 @@ export class ArticleListComponent implements OnInit {
       }
     })
   }
+
+  toggleArticleLike(articleId: string) {
+    if (!articleId) return;
+
+    this.articleService.toggleArticleLike(articleId).subscribe({
+      next: () => {
+        this.articles.update(articles =>
+          articles.map(
+            currentArticle => {
+              if (currentArticle.articleId == articleId) {
+                const willLike = !currentArticle.liked;
+
+                return {
+                  ...currentArticle,
+                  liked: willLike,
+                  articleTotalLikes: currentArticle.articleTotalLikes + (willLike ? 1 : -1)
+                };
+              }
+              return currentArticle
+            }
+          )
+        );
+      },
+      error: () => {
+        alert("Não foi possível processar a curtida. Tente novamente.");
+      }
+    });
+  }
 }
