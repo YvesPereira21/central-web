@@ -10,19 +10,19 @@ import { ProfileDetailComponent } from './shared/components/profile-detail/profi
 import { QualificationCreateComponent } from './shared/components/qualification-create/qualification-create.component';
 import { HomePageComponent } from './shared/components/home-page/home-page.component';
 import { LoginComponent } from './shared/components/login/login.component';
-import { authGuard } from './core/guards/auth.guard';
+import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
-    { path: '', component: HomePageComponent, canActivate: [authGuard] },
+    { path: '', component: HomePageComponent, canActivate: [roleGuard] },
     { path: 'login', component: LoginComponent },
     { path: 'create-profile', component: ProfileCreateComponent },
-    { path: 'create-article', component: ArticleCreateComponent, canActivate: [authGuard] },
-    { path: 'create-question', component: QuestionCreateComponent, canActivate: [authGuard] },
-    { path: 'create-qualification', component: QualificationCreateComponent, canActivate: [authGuard] },
-    { path: 'articles', component: ArticleListComponent, canActivate: [authGuard] },
-    { path: 'articles/:id/profile', component: ArticleListComponent, canActivate: [authGuard] },
-    { path: 'questions', component: QuestionListComponent, canActivate: [authGuard] },
-    { path: 'articles/:id', component: ArticleDetailComponent, canActivate: [authGuard] },
-    { path: 'questions/:id', component: QuestionDetailComponent, canActivate: [authGuard] },
-    { path: 'profiles/:id', component: ProfileDetailComponent, canActivate: [authGuard] }
+    { path: 'create-article', component: ArticleCreateComponent, canActivate: [roleGuard], data: { roles: ['PERSON'] } },
+    { path: 'create-question', component: QuestionCreateComponent, canActivate: [roleGuard], data: { roles: ['PERSON'] } },
+    { path: 'create-qualification', component: QualificationCreateComponent, canActivate: [roleGuard], data: { roles: ['PERSON'] } },
+    { path: 'articles', component: ArticleListComponent, canActivate: [roleGuard] },
+    { path: 'articles/:id/profile', component: ArticleListComponent, canActivate: [roleGuard] },
+    { path: 'questions', component: QuestionListComponent, canActivate: [roleGuard] },
+    { path: 'articles/:id', component: ArticleDetailComponent, canActivate: [roleGuard] },
+    { path: 'questions/:id', component: QuestionDetailComponent, canActivate: [roleGuard] },
+    { path: 'profiles/:id', component: ProfileDetailComponent, canActivate: [roleGuard] }
 ];

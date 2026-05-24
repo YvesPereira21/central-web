@@ -4,6 +4,7 @@ import { environment } from '../../../environments/environment';
 import { Observable, tap } from 'rxjs';
 import { LoginRequest, LoginResponse } from '../../models/authentication';
 import { Router } from '@angular/router';
+import { jwtDecode } from 'jwt-decode';
 
 @Injectable({
   providedIn: 'root'
@@ -14,6 +15,7 @@ export class AuthenticationService {
   private apiUrl = `${environment.apiUrl}/auth`
 
   isAuthenticated = signal<boolean>(this.hasToken());
+  userRole = signal<string | null>(this.getUserRole());
 
   login(loginData: LoginRequest): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.apiUrl}/login`, loginData).pipe(
@@ -27,11 +29,13 @@ export class AuthenticationService {
   logout() {
     localStorage.removeItem('token');
     this.isAuthenticated.set(false);
+    this.userRole.set(this.getUserRole());
     this.router.navigate(['/login']);
   }
 
   private saveToken(token: string) {
     localStorage.setItem('token', token);
+    this.userRole.set(this.getUserRole());
   }
 
   getToken() {
@@ -40,5 +44,25 @@ export class AuthenticationService {
 
   private hasToken(): boolean {
     return !!this.getToken();
+  }
+
+  private getUserRole(): string | null {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+
+    try {
+      const decodedToken: any = jwtDecode(token)
+      return decodedToken.role;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  isAdmin(): boolean {
+    return this.userRole() === 'ADMIN';
+  }
+
+  isPerson(): boolean {
+    return this.userRole() === 'PERSON';
   }
 }
