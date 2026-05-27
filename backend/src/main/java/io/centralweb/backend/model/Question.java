@@ -38,16 +38,16 @@ public class Question {
             joinColumns = @JoinColumn(name = "question_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
-    private List<Tag> tags;
+    private List<Tag> tags = new java.util.ArrayList<>();
     @OneToMany(mappedBy = "question", fetch =  FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Answer> answers;
+    private List<Answer> answers = new java.util.ArrayList<>();
     @ManyToMany
     @JoinTable(
             name = "question_likes",
             joinColumns = @JoinColumn(name = "question_id"),
             inverseJoinColumns = @JoinColumn(name = "profile_id")
     )
-    private List<Profile> questionLikes;
+    private List<Profile> questionLikes = new java.util.ArrayList<>();
     @Formula("(SELECT COUNT(*) FROM question_likes ql WHERE ql.question_id = question_id)")
     private Long questionTotalLikes;
 

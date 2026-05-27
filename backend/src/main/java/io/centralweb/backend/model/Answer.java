@@ -6,6 +6,7 @@ import lombok.ToString;
 import org.hibernate.annotations.Formula;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,7 +37,7 @@ public class Answer {
             joinColumns = @JoinColumn(name = "answer_id"),
             inverseJoinColumns = @JoinColumn(name = "profile_id")
     )
-    private List<Profile> answerLikes;
+    private List<Profile> answerLikes = new ArrayList<>();
     @Formula("(SELECT COUNT(*) FROM answer_likes al WHERE al.answer_id = answer_id)")
     private Long answerTotalLikes;
 

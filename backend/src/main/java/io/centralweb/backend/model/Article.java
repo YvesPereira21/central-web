@@ -6,6 +6,7 @@ import lombok.ToString;
 import org.hibernate.annotations.Formula;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,14 +36,14 @@ public class Article {
             joinColumns = @JoinColumn(name = "article_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
-    private List<Tag> tags;
+    private List<Tag> tags = new ArrayList<>();
     @ManyToMany
     @JoinTable(
             name = "article_likes",
             joinColumns = @JoinColumn(name = "article_id"),
             inverseJoinColumns = @JoinColumn(name = "profile_id")
     )
-    private List<Profile> articleLikes;
+    private List<Profile> articleLikes = new ArrayList<>();
     @Formula("(SELECT COUNT(*) FROM article_likes al WHERE al.article_id = article_id)")
     private Long articleTotalLikes;
 

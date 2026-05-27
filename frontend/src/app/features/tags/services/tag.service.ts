@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Tag, TagUpdate } from '../../models/tag';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { Page } from '../../models/page';
 
 @Injectable({
   providedIn: 'root'
@@ -15,8 +16,8 @@ export class TagService {
     return this.http.post<Tag>(this.apiUrl, tagData);
   }
 
-  getAllTags(): Observable<Tag[]> {
-    return this.http.get<Tag[]>(this.apiUrl);
+  getAllTags(): Observable<Page<Tag>> {
+    return this.http.get<Page<Tag>>(this.apiUrl);
   }
 
   updateTag(tagId: string, tagUpdated: TagUpdate): Observable<Tag> {

@@ -1,64 +1,37 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { QuestionService } from '../../../features/questions/services/question.service';
-import { FormArray, FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { QuestionCreate } from '../../../features/models/question';
-import { Tag } from '../../../features/models/tag';
-import { TagService } from '../../../features/tags/services/tag.service';
+import { TagSelectorComponent } from '../tag-selector/tag-selector.component';
 
 @Component({
   selector: 'app-question-create',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TagSelectorComponent],
   templateUrl: './question-create.component.html',
   styleUrl: './question-create.component.css'
 })
 export class QuestionCreateComponent {
   private formBuilder = inject(FormBuilder);
   private questionService = inject(QuestionService);
-  private tagService = inject(TagService);
 
-  tags = signal<Tag[]>([]);
   isSubmiting: boolean = false;
+
   questionForm = this.formBuilder.group({
-    title: [''],
-    content: [''],
+    title: ['', Validators.required],
+    content: ['', Validators.required],
     technologyNames: this.formBuilder.array([])
   })
-
-  ngOnInit(): void {
-    this.loadAllTags();
-  }
-
-  loadAllTags() {
-    this.tagService.getAllTags().subscribe({
-      next: (data) => {
-        this.tags.set(data);
-      },
-      error: (erro) => {
-        console.log('Erro procurar as tags');
-      }
-    })
-  }
 
   get technologyNames() {
     return this.questionForm.get('technologyNames') as FormArray;
   }
 
-  toggleTag(technologyName: string) {
-    const index = this.technologyNames.controls.findIndex(control => control.value === technologyName);
-
-    if (index === -1) {
-      this.technologyNames.controls.push(this.formBuilder.control(technologyName));
-    } else {
-      this.technologyNames.removeAt(index);
-    }
-  }
-
-  isTagSelected(technologyName: string): boolean {
-    return this.technologyNames.controls.some(control => control.value === technologyName);
-  }
-
   onSubmit() {
-    if (this.questionForm.invalid) return alert('Preencha o formulário com informações corretas.');
+    if (this.questionForm.invalid || this.technologyNames.length === 0) {
+      alert('Preencha o formulário e selecione pelo menos uma tag.');
+      return;
+    }
+    
     this.isSubmiting = true;
 
     const formValues = this.questionForm.value;
@@ -70,18 +43,20 @@ export class QuestionCreateComponent {
 
     this.questionService.createQuestion(question).subscribe({
       next: (response) => {
-        console.log('Nova pergunta registrado com sucesso!')
+        console.log('Nova pergunta registrada com sucesso!')
         this.clearForm();
       },
       error: (error) => {
-        console.log('Erro ao registrar pergunta.');
-        this.clearForm();
+        console.log('Erro ao registrar pergunta.', error);
+        alert('Não foi possível registrar a pergunta. Tente novamente.');
+        this.isSubmiting = false;
       }
     })
   }
 
   clearForm() {
     this.questionForm.reset();
+    this.technologyNames.clear();
     this.isSubmiting = false;
   }
 }
