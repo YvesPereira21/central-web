@@ -1,20 +1,24 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ArticleService } from '../../../features/articles/services/article.service';
+import { CollectionService } from '../../../features/collections/services/collection.service';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Article } from '../../../features/models/article';
+import { CollectionModalComponent } from '../collection-modal/collection-modal.component';
 
 @Component({
   selector: 'app-article-detail',
-  imports: [RouterLink],
+  imports: [RouterLink, CollectionModalComponent],
   templateUrl: './article-detail.component.html',
   styleUrl: './article-detail.component.css'
 })
 export class ArticleDetailComponent implements OnInit {
   private articleService = inject(ArticleService);
+  private collectionService = inject(CollectionService);
   private activatedRoute = inject(ActivatedRoute);
 
   article = signal<Article | null>(null);
   articleId = signal<string>('');
+  isOpen = signal<boolean>(false);
   errorMessage: string = '';
 
   ngOnInit(): void {
@@ -58,5 +62,27 @@ export class ArticleDetailComponent implements OnInit {
         alert("Não foi possível processar a curtida. Tente novamente.");
       }
     });
+  }
+
+  toggleSave() {
+    const currentArticle = this.article();
+    if (!currentArticle) return;
+
+    if (currentArticle.saved) {
+      this.collectionService.removeArticleFromAllMyCollections(this.articleId()).subscribe({
+        next: () => {
+          this.article.update(a => a ? { ...a, saved: false } : null);
+        },
+        error: () => {
+          alert('Erro ao remover o artigo das coleções.');
+        }
+      });
+    } else {
+      this.isOpen.set(true);
+    }
+  }
+
+  onSaveSuccess() {
+    this.article.update(a => a ? { ...a, saved: true } : null);
   }
 }

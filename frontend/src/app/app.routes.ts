@@ -11,6 +11,8 @@ import { QualificationCreateComponent } from './shared/components/qualification-
 import { HomePageComponent } from './shared/components/home-page/home-page.component';
 import { LoginComponent } from './shared/components/login/login.component';
 import { roleGuard } from './core/guards/role.guard';
+import { CollectionListComponent } from './shared/components/collection-list/collection-list.component';
+import { CollectionDetailComponent } from './shared/components/collection-detail/collection-detail.component';
 
 export const routes: Routes = [
     { path: '', component: HomePageComponent, canActivate: [roleGuard] },
@@ -24,5 +26,7 @@ export const routes: Routes = [
     { path: 'questions', component: QuestionListComponent, canActivate: [roleGuard] },
     { path: 'articles/:id', component: ArticleDetailComponent, canActivate: [roleGuard] },
     { path: 'questions/:id', component: QuestionDetailComponent, canActivate: [roleGuard] },
-    { path: 'profiles/:id', component: ProfileDetailComponent, canActivate: [roleGuard] }
+    { path: 'profiles/:id', component: ProfileDetailComponent, canActivate: [roleGuard] },
+    { path: 'collections', component: CollectionListComponent, canActivate: [roleGuard] },
+    { path: 'collections/:id', component: CollectionDetailComponent, canActivate: [roleGuard] },
 ];

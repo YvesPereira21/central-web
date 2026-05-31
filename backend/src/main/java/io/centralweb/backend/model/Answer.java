@@ -40,6 +40,9 @@ public class Answer {
     private List<Profile> answerLikes = new ArrayList<>();
     @Formula("(SELECT COUNT(*) FROM answer_likes al WHERE al.answer_id = answer_id)")
     private Long answerTotalLikes;
+    
+    @OneToMany(mappedBy = "answer", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Comment> comments = new ArrayList<>();
 
     public Answer() {
     }
@@ -116,5 +119,13 @@ public class Answer {
 
     public Long getAnswerTotalLikes(){
         return answerTotalLikes == null ? 0 : answerTotalLikes;
+    }
+
+    public List<Comment> getComments() {
+        return comments;
+    }
+
+    public void setComments(List<Comment> comments) {
+        this.comments = comments;
     }
 }

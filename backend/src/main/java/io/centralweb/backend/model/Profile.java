@@ -43,11 +43,13 @@ public class Profile {
     private List<Answer> answers = new ArrayList<>();
     @OneToMany(mappedBy = "profile", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Qualification> qualifications = new ArrayList<>();
+    @OneToMany(mappedBy = "profile", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Collection> collections = new ArrayList<>();
 
     public Profile() {
     }
 
-    public Profile(UUID profileId, String name, String bio, ProfileType profileType, String expertise, String level, long reputationScore, boolean professional, User user, List<Question> questions, List<Article> articles, List<Answer> answers, List<Qualification> qualifications) {
+    public Profile(UUID profileId, String name, String bio, ProfileType profileType, String expertise, String level, long reputationScore, boolean professional, User user, List<Question> questions, List<Article> articles, List<Answer> answers, List<Qualification> qualifications, List<Collection> collections) {
         this.profileId = profileId;
         this.name = name;
         this.bio = bio;
@@ -61,6 +63,7 @@ public class Profile {
         this.articles = articles;
         this.answers = answers;
         this.qualifications = qualifications;
+        this.collections = collections;
     }
 
     public UUID getProfileId() {
@@ -161,6 +164,14 @@ public class Profile {
 
     public void setQualifications(List<Qualification> qualifications) {
         this.qualifications = qualifications;
+    }
+
+    public List<Collection> getCollections() {
+        return collections;
+    }
+
+    public void setCollections(List<Collection> collections) {
+        this.collections = collections;
     }
 }
 

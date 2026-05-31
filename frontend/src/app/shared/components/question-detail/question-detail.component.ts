@@ -3,19 +3,23 @@ import { QuestionService } from '../../../features/questions/services/question.s
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Question } from '../../../features/models/question';
 import { AnswersQuestionComponent } from '../answers-question/answers-question.component';
+import { CollectionModalComponent } from '../collection-modal/collection-modal.component';
+import { CollectionService } from '../../../features/collections/services/collection.service';
 
 @Component({
   selector: 'app-question-detail',
-  imports: [RouterLink, AnswersQuestionComponent],
+  imports: [RouterLink, AnswersQuestionComponent, CollectionModalComponent],
   templateUrl: './question-detail.component.html',
   styleUrl: './question-detail.component.css'
 })
 export class QuestionDetailComponent {
   private questionService = inject(QuestionService);
+  private collectionService = inject(CollectionService);
   private activatedRoute = inject(ActivatedRoute);
 
   question = signal<Question | null>(null);
   questionId = signal<string>('');
+  isOpen = signal<boolean>(false);
   errorMessage: string = '';
 
   ngOnInit(): void {
@@ -59,5 +63,27 @@ export class QuestionDetailComponent {
         alert("Não foi possível processar a curtida. Tente novamente.");
       }
     });
+  }
+
+  toggleSave() {
+    const currentQuestion = this.question();
+    if (!currentQuestion) return;
+
+    if (currentQuestion.saved) {
+      this.collectionService.removeQuestionFromAllMyCollections(this.questionId()).subscribe({
+        next: () => {
+          this.question.update(q => q ? { ...q, saved: false } : null);
+        },
+        error: () => {
+          alert('Erro ao remover a pergunta das coleções.');
+        }
+      });
+    } else {
+      this.isOpen.set(true);
+    }
+  }
+
+  onSaveSuccess() {
+    this.question.update(q => q ? { ...q, saved: true } : null);
   }
 }

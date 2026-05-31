@@ -2,7 +2,9 @@ package io.centralweb.backend.service;
 
 import io.centralweb.backend.dto.qualification.QualificationCreateDTO;
 import io.centralweb.backend.dto.qualification.QualificationDTO;
+import io.centralweb.backend.enums.ExperienceLevel;
 import io.centralweb.backend.enums.UserRole;
+import io.centralweb.backend.events.QualificationCreateEvent;
 import io.centralweb.backend.exception.ObjectNotFoundException;
 import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
 import io.centralweb.backend.mapper.QualificationMapper;
@@ -13,6 +15,7 @@ import io.centralweb.backend.repository.ProfileRepository;
 import io.centralweb.backend.repository.QualificationRepository;
 import io.centralweb.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,12 +28,14 @@ public class QualificationService {
     private final QualificationMapper qualificationMapper;
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
+    private final ApplicationEventPublisher publisher;
 
-    public QualificationService(QualificationRepository qualificationRepository, QualificationMapper qualificationMapper, UserRepository userRepository, ProfileRepository profileRepository) {
+    public QualificationService(QualificationRepository qualificationRepository, QualificationMapper qualificationMapper, UserRepository userRepository, ProfileRepository profileRepository, ApplicationEventPublisher publisher) {
         this.qualificationRepository = qualificationRepository;
         this.qualificationMapper = qualificationMapper;
         this.userRepository = userRepository;
         this.profileRepository = profileRepository;
+        this.publisher = publisher;
     }
 
     @Transactional(rollbackOn = Exception.class)
@@ -46,8 +51,15 @@ public class QualificationService {
         newQualification.setEndDate(qualification.endDate());
         newQualification.setProfile(profile);
 
-        return qualificationMapper
-                .toDTO(qualificationRepository.save(newQualification));
+        Qualification qualificationCreated = qualificationRepository.save(newQualification);
+        publisher.publishEvent(
+                new QualificationCreateEvent(
+                        qualificationCreated.getProfile().getProfileId(),
+                        qualificationCreated.getExperienceLevel()
+                )
+        );
+
+        return qualificationMapper.toDTO(qualificationCreated);
     }
 
     public Page<QualificationDTO> getAllQualificationsVerified(Pageable pageable) {
@@ -94,5 +106,22 @@ public class QualificationService {
         }
 
         qualificationRepository.delete(qualification);
+    }
+
+    public long getExperienceLevelAndReturnPoints(ExperienceLevel experienceLevel){
+        switch (experienceLevel) {
+            case JUNIOR -> {
+                return 100;
+            }
+            case MID -> {
+                return 200;
+            }
+            case SENIOR -> {
+                return 300;
+            }
+            case null, default -> {
+                return 0;
+            }
+        }
     }
 }

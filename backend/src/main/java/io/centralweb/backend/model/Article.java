@@ -46,6 +46,8 @@ public class Article {
     private List<Profile> articleLikes = new ArrayList<>();
     @Formula("(SELECT COUNT(*) FROM article_likes al WHERE al.article_id = article_id)")
     private Long articleTotalLikes;
+    @ManyToMany(mappedBy = "articles")
+    private List<Collection> collections = new ArrayList<>();
 
     public Article() {
     }
@@ -131,5 +133,13 @@ public class Article {
 
     public Long getArticleTotalLikes() {
         return articleTotalLikes == null ? 0 : articleTotalLikes;
+    }
+
+    public List<Collection> getCollections() {
+        return collections;
+    }
+
+    public void setCollections(List<Collection> collections) {
+        this.collections = collections;
     }
 }

@@ -3,10 +3,11 @@ import { AnswerService } from '../../../features/answers/services/answer.service
 import { Answer } from '../../../features/models/answer';
 import { PaginationComponent } from '../pagination/pagination.component';
 import { RouterLink } from "@angular/router";
+import { CommentsAnswerComponent } from '../comments-answer/comments-answer.component';
 
 @Component({
   selector: 'app-answers-question',
-  imports: [RouterLink, PaginationComponent],
+  imports: [RouterLink, PaginationComponent, CommentsAnswerComponent],
   templateUrl: './answers-question.component.html',
   styleUrl: './answers-question.component.css'
 })

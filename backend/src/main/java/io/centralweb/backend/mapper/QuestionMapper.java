@@ -17,13 +17,16 @@ import java.util.Objects;
 )
 public interface QuestionMapper {
     @Mapping(target = "liked", expression = "java(verifyQuestionLikedByCurrentUser(question))")
+    @Mapping(target = "saved", expression = "java(verifyQuestionSavedByCurrentUser(question))")
     QuestionDTO toQuestionDTO(Question question);
 
     @Mapping(target = "liked", expression = "java(verifyQuestionLikedByCurrentUser(questions))")
+    @Mapping(target = "saved", expression = "java(verifyQuestionSavedByCurrentUser(questions))")
     QuestionListDTO toQuestionListDTO(Question questions);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "answers", ignore = true)
+    @Mapping(target = "collections", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "profile", ignore = true)
     @Mapping(target = "published", ignore = true)
@@ -39,6 +42,18 @@ public interface QuestionMapper {
 
             return question.getQuestionLikes().stream()
                     .anyMatch(profile -> profile.getUser().getEmail().equals(emailUser));
+        }
+
+        return false;
+    }
+
+    default boolean verifyQuestionSavedByCurrentUser(Question question){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if(auth != null && auth.isAuthenticated() && !Objects.equals(auth.getPrincipal(), "anonymousUser")){
+            String emailUser = auth.getName();
+
+            return question.getCollections().stream()
+                    .anyMatch(collection -> collection.getProfile().getUser().getEmail().equals(emailUser));
         }
 
         return false;

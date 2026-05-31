@@ -3,17 +3,22 @@ import { QuestionService } from '../../../features/questions/services/question.s
 import { QuestionList } from '../../../features/models/question';
 import { RouterLink } from "@angular/router";
 import { PaginationComponent } from '../pagination/pagination.component';
+import { CollectionModalComponent } from '../collection-modal/collection-modal.component';
+import { CollectionService } from '../../../features/collections/services/collection.service';
 
 @Component({
   selector: 'app-question-list',
-  imports: [RouterLink, PaginationComponent],
+  imports: [RouterLink, PaginationComponent, CollectionModalComponent],
   templateUrl: './question-list.component.html',
   styleUrl: './question-list.component.css'
 })
 export class QuestionListComponent implements OnInit {
   private questionService = inject(QuestionService);
+  private collectionService = inject(CollectionService);
 
   questions = signal<QuestionList[]>([]);
+  isOpen = signal<boolean>(false);
+  selectedQuestionId = signal<string | undefined>(undefined);
 
   isEmpty = signal<boolean>(false);
   isFirst = signal<boolean>(true);
@@ -73,5 +78,29 @@ export class QuestionListComponent implements OnInit {
         alert("Não foi possível processar a curtida. Tente novamente.");
       }
     });
+  }
+
+  toggleSave(question: QuestionList) {
+    if (question.saved) {
+      this.collectionService.removeQuestionFromAllMyCollections(question.questionId).subscribe({
+        next: () => {
+          this.questions.update(questions =>
+            questions.map(q => q.questionId === question.questionId ? { ...q, saved: false } : q)
+          );
+        },
+        error: () => {
+          alert('Erro ao remover a pergunta das coleções.');
+        }
+      });
+    } else {
+      this.selectedQuestionId.set(question.questionId);
+      this.isOpen.set(true);
+    }
+  }
+
+  onSaveSuccess(questionId: string) {
+    this.questions.update(questions =>
+      questions.map(q => q.questionId === questionId ? { ...q, saved: true } : q)
+    );
   }
 }

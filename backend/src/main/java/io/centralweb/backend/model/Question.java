@@ -50,6 +50,8 @@ public class Question {
     private List<Profile> questionLikes = new java.util.ArrayList<>();
     @Formula("(SELECT COUNT(*) FROM question_likes ql WHERE ql.question_id = question_id)")
     private Long questionTotalLikes;
+    @ManyToMany(mappedBy = "questions")
+    private List<Collection> collections = new java.util.ArrayList<>();
 
     public Question() {
     }
@@ -153,6 +155,14 @@ public class Question {
 
     public Long getQuestionTotalLikes() {
         return questionTotalLikes == null ? 0 : questionTotalLikes;
+    }
+
+    public List<Collection> getCollections() {
+        return collections;
+    }
+
+    public void setCollections(List<Collection> collections) {
+        this.collections = collections;
     }
 }
 

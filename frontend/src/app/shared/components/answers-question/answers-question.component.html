@@ -43,7 +43,10 @@
                     <span class="text-sm font-medium">{{ answer.answerTotalLikes }}</span>
                 </button>
             </div>
-            <hr class="border-[#8B949E] mt-2">
+            
+            <app-comments-answer [answerId]="answer.answerId"></app-comments-answer>
+            
+            <hr class="border-[#8B949E] mt-4">
         </section>
     </li>
     }

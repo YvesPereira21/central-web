@@ -19,5 +19,6 @@ public record QuestionDTO(
         List<TagDTO> tags,
         List<AnswerDTO> answers,
         Long questionTotalLikes,
-        boolean liked
+        boolean liked,
+        boolean saved
 ) {}

@@ -17,5 +17,6 @@ public record QuestionListDTO(
         ProfileSimpleDTO profile,
         List<TagDTO> tags,
         Long questionTotalLikes,
-        boolean liked
+        boolean liked,
+        boolean saved
 ) {}

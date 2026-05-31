@@ -12,8 +12,8 @@ export class AnswerService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/answers`;
 
-  createAnswer(answerData: AnswerCreate): Observable<Answer> {
-    return this.http.post<Answer>(this.apiUrl, answerData);
+  createAnswer(questionId: string, answerData: AnswerCreate): Observable<Answer> {
+    return this.http.post<Answer>(`${this.apiUrl}/${questionId}`, answerData);
   }
 
   getAllAnswersFromQuestion(questionId: string, page: number, size: number): Observable<Page<Answer>> {

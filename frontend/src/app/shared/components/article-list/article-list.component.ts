@@ -3,19 +3,25 @@ import { ArticleService } from '../../../features/articles/services/article.serv
 import { Article } from '../../../features/models/article';
 import { ActivatedRoute, RouterLink } from "@angular/router";
 import { PaginationComponent } from '../pagination/pagination.component';
+import { CollectionModalComponent } from '../collection-modal/collection-modal.component';
+import { CollectionService } from '../../../features/collections/services/collection.service';
 
 @Component({
   selector: 'app-article-list',
-  imports: [RouterLink, PaginationComponent],
+  imports: [RouterLink, PaginationComponent, CollectionModalComponent],
   templateUrl: './article-list.component.html',
   styleUrl: './article-list.component.css'
 })
 export class ArticleListComponent implements OnInit {
   private articleService = inject(ArticleService);
+  private collectionService = inject(CollectionService);
   private activatedRoute = inject(ActivatedRoute);
 
   @Input() profileId: string | null = null;
   @Input() showPagination: boolean = true;
+
+  isOpen = signal<boolean>(false);
+  selectedArticleId = signal<string | undefined>(undefined);
 
   articles = signal<Article[]>([]);
 
@@ -113,5 +119,29 @@ export class ArticleListComponent implements OnInit {
         alert("Não foi possível processar a curtida. Tente novamente.");
       }
     });
+  }
+
+  toggleSave(article: Article) {
+    if (article.saved) {
+      this.collectionService.removeArticleFromAllMyCollections(article.articleId).subscribe({
+        next: () => {
+          this.articles.update(articles =>
+            articles.map(a => a.articleId === article.articleId ? { ...a, saved: false } : a)
+          );
+        },
+        error: () => {
+          alert('Erro ao remover o artigo das coleções.');
+        }
+      });
+    } else {
+      this.selectedArticleId.set(article.articleId);
+      this.isOpen.set(true);
+    }
+  }
+
+  onSaveSuccess(articleId: string) {
+    this.articles.update(articles =>
+      articles.map(a => a.articleId === articleId ? { ...a, saved: true } : a)
+    );
   }
 }

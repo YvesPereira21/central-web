@@ -13,7 +13,8 @@ export interface Question {
     tags: Tag[],
     answers: Answer[],
     questionTotalLikes: number,
-    liked: boolean
+    liked: boolean,
+    saved: boolean
 }
 
 export interface QuestionCreate {
@@ -32,7 +33,8 @@ export interface QuestionList {
     profile: ProfileSimple,
     tags: Tag[],
     questionTotalLikes: number,
-    liked: boolean
+    liked: boolean,
+    saved: boolean
 }
 
 export interface QuestionUpdate {
