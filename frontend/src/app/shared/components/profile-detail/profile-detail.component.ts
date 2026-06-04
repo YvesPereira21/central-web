@@ -3,18 +3,22 @@ import { ProfileService } from '../../../features/profiles/services/profile.serv
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Profile } from '../../../features/models/profile';
 import { ArticleListComponent } from '../article-list/article-list.component';
+import { QuestionListComponent } from '../question-list/question-list.component';
+import { AuthenticationService } from '../../../features/authentications/services/authentication.service';
 
 @Component({
   selector: 'app-profile-detail',
-  imports: [RouterLink, ArticleListComponent],
+  imports: [RouterLink, ArticleListComponent, QuestionListComponent],
   templateUrl: './profile-detail.component.html',
   styleUrl: './profile-detail.component.css'
 })
 export class ProfileDetailComponent implements OnInit {
   private profileService = inject(ProfileService);
   private activatedRoute = inject(ActivatedRoute);
+  private authenticationService = inject(AuthenticationService);
 
   profileId = signal<string>('');
+  isOwner = signal<boolean>(false);
   profile: Profile | null = null;
   errorMessage: string = '';
 
@@ -22,14 +26,21 @@ export class ProfileDetailComponent implements OnInit {
     const profileId = this.activatedRoute.snapshot.paramMap.get('id');
     if (profileId) {
       this.profileId.set(profileId);
+
       this.loadProfile(profileId);
     }
+
   }
 
   loadProfile(profileId: string) {
     this.profileService.getProfile(profileId).subscribe({
       next: (response) => {
         this.profile = response;
+        
+        const userIsOwner = this.authenticationService.isOwner(this.profile.userId);
+        if (userIsOwner) {
+          this.isOwner.set(true);
+        }
       },
       error: (error) => {
         this.errorMessage = 'Erro ao carregar perfil.';

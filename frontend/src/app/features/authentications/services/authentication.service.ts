@@ -58,11 +58,27 @@ export class AuthenticationService {
     }
   }
 
+  private getAuthenticatedUserId(): string | null {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+
+    try {
+      const decodedToken: any = jwtDecode(token)
+      return decodedToken.id;
+    } catch (error) {
+      return null;
+    }
+  }
+
   isAdmin(): boolean {
     return this.userRole() === 'ADMIN';
   }
 
   isPerson(): boolean {
     return this.userRole() === 'PERSON';
+  }
+
+  isOwner(userId: string): boolean {
+    return this.getAuthenticatedUserId() === userId;
   }
 }

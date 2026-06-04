@@ -12,6 +12,7 @@ public interface QuestionRepository extends JpaRepository<Question, UUID> {
     Page<Question> findAllByPublishedIsTrue(Pageable pageable);
     Page<Question> findAllByTitleContainingIgnoreCaseAndPublishedIsTrue(String title, Pageable pageable);
     Page<Question> findAllByTags_TechnologyNameAndPublishedIsTrue(String tagsTechnologyName, Pageable pageable);
+    Page<Question> findAllByProfile_ProfileIdAndPublishedIsTrue(UUID profileId, Pageable pageable);
     @Query("SELECT q FROM Question q JOIN q.answers a " +
             "WHERE q.published = true AND a.accepted = true")
     Page<Question> findPublishedQuestionsWithAcceptedAnswers(Pageable pageable);

@@ -4,6 +4,7 @@ import { User } from './user';
 
 export interface Profile {
     profileId: string,
+    userId: string,
     name: string,
     bio: string,
     expertise: string,
@@ -29,6 +30,7 @@ export interface ProfileUpdate {
 
 export interface ProfileSimple {
     profileId: string,
+    userId: string,
     name: string,
     expertise: string,
     level: string,

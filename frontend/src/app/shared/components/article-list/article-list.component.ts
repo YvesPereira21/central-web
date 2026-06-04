@@ -5,6 +5,7 @@ import { ActivatedRoute, RouterLink } from "@angular/router";
 import { PaginationComponent } from '../pagination/pagination.component';
 import { CollectionModalComponent } from '../collection-modal/collection-modal.component';
 import { CollectionService } from '../../../features/collections/services/collection.service';
+import { AuthenticationService } from '../../../features/authentications/services/authentication.service';
 
 @Component({
   selector: 'app-article-list',
@@ -16,9 +17,11 @@ export class ArticleListComponent implements OnInit {
   private articleService = inject(ArticleService);
   private collectionService = inject(CollectionService);
   private activatedRoute = inject(ActivatedRoute);
+  authService = inject(AuthenticationService);
 
   @Input() profileId: string | null = null;
   @Input() showPagination: boolean = true;
+  @Input() showCreateButton: boolean = true;
 
   isOpen = signal<boolean>(false);
   selectedArticleId = signal<string | undefined>(undefined);
@@ -143,5 +146,19 @@ export class ArticleListComponent implements OnInit {
     this.articles.update(articles =>
       articles.map(a => a.articleId === articleId ? { ...a, saved: true } : a)
     );
+  }
+
+  deleteArticle(articleId: string) {
+    if (confirm('Tem certeza de que deseja excluir este artigo?')) {
+      this.articleService.deleteArticle(articleId).subscribe({
+        next: () => {
+          this.articles.update(articles => articles.filter(a => a.articleId !== articleId));
+          alert('Artigo removido com sucesso!');
+        },
+        error: () => {
+          alert('Erro ao remover o artigo. Tente novamente.');
+        }
+      });
+    }
   }
 }

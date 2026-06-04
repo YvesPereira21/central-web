@@ -4,6 +4,7 @@ import java.util.UUID;
 
 public record ProfileDTO(
         UUID profileId,
+        UUID userId,
         String name,
         String bio,
         String expertise,

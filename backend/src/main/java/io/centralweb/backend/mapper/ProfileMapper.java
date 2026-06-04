@@ -8,8 +8,10 @@ import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
 public interface ProfileMapper {
+    @Mapping(source = "user.userId", target = "userId")
     ProfileSimpleDTO toProfileSimpleDTO(Profile profile);
 
+    @Mapping(source = "user.userId", target = "userId")
     ProfileDTO toProfileUniqueDTO(Profile profile);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

@@ -28,6 +28,14 @@ export class QuestionService {
     return this.http.get<Page<Question>>(this.apiUrl, { params });
   }
 
+  getProfileQuestions(profileId: string, page: number, size: number): Observable<Page<Question>> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    return this.http.get<Page<Question>>(`${this.apiUrl}/${profileId}/profile`, { params });
+  }
+
   getQuestionsByTitle(title: string, page: number, size: number): Observable<Page<Question>> {
     const params = new HttpParams()
       .set('page', page.toString())

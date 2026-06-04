@@ -1,10 +1,11 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, Input, OnInit, signal } from '@angular/core';
 import { QuestionService } from '../../../features/questions/services/question.service';
 import { QuestionList } from '../../../features/models/question';
-import { RouterLink } from "@angular/router";
+import { ActivatedRoute, RouterLink } from "@angular/router";
 import { PaginationComponent } from '../pagination/pagination.component';
 import { CollectionModalComponent } from '../collection-modal/collection-modal.component';
 import { CollectionService } from '../../../features/collections/services/collection.service';
+import { AuthenticationService } from '../../../features/authentications/services/authentication.service';
 
 @Component({
   selector: 'app-question-list',
@@ -15,6 +16,12 @@ import { CollectionService } from '../../../features/collections/services/collec
 export class QuestionListComponent implements OnInit {
   private questionService = inject(QuestionService);
   private collectionService = inject(CollectionService);
+  private activatedRoute = inject(ActivatedRoute);
+  authService = inject(AuthenticationService);
+
+  @Input() profileId: string | null = null;
+  @Input() showPagination: boolean = true;
+  @Input() showCreateButton: boolean = true;
 
   questions = signal<QuestionList[]>([]);
   isOpen = signal<boolean>(false);
@@ -30,7 +37,22 @@ export class QuestionListComponent implements OnInit {
   totalPages = signal<number>(0);
 
   ngOnInit(): void {
-    this.loadAllQuestions(0, 1);
+    this.activatedRoute.paramMap.subscribe(params => {
+      const routeId = params.get('id');
+      if (routeId) {
+        this.profileId = routeId;
+      }
+
+      this.loadData(0, 10);
+    });
+  }
+
+  loadData(page: number, size: number) {
+    if (this.profileId) {
+      this.loadProfileQuestions(page, size);
+    } else {
+      this.loadAllQuestions(page, size);
+    }
   }
 
   loadAllQuestions(page: number, size: number) {
@@ -47,9 +69,30 @@ export class QuestionListComponent implements OnInit {
         this.totalPages.set(response.totalPages);
       },
       error: (error) => {
-        alert("Não foi possível encontrar todos os pontos");
+        alert("Não foi possível encontrar todas as perguntas");
       }
-    })
+    });
+  }
+
+  loadProfileQuestions(page: number, size: number) {
+    if (!this.profileId) return;
+
+    this.questionService.getProfileQuestions(this.profileId, page, size).subscribe({
+      next: (response) => {
+        this.questions.set(response.content);
+        this.isEmpty.set(response.empty);
+        this.isFirst.set(response.first);
+        this.isLast.set(response.last);
+        this.pageSize.set(response.size);
+        this.currentPage.set(response.number);
+        this.numberOfElements.set(response.numberOfElements)
+        this.totalElements.set(response.totalElements);
+        this.totalPages.set(response.totalPages);
+      },
+      error: (error) => {
+        alert("Não foi possível encontrar todas as perguntas do perfil");
+      }
+    });
   }
 
   toggleQuestionLike(questionId: string) {
@@ -102,5 +145,19 @@ export class QuestionListComponent implements OnInit {
     this.questions.update(questions =>
       questions.map(q => q.questionId === questionId ? { ...q, saved: true } : q)
     );
+  }
+
+  deleteQuestion(questionId: string) {
+    if (confirm('Tem certeza de que deseja excluir esta pergunta?')) {
+      this.questionService.deleteQuestion(questionId).subscribe({
+        next: () => {
+          this.questions.update(questions => questions.filter(q => q.questionId !== questionId));
+          alert('Pergunta removida com sucesso!');
+        },
+        error: () => {
+          alert('Erro ao remover a pergunta. Tente novamente.');
+        }
+      });
+    }
   }
 }

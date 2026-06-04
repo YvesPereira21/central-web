@@ -45,16 +45,16 @@
         <div class="flex flex-wrap items-center justify-between">
             <span class="text-2xl font-lora font-semibold">Todos os artigos publicados</span>
             <a routerLink="/create-article"
-                class="inline-flex items-center gap-2 rounded-full border border-emerald-500/50 bg-emerald-500/10 px-5 py-2 text-sm font-medium text-emerald-300 transition-all hover:border-emerald-400 hover:bg-emerald-500/20 hover:text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-4">
-                    <path
-                        d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                class="flex items-center gap-2 bg-[#161B22] hover:bg-[#1f242c] text-white border border-[#30363d] hover:border-emerald-500 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                    stroke="currentColor" class="size-5 text-emerald-500">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
-                Criar novo artigo
+                <span>Criar novo artigo</span>
             </a>
         </div>
 
-        <app-article-list [profileId]="profileId()" [showPagination]="false"></app-article-list>
+        <app-article-list [profileId]="profileId()" [showPagination]="false" [showCreateButton]="false"></app-article-list>
 
         <!-- Link to all articles written by the profile -->
         <a [routerLink]="['/articles', profileId(), 'profile']"
@@ -63,7 +63,32 @@
         </a>
     </section>
 
-    <!-- User experience -->
+    <!-- Card and Link to all questions written by the profile (ONLY for the owner) -->
+    @if (isOwner()) {
+    <section class="rounded-lg bg-[#161B22] p-4 text-white shadow-md space-y-4">
+        <div class="flex flex-wrap items-center justify-between">
+            <span class="text-2xl font-lora font-semibold">Todas as minhas perguntas postadas</span>
+            <a routerLink="/create-question"
+                class="flex items-center gap-2 bg-[#161B22] hover:bg-[#1f242c] text-white border border-[#30363d] hover:border-emerald-500 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                    stroke="currentColor" class="size-5 text-emerald-500">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                <span>Criar nova pergunta</span>
+            </a>
+        </div>
+
+        <app-question-list [profileId]="profileId()" [showPagination]="false" [showCreateButton]="false"></app-question-list>
+
+        <!-- Link to all questions written by the profile -->
+        <a [routerLink]="['/questions', profileId(), 'profile']"
+            class="block w-full rounded-md bg-[#30363D] p-3 text-center text-white shadow-sm transition hover:bg-[#3c444d]">
+            Mostrar todas as perguntas
+        </a>
+    </section>
+    }
+
+    <!-- User's experience -->
     <section class="rounded-lg bg-[#161B22] p-4 text-white shadow-md">
         <h1 class="text-xl font-semibold">Experiências</h1>
         @for (qualification of profile?.qualifications; track qualification.qualificationId) {

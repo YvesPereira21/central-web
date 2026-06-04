@@ -22,7 +22,6 @@
                 </textarea>
             </div>
 
-            <!-- Create button -->
             <div class="flex justify-end pt-4">
                 <button type="submit"
                     class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-emerald-500 hover:shadow-md"
@@ -33,9 +32,18 @@
                             clip-rule="evenodd" />
                     </svg>
                     @if (isSubmiting) {
-                    Criando...
+                        @if (isEditMode) {
+                            Editando...
+                        } @else {
+                            Criando...
+                        }
+                    } @else {
+                        @if (isEditMode) {
+                            Editar
+                        } @else {
+                            Criar
+                        }
                     }
-                    Criar
                 </button>
             </div>
         </form>

@@ -99,6 +99,19 @@ public class QuestionService {
                 .map(questionMapper::toQuestionListDTO);
     }
 
+    public Page<QuestionListDTO> getAllQuestionsByProfile(UUID profileId, UUID userId, Pageable pageable) {
+        Profile profile = profileRepository.findById(profileId)
+                .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
+
+        if (!profile.getUser().getUserId().equals(userId)) {
+            throw new ProfileIsNotTheOwnerException("Você não tem permissão para visualizar estas perguntas.");
+        }
+
+        return questionRepository
+                .findAllByProfile_ProfileIdAndPublishedIsTrue(profileId, pageable)
+                .map(questionMapper::toQuestionListDTO);
+    }
+
     public QuestionDTO updateQuestion(UUID questionId, QuestionUpdateDTO questionUpdated, UUID userProfileId) {
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new ObjectNotFoundException("Pergunta não encontrada"));

@@ -81,6 +81,23 @@ public class QuestionController {
         return ResponseEntity.ok(questionService.getAllPublishedQuestions(pageable));
     }
 
+    @GetMapping("/{profileId}/profile")
+    @Operation(summary = "Busca perguntas por perfil", description = "Retorna as perguntas de um perfil específico, apenas para o próprio dono")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de perguntas do perfil"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado"),
+            @ApiResponse(responseCode = "404", description = "Perfil não encontrado")
+    })
+    public ResponseEntity<Page<QuestionListDTO>> getProfileQuestions(
+            @PathVariable UUID profileId,
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable,
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal(expression = "userId") UUID userId
+    ) {
+        return ResponseEntity.ok(questionService.getAllQuestionsByProfile(profileId, userId, pageable));
+    }
+
     @GetMapping("/{title}/title")
     @Operation(summary = "Busca perguntas pelo título", description = "Pesquisa perguntas publicadas cujo título contenha o texto informado")
     @ApiResponses(value = {

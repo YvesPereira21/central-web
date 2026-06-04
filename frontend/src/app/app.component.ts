@@ -18,6 +18,10 @@ export class AppComponent {
 
   get showSidebars(): boolean {
     const url = this.router.url;
-    return !url.includes('/create-article') && !url.includes('/create-question') && !url.includes('/create-qualification');
+    return !url.includes('/create-article') && 
+           !url.includes('/create-question') && 
+           !url.includes('/create-qualification') &&
+           !url.includes('/edit-article') &&
+           !url.includes('/edit-question');
   }
 }
