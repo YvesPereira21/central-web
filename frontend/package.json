@@ -17,6 +17,8 @@
     "@angular/platform-browser": "^19.2.0",
     "@angular/platform-browser-dynamic": "^19.2.0",
     "@angular/router": "^19.2.0",
+    "@fontsource/inter": "^5.2.8",
+    "@fontsource/lora": "^5.2.8",
     "@tailwindcss/postcss": "^4.2.2",
     "daisyui": "^5.5.19",
     "jwt-decode": "^4.0.0",

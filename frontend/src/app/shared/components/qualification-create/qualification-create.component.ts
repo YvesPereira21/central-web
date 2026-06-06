@@ -37,11 +37,13 @@ export class QualificationCreateComponent {
 
     this.qualificationService.createQualification(qualification).subscribe({
       next: (response) => {
+        alert('Experiência registrada com sucesso!');
         console.log('Experiência registrada com sucesso!')
         this.clearForm();
       },
       error: (error) => {
-        console.log('Erro ao registrar experiência.');
+        alert('Erro ao registrar experiência. Verifique os dados e tente novamente.');
+        console.log('Erro ao registrar experiência.', error);
         this.clearForm();
       }
     })

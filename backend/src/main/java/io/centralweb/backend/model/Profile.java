@@ -24,8 +24,6 @@ public class Profile {
     @Column(name = "bio", columnDefinition = "TEXT")
     private String bio;
     private ProfileType profileType;
-    @Column(name = "expertise")
-    private String expertise;
     @Column(name = "level")
     private String level = "Iniciante";
     @Column(name = "reputation_score")
@@ -49,12 +47,11 @@ public class Profile {
     public Profile() {
     }
 
-    public Profile(UUID profileId, String name, String bio, ProfileType profileType, String expertise, String level, long reputationScore, boolean professional, User user, List<Question> questions, List<Article> articles, List<Answer> answers, List<Qualification> qualifications, List<Collection> collections) {
+    public Profile(UUID profileId, String name, String bio, ProfileType profileType, String level, long reputationScore, boolean professional, User user, List<Question> questions, List<Article> articles, List<Answer> answers, List<Qualification> qualifications, List<Collection> collections) {
         this.profileId = profileId;
         this.name = name;
         this.bio = bio;
         this.profileType = profileType;
-        this.expertise = expertise;
         this.level = level;
         this.reputationScore = reputationScore;
         this.professional = professional;
@@ -92,14 +89,6 @@ public class Profile {
 
     public void setProfileType(ProfileType profileType) {
         this.profileType = profileType;
-    }
-
-    public String getExpertise() {
-        return expertise;
-    }
-
-    public void setExpertise(String expertise) {
-        this.expertise = expertise;
     }
 
     public String getLevel() {

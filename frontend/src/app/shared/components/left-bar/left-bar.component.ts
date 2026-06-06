@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
-import { RouterLink } from "@angular/router";
+import { RouterLink, RouterLinkActive } from "@angular/router";
 
 @Component({
   selector: 'app-left-bar',
-  imports: [RouterLink],
+  imports: [RouterLink, RouterLinkActive],
   templateUrl: './left-bar.component.html',
   styleUrl: './left-bar.component.css'
 })

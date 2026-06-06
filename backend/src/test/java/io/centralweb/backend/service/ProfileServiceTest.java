@@ -79,7 +79,6 @@ class ProfileServiceTest {
         profilePerson1.setName("Usuário Teste");
         profilePerson1.setBio("Sou um programador de testes");
         profilePerson1.setProfileType(ProfileType.UNDERGRADUATE);
-        profilePerson1.setExpertise("QA");
         profilePerson1.setReputationScore(870);
         profilePerson1.setProfessional(false);
         profilePerson1.setUser(userPerson1);
@@ -89,7 +88,6 @@ class ProfileServiceTest {
         profilePerson2.setName("Usuário Teste 2");
         profilePerson2.setBio("Sou um programador de testes 2");
         profilePerson2.setProfileType(ProfileType.SELFTAUGHT);
-        profilePerson2.setExpertise("Desenvolvedor Web");
         profilePerson2.setReputationScore(110);
         profilePerson2.setProfessional(false);
         profilePerson2.setUser(userPerson2);
@@ -103,15 +101,14 @@ class ProfileServiceTest {
                 "Usuário Teste",
                 "Sou um programador de testes",
                 ProfileType.UNDERGRADUATE,
-                "QA",
                 user1
         );
 
         profileDTO = new ProfileDTO(
                 profilePerson1.getProfileId(),
+                profilePerson1.getUser().getUserId(),
                 profilePerson1.getName(),
                 profilePerson1.getBio(),
-                profilePerson1.getExpertise(),
                 profilePerson1.getLevel(),
                 profilePerson1.getReputationScore(),
                 profilePerson1.isProfessional()
@@ -130,7 +127,6 @@ class ProfileServiceTest {
         assertNotNull(result);
         assertEquals("Usuário Teste", result.name());
         assertEquals("Sou um programador de testes", result.bio());
-        assertEquals("QA", result.expertise());
         assertEquals(870, result.reputationScore());
         assertEquals("Iniciante", result.level());
 
@@ -152,7 +148,6 @@ class ProfileServiceTest {
         assertNotNull(result);
         assertEquals("Usuário Teste", result.name());
         assertEquals("Sou um programador de testes", result.bio());
-        assertEquals("QA", result.expertise());
         assertEquals(870, result.reputationScore());
         assertEquals("Iniciante", result.level());
 
@@ -166,15 +161,14 @@ class ProfileServiceTest {
         UUID userId = profilePerson1.getUser().getUserId();
         ProfileUpdateDTO profileUpdated = new ProfileUpdateDTO(
                 "Ronaldo",
-                "Testando update",
-                "Desenvolvedor backend"
+                "Testando update"
         );
 
         ProfileDTO profileUpdatedResponse = new ProfileDTO(
                 profilePerson1.getProfileId(),
+                profilePerson1.getUser().getUserId(),
                 "Ronaldo",
                 "Testando update",
-                "Desenvolvedor backend",
                 profilePerson1.getLevel(),
                 profilePerson1.getReputationScore(),
                 profilePerson1.isProfessional()
@@ -189,7 +183,6 @@ class ProfileServiceTest {
         assertNotNull(result);
         assertEquals("Ronaldo", result.name());
         assertEquals("Testando update", result.bio());
-        assertEquals("Desenvolvedor backend", result.expertise());
 
         verify(profileRepository, times(1)).findById(profileId);
         verify(profileMapper, times(1)).updateProfileFromDTO(profileUpdated, profilePerson1);
@@ -296,8 +289,7 @@ class ProfileServiceTest {
         UUID userId = profilePerson1.getUser().getUserId();
         ProfileUpdateDTO profileUpdated = new ProfileUpdateDTO(
                 "Ronaldo",
-                "Testando update",
-                "Desenvolvedor backend"
+                "Testando update"
         );
 
         when(profileRepository.findById(profileId)).thenReturn(Optional.empty());
@@ -318,8 +310,7 @@ class ProfileServiceTest {
         UUID userId = profilePerson2.getUser().getUserId();
         ProfileUpdateDTO profileUpdated = new ProfileUpdateDTO(
                 "Ronaldo",
-                "Testando update",
-                "Desenvolvedor backend"
+                "Testando update"
         );
 
         when(profileRepository.findById(profileId)).thenReturn(Optional.of(profilePerson1));

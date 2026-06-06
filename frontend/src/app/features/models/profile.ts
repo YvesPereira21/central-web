@@ -7,7 +7,6 @@ export interface Profile {
     userId: string,
     name: string,
     bio: string,
-    expertise: string,
     level: string,
     reputationScore: number,
     professional: boolean,
@@ -24,15 +23,13 @@ export interface ProfileCreate {
 
 export interface ProfileUpdate {
     name: string,
-    bio: string,
-    expertise: string
+    bio: string
 }
 
 export interface ProfileSimple {
     profileId: string,
     userId: string,
     name: string,
-    expertise: string,
     level: string,
     professional: boolean
 }

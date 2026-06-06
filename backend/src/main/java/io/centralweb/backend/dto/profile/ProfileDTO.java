@@ -7,7 +7,6 @@ public record ProfileDTO(
         UUID userId,
         String name,
         String bio,
-        String expertise,
         String level,
         long reputationScore,
         boolean professional

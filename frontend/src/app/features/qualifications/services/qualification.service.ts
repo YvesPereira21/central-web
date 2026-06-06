@@ -12,7 +12,7 @@ export class QualificationService {
   private apiUrl = `${environment.apiUrl}/qualifications`;
 
   createQualification(qualificationData: QualificationCreate): Observable<Qualification> {
-    return this.http.post<Qualification>(`${this.apiUrl}/qualifications`, qualificationData);
+    return this.http.post<Qualification>(this.apiUrl, qualificationData);
   }
 
   getVerifiedQualifications(): Observable<Qualification[]> {

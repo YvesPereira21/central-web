@@ -11,5 +11,5 @@ public record QualificationCreateDTO(
         @NotNull ExperienceLevel experienceLevel,
         @NotBlank String institution,
         @NotNull LocalDate startDate,
-        @NotNull LocalDate endDate
+        LocalDate endDate
 ) {}

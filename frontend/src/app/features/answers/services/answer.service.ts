@@ -24,8 +24,8 @@ export class AnswerService {
     return this.http.get<Page<Answer>>(`${this.apiUrl}/${questionId}`, { params });
   }
 
-  acceptAnswer(answerAccepted: AnswerAccepted): Observable<Answer> {
-    return this.http.put<Answer>(this.apiUrl, answerAccepted);
+  acceptAnswer(answerId: string): Observable<void> {
+    return this.http.patch<void>(`${this.apiUrl}/${answerId}`, null);
   }
 
   toggleAnswerLike(answerId: string): Observable<void> {

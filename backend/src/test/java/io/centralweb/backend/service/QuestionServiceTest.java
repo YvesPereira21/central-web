@@ -107,8 +107,8 @@ class QuestionServiceTest {
 
         profileSimpleDTO = new ProfileSimpleDTO(
                 profilePerson1.getProfileId(),
+                profilePerson1.getUser().getUserId(),
                 profilePerson1.getName(),
-                profilePerson1.getExpertise(),
                 profilePerson1.getLevel(),
                 profilePerson1.isProfessional()
         );
@@ -151,6 +151,7 @@ class QuestionServiceTest {
                 List.of(tagJavaDTO, tagRustDTO),
                 new ArrayList<>(),
                 0L,
+                false,
                 false
         );
 
@@ -164,6 +165,7 @@ class QuestionServiceTest {
                 profileSimpleDTO,
                 List.of(tagJavaDTO, tagRustDTO),
                 0L,
+                false,
                 false
         );
     }
@@ -338,6 +340,7 @@ class QuestionServiceTest {
                 List.of(tagJavaDTO),
                 new ArrayList<>(),
                 0L,
+                false,
                 false
         );
 

@@ -23,6 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
@@ -44,6 +45,8 @@ class QualificationServiceTest {
     private QualificationRepository qualificationRepository;
     @Mock
     private QualificationMapper qualificationMapper;
+    @Mock
+    private ApplicationEventPublisher publisher;
     @InjectMocks
     private QualificationService qualificationService;
     private User userAdmin;

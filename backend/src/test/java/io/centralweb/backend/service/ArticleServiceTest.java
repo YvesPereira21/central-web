@@ -102,8 +102,8 @@ class ArticleServiceTest {
 
         profileSimpleDTO = new ProfileSimpleDTO(
                 profilePerson1.getProfileId(),
+                profilePerson1.getUser().getUserId(),
                 profilePerson1.getName(),
-                profilePerson1.getExpertise(),
                 profilePerson1.getLevel(),
                 profilePerson1.isProfessional()
         );
@@ -142,6 +142,7 @@ class ArticleServiceTest {
                 List.of(tagJavaDTO, tagRustDTO),
                 profileSimpleDTO,
                 0L,
+                false,
                 false
         );
     }
@@ -306,6 +307,7 @@ class ArticleServiceTest {
                 List.of(tagJavaDTO),
                 profileSimpleDTO,
                 0L,
+                false,
                 false
         );
 

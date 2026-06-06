@@ -1,4 +1,4 @@
-<article class="w-[600px] max-w-[600px] mx-auto">
+<article class="w-full max-w-[600px] mx-auto min-h-[calc(100vh-10rem)] flex flex-col justify-center">
     <section class="rounded-xl bg-[#161B22] p-6 text-white shadow-lg">
         <div class="space-y-6">
             <!-- Form -->
@@ -25,18 +25,20 @@
                         (click)="onSubmit()" [disabled]="isSubmiting || loginForm.invalid">
                         @if (isSubmiting) {
                         Logando
-                        }
+                        } @else{
                         Login
+                        }
                     </button>
                 </div>
             </form>
 
-            <!-- Link para criar conta -->
+            <!-- Link to create account -->
             <div class="text-center">
                 <span class="text-sm text-gray-400">
-                    Não possui conta? <a [routerLink]="['/create-profile']"
-                        class="text-emerald-400 hover:underline">Crie
-                        por aqui</a>
+                    Não possui conta?
+                    <a [routerLink]="['/create-profile']" class="text-emerald-400 hover:underline">
+                        Crie por aqui
+                    </a>
                 </span>
             </div>
         </div>

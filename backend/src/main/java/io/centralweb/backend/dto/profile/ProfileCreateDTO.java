@@ -10,6 +10,5 @@ public record ProfileCreateDTO(
         @NotBlank String name,
         @NotBlank String bio,
         @NotNull ProfileType profileType,
-        @NotBlank String expertise,
         @NotNull @Valid UserDTO user
 ) {}

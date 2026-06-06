@@ -71,7 +71,6 @@ public class ProfileControllerTest {
         profile1.setName("Usuário Teste1");
         profile1.setBio("Sou um programador de testes");
         profile1.setProfileType(ProfileType.UNDERGRADUATE);
-        profile1.setExpertise("Desenvolvedor Fullstack");
         profile1.setLevel("Especialista");
         profile1.setReputationScore(1200);
         profile1.setUser(user2);
@@ -82,7 +81,6 @@ public class ProfileControllerTest {
         profile2.setName("Usuário Bom");
         profile2.setBio("Sou um desenvolvedor em Segurança da Informação");
         profile2.setProfileType(ProfileType.PROFESSIONAL);
-        profile2.setExpertise("Analista SOC");
         profile2.setLevel("Especialista");
         profile2.setReputationScore(2760);
         profile2.setProfessional(true);
@@ -107,7 +105,6 @@ public class ProfileControllerTest {
                 "Usuário Teste",
                 "Sou um programador de QA",
                 ProfileType.SELFTAUGHT,
-                "Aspirante a tecnologia",
                 user
         );
 
@@ -120,7 +117,6 @@ public class ProfileControllerTest {
                 .statusCode(HttpStatus.CREATED.value())
                 .body("name", equalTo("Usuário Teste"))
                 .body("bio", equalTo("Sou um programador de QA"))
-                .body("expertise", equalTo("Aspirante a tecnologia"))
                 .body("level", equalTo("Iniciante"))
                 .body("reputationScore", equalTo(0))
                 .body("professional", equalTo(false));
@@ -140,7 +136,6 @@ public class ProfileControllerTest {
                 .body("profileId", equalTo(profileId.toString()))
                 .body("name", equalTo("Usuário Teste1"))
                 .body("bio", equalTo("Sou um programador de testes"))
-                .body("expertise", equalTo("Desenvolvedor Fullstack"))
                 .body("level", equalTo("Especialista"))
                 .body("reputationScore", equalTo(1200))
                 .body("professional", equalTo(false));
@@ -151,8 +146,7 @@ public class ProfileControllerTest {
         UUID profileId = profile1Id;
         ProfileUpdateDTO profileUpdated = new ProfileUpdateDTO(
                 "Galego",
-                "Melhor programador Django",
-                "Desenvolvedor Fullstack"
+                "Melhor programador Django"
         );
 
         given()
@@ -164,8 +158,7 @@ public class ProfileControllerTest {
         .then()
                 .statusCode(HttpStatus.OK.value())
                 .body("name", equalTo("Galego"))
-                .body("bio", equalTo("Melhor programador Django"))
-                .body("expertise", equalTo("Desenvolvedor Fullstack"));
+                .body("bio", equalTo("Melhor programador Django"));
     }
 
     @Test
@@ -207,7 +200,6 @@ public class ProfileControllerTest {
                 "Galego",
                 "Sou um programador de QA",
                 ProfileType.SELFTAUGHT,
-                "QA",
                 user
         );
 
@@ -231,7 +223,6 @@ public class ProfileControllerTest {
                 "Renato",
                 "Sou um programador de QA",
                 ProfileType.SELFTAUGHT,
-                "QA",
                 user
         );
 
@@ -255,7 +246,6 @@ public class ProfileControllerTest {
                 "Renato",
                 "Sou um programador de QA",
                 ProfileType.SELFTAUGHT,
-                "QA",
                 user
         );
 
@@ -273,8 +263,7 @@ public class ProfileControllerTest {
         UUID profileId = profile1Id;
         ProfileUpdateDTO profileUpdated = new ProfileUpdateDTO(
                 "Galego",
-                "Melhor programador Django",
-                "Desenvolvedor Fullstack"
+                "Melhor programador Django"
         );
 
         given()
@@ -291,8 +280,7 @@ public class ProfileControllerTest {
         UUID profileId = profile1Id;
         ProfileUpdateDTO profileUpdated = new ProfileUpdateDTO(
                 "Galego",
-                "Melhor programador Django",
-                "Desenvolvedor Fullstack"
+                "Melhor programador Django"
         );
 
         given()

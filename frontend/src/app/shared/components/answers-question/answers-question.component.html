@@ -1,12 +1,34 @@
 <!-- Title "Answers:" -->
-<div class="w-[940px] max-w-[940px] container mx-auto mt-6 mb-2">
+<div class="w-full max-w-[940px] container mx-auto mt-6 mb-2">
     <h2 class="text-[#C9D1D9] text-xl font-bold font-inter border-l-4 border-[#3FB950] pl-3">Respostas:</h2>
+</div>
+
+<!-- Create Answer Form -->
+<div class="w-full max-w-[940px] container mx-auto my-4 rounded-md bg-[#1C2128] text-white shadow-md p-4">
+    <form [formGroup]="answerForm" (ngSubmit)="submitAnswer()">
+        <div class="space-y-3">
+            <label for="content" class="text-sm font-medium text-gray-300">Sua Resposta</label>
+            <textarea id="content" formControlName="content" rows="4" placeholder="Escreva sua resposta aqui..."
+                class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-3 text-white placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none"></textarea>
+            
+            <div class="flex justify-end pt-2">
+                <button type="submit" [disabled]="isSubmitting() || answerForm.invalid"
+                    class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md">
+                    @if (isSubmitting()) {
+                        Enviando...
+                    } @else {
+                        Responder
+                    }
+                </button>
+            </div>
+        </div>
+    </form>
 </div>
 
 <!-- list of answers -->
 <ul class="w-full max-w-[940px] h-auto container mx-auto my-4 rounded-md bg-[#1C2128] text-white shadow-md">
     @for (answer of answers(); track answer.answerId) {
-    <li>
+    <li class="relative">
         <section class="flex gap-3 px-3 pt-3 h-[70px] text-xs">
             <a [routerLink]="['/profiles', answer?.profile?.profileId]">
                 <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
@@ -24,6 +46,25 @@
                     class="w-fit px-3 text-emerald-500 text-center bg-emerald-500/10 rounded-full border-2 border-emerald-500/30">
                     {{ answer.profile.level }}
                 </div>
+            </div>
+
+            <!-- Botão / Ícone de Resposta Aceita no Canto Superior Direito -->
+            <div class="absolute top-4 right-4">
+                @if (answer.accepted) {
+                <div class="flex items-center gap-1 text-emerald-500 tooltip tooltip-left" data-tip="Resposta aceita pelo autor">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-7">
+                        <path fill-rule="evenodd" d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.739a.75.75 0 011.04-.208z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                } @else if (isQuestionOwner) {
+                <button (click)="acceptAnswer(answer)"
+                    class="group flex items-center gap-1 transition-all tooltip tooltip-left text-gray-500 hover:text-emerald-500" data-tip="Marcar como aceita">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" 
+                        class="size-7 transition-transform group-hover:scale-110">
+                        <path fill-rule="evenodd" d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.739a.75.75 0 011.04-.208z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+                }
             </div>
         </section>
 

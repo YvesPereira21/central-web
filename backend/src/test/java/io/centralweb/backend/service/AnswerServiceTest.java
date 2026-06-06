@@ -121,8 +121,8 @@ class AnswerServiceTest {
 
         profileSimpleDTO = new ProfileSimpleDTO(
                 profilePerson1.getProfileId(),
+                profilePerson1.getUser().getUserId(),
                 profilePerson1.getName(),
-                profilePerson1.getExpertise(),
                 profilePerson1.getLevel(),
                 profilePerson1.isProfessional()
         );

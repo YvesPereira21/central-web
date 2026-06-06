@@ -3,8 +3,8 @@
         <div class="flex flex-col items-center gap-4">
             <img alt="Avatar do usuário" src="https://img.daisyui.com/images/profile/demo/yellingcat@192.webp"
                 class="size-28 rounded-full" />
-            <span class="text-2xl">{{ profile?.name }}</span>
-            <p class="text-justify break-words">
+            <span class="text-2xl font-inter">{{ profile?.name }}</span>
+            <p class="text-justify break-words font-lora">
                 {{ profile?.bio }}
             </p>
         </div>
@@ -43,7 +43,7 @@
     <!-- Card and Link to all articles written by the profile -->
     <section class="rounded-lg bg-[#161B22] p-4 text-white shadow-md space-y-4">
         <div class="flex flex-wrap items-center justify-between">
-            <span class="text-2xl font-lora font-semibold">Todos os artigos publicados</span>
+            <span class="text-2xl font-inter font-semibold">Todos os artigos publicados</span>
             <a routerLink="/create-article"
                 class="flex items-center gap-2 bg-[#161B22] hover:bg-[#1f242c] text-white border border-[#30363d] hover:border-emerald-500 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 shadow-md">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
@@ -67,7 +67,7 @@
     @if (isOwner()) {
     <section class="rounded-lg bg-[#161B22] p-4 text-white shadow-md space-y-4">
         <div class="flex flex-wrap items-center justify-between">
-            <span class="text-2xl font-lora font-semibold">Todas as minhas perguntas postadas</span>
+            <span class="text-2xl font-inter font-semibold">Todas as minhas perguntas postadas</span>
             <a routerLink="/create-question"
                 class="flex items-center gap-2 bg-[#161B22] hover:bg-[#1f242c] text-white border border-[#30363d] hover:border-emerald-500 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 shadow-md">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
@@ -90,7 +90,19 @@
 
     <!-- User's experience -->
     <section class="rounded-lg bg-[#161B22] p-4 text-white shadow-md">
-        <h1 class="text-xl font-semibold">Experiências</h1>
+        <div class="flex flex-wrap items-center justify-between mb-4">
+            <h1 class="text-xl font-inter font-semibold">Experiências</h1>
+            @if (isOwner()) {
+            <a routerLink="/create-qualification"
+                class="flex items-center gap-2 bg-[#161B22] hover:bg-[#1f242c] text-white border border-[#30363d] hover:border-emerald-500 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                    stroke="currentColor" class="size-5 text-emerald-500">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                <span>Criar nova experiência</span>
+            </a>
+            }
+        </div>
         @for (qualification of profile?.qualifications; track qualification.qualificationId) {
         <div class="mt-3 flex flex-col gap-1">
             <span class="font-medium">{{ qualification.jobTitle }}</span>

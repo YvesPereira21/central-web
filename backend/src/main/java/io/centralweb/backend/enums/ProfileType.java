@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum ProfileType {
     PROFESSIONAL("profissional"),
     UNDERGRADUATE("universitario"),
+    INTERN("estagiario"),
+    TRAINEE("trainee"),
     SELFTAUGHT("autodidata");
 
     private final String profileType;

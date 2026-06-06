@@ -1,4 +1,4 @@
-<article class="w-[600px] max-w-[600px] mx-auto">
+<article class="w-full max-w-[600px] mx-auto my-12 flex flex-col justify-center">
     <section class="rounded-xl bg-[#161B22] p-6 text-white shadow-lg">
         <div class="space-y-6">
             <!-- Form -->
@@ -7,7 +7,7 @@
                 <div class="space-y-1.5">
                     <label for="name" class="text-sm font-medium text-gray-300">Nome de usuário</label>
                     <input id="name" formControlName="name" placeholder="ex: maicon_jackson" type="text" required
-                        class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-3 text-white placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none" />
+                        class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-3 text-white placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none font-inter" />
                 </div>
 
                 <!-- Email -->
@@ -29,15 +29,22 @@
                 <div class="space-y-1.5">
                     <label for="bio" class="text-sm font-medium text-gray-300">Bio</label>
                     <textarea id="bio" formControlName="bio" rows="3" placeholder="Conte um pouco sobre você..."
-                        class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-3 text-white placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none"></textarea>
+                        class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-3 text-white placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none font-lora"></textarea>
                 </div>
 
                 <!-- ProfileType -->
                 <div class="space-y-1.5">
                     <label for="profileType" class="text-sm font-medium text-gray-300">Perfil</label>
-                    <input id="profileType" formControlName="profileType" type="text"
+                    <select id="profileType" formControlName="profileType" type="text"
                         placeholder="ex: Estudante Universitário, Autodidata" required
-                        class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-3 text-white placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none" />
+                        class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-3 text-white placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none">
+                        <option value="" disabled selected>Selecione seu tipo de perfil</option>
+                        <option value="TRAINEE">Trainee</option>
+                        <option value="INTERN">Estagiário</option>
+                        <option value="PROFESSIONAL">Profissional</option>
+                        <option value="SELFTAUGHT">Autodidata</option>
+                        <option value="UNDERGRADUATE">Universitário</option>
+                    </select>
                 </div>
 
                 <!-- Action buttons -->

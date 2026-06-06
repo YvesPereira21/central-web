@@ -33,12 +33,12 @@ export class LoginComponent {
 
     this.authenticationService.login(login).subscribe({
       next: (response) => {
-        console.log('Login realizado com sucesso!')
+        alert('Login realizado com sucesso!')
         this.clearForm();
         this.router.navigate([''])
       },
       error: (erro) => {
-        console.log('Erro ao realizar login.');
+        alert('Erro ao realizar login.');
         this.clearForm();
       }
     });

@@ -3,10 +3,10 @@
     @for (comment of comments(); track comment.commentId) {
     <div class="flex flex-col gap-1 text-sm border-b border-[#30363d] pb-3 last:border-0 last:pb-0">
         <div class="flex items-center gap-2">
-            <span class="font-bold text-gray-300">{{ comment.profile.name }}</span>
+            <span class="font-bold font-inter text-gray-300">{{ comment.profile.name }}</span>
             <span class="text-xs text-gray-500">{{ comment.createdAt | date:'short' }}</span>
         </div>
-        <p class="text-gray-400">
+        <p class="text-gray-400 font-lora">
             {{ comment.content }}
         </p>
         <button type="button" (click)="replyTo(comment.profile.name)" class="text-xs text-emerald-500 hover:text-emerald-400 self-start mt-1 font-medium transition-colors">
