@@ -2,11 +2,12 @@ import { Component, inject } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
 import { HeaderComponent } from './shared/components/header/header.component';
 import { LeftBarComponent } from './shared/components/left-bar/left-bar.component';
+import { RightBarComponent } from './shared/components/right-bar/right-bar.component';
 import { AuthenticationService } from './features/authentications/services/authentication.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, HeaderComponent, LeftBarComponent],
+  imports: [RouterOutlet, HeaderComponent, LeftBarComponent, RightBarComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })

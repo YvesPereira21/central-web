@@ -77,17 +77,16 @@ public class ArticleController {
         return ResponseEntity.ok(articleService.getAllPublishedArticles(pageable));
     }
 
-    @GetMapping("/{title}/title")
+    @GetMapping("/search")
     @Operation(summary = "Busca artigos pelo título", description = "Pesquisa artigos publicados cujo título contenha o texto informado")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de artigos correspondentes")
     })
-    public ResponseEntity<Page<ArticleDTO>> getArticlesByTitle(
-            @PathVariable("title") String title,
-            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
-            Pageable pageable
+    public ResponseEntity<Page<ArticleDTO>> searchPublishedArticles(
+            @RequestParam("query") String query,
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        return ResponseEntity.ok(articleService.getAllPublishedArticlesByTitle(title, pageable));
+        return ResponseEntity.ok(articleService.searchPublishedArticles(query, pageable));
     }
 
     @GetMapping("/{technologyName}/tag")
@@ -101,6 +100,19 @@ public class ArticleController {
             Pageable pageable
     ) {
         return ResponseEntity.ok(articleService.getAllPublishedArticlesByTechnologyName(technologyName, pageable));
+    }
+
+    @GetMapping("/filter")
+    @Operation(summary = "Busca artigos por múltiplas tags", description = "Retorna artigos que possuam TODAS as tags listadas (Filtro Estrito)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de artigos correspondentes")
+    })
+    public ResponseEntity<Page<ArticleDTO>> getArticlesByTags(
+            @RequestParam List<String> tags,
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable
+    ) {
+        return ResponseEntity.ok(articleService.getAllPublishedArticlesByTags(tags, pageable));
     }
 
     @GetMapping("/{profileId}/profile")

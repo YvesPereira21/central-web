@@ -6,6 +6,7 @@ import { PaginationComponent } from '../pagination/pagination.component';
 import { CollectionModalComponent } from '../collection-modal/collection-modal.component';
 import { CollectionService } from '../../../features/collections/services/collection.service';
 import { AuthenticationService } from '../../../features/authentications/services/authentication.service';
+import { combineLatest } from 'rxjs';
 
 @Component({
   selector: 'app-question-list',
@@ -20,6 +21,8 @@ export class QuestionListComponent implements OnInit {
   authService = inject(AuthenticationService);
 
   @Input() profileId: string | null = null;
+  @Input() tags: string[] = [];
+  @Input() searchQuery: string | null = null;
   @Input() showPagination: boolean = true;
   @Input() showCreateButton: boolean = true;
 
@@ -37,11 +40,19 @@ export class QuestionListComponent implements OnInit {
   totalPages = signal<number>(0);
 
   ngOnInit(): void {
-    this.activatedRoute.paramMap.subscribe(params => {
+    combineLatest([
+      this.activatedRoute.paramMap,
+      this.activatedRoute.queryParamMap
+    ]).subscribe(([params, queryParams]) => {
       const routeId = params.get('id');
       if (routeId) {
         this.profileId = routeId;
       }
+
+      const tagsParam = queryParams.get('tags');
+      this.tags = tagsParam ? tagsParam.split(',') : [];
+
+      this.searchQuery = queryParams.get('search');
 
       this.loadData(0, 10);
     });
@@ -50,6 +61,10 @@ export class QuestionListComponent implements OnInit {
   loadData(page: number, size: number) {
     if (this.profileId) {
       this.loadProfileQuestions(page, size);
+    } else if (this.searchQuery) {
+      this.loadQuestionsBySearch(this.searchQuery, page, size);
+    } else if (this.tags && this.tags.length > 0) {
+      this.loadQuestionsByTags(this.tags, page, size);
     } else {
       this.loadAllQuestions(page, size);
     }
@@ -70,6 +85,44 @@ export class QuestionListComponent implements OnInit {
       },
       error: (error) => {
         alert("Não foi possível encontrar todas as perguntas");
+      }
+    });
+  }
+
+  loadQuestionsBySearch(query: string, page: number, size: number) {
+    this.questionService.searchQuestions(query, page, size).subscribe({
+      next: (response) => {
+        this.questions.set(response.content);
+        this.isEmpty.set(response.empty);
+        this.isFirst.set(response.first);
+        this.isLast.set(response.last);
+        this.pageSize.set(response.size);
+        this.currentPage.set(response.number);
+        this.numberOfElements.set(response.numberOfElements)
+        this.totalElements.set(response.totalElements);
+        this.totalPages.set(response.totalPages);
+      },
+      error: (error) => {
+        alert("Não foi possível encontrar perguntas para sua pesquisa");
+      }
+    });
+  }
+
+  loadQuestionsByTags(tags: string[], page: number, size: number) {
+    this.questionService.getQuestionsByTags(tags, page, size).subscribe({
+      next: (response) => {
+        this.questions.set(response.content);
+        this.isEmpty.set(response.empty);
+        this.isFirst.set(response.first);
+        this.isLast.set(response.last);
+        this.pageSize.set(response.size);
+        this.currentPage.set(response.number);
+        this.numberOfElements.set(response.numberOfElements)
+        this.totalElements.set(response.totalElements);
+        this.totalPages.set(response.totalPages);
+      },
+      error: (error) => {
+        alert("Não foi possível encontrar as perguntas filtradas pelas tags");
       }
     });
   }

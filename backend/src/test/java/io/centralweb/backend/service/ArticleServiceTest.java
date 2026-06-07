@@ -222,26 +222,22 @@ class ArticleServiceTest {
     }
 
     @Test
-    void shouldReturnPublishedArticlesByTitle() {
-        String title = "Diferenças";
-        List<Article> articles = List.of(article1);
-        Page<Article> articlePage = new PageImpl<>(articles);
-
-        when(articleRepository.findAllByTitleContainingIgnoreCaseAndPublishedIsTrue(
-                eq(title),
-                any(Pageable.class)
-        )).thenReturn(articlePage);
+    void testSearchPublishedArticles() {
+        // Arrange
+        String title = "Java";
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        Page<Article> expectedPage = new PageImpl<>(List.of(article1));
+        when(articleRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), eq(pageRequest)))
+                .thenReturn(expectedPage);
         when(articleMapper.toDTO(any(Article.class))).thenReturn(articleDTO);
 
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<ArticleDTO> result = articleService.getAllPublishedArticlesByTitle(title, pageable);
+        // Act
+        Page<ArticleDTO> result = articleService.searchPublishedArticles(title, pageRequest);
 
+        // Assert
         assertNotNull(result);
-        assertEquals(1, result.getNumberOfElements());
-
-        verify(articleRepository, times(1))
-                .findAllByTitleContainingIgnoreCaseAndPublishedIsTrue(eq(title), any(Pageable.class));
-        verify(articleMapper, times(1)).toDTO(any(Article.class));
+        assertEquals(1, result.getContent().size());
+        assertEquals(article1.getTitle(), result.getContent().get(0).title());
     }
 
     @Test

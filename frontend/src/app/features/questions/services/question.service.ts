@@ -36,12 +36,13 @@ export class QuestionService {
     return this.http.get<Page<Question>>(`${this.apiUrl}/${profileId}/profile`, { params });
   }
 
-  getQuestionsByTitle(title: string, page: number, size: number): Observable<Page<Question>> {
+  searchQuestions(query: string, page: number, size: number): Observable<Page<Question>> {
     const params = new HttpParams()
+      .set('query', query)
       .set('page', page.toString())
       .set('size', size.toString());
 
-    return this.http.get<Page<Question>>(`${this.apiUrl}/${title}/title`, { params });
+    return this.http.get<Page<Question>>(`${this.apiUrl}/search`, { params });
   }
 
   getQuestionsByTag(technologyName: string, page: number, size: number): Observable<Page<Question>> {
@@ -50,6 +51,15 @@ export class QuestionService {
       .set('size', size.toString());
 
     return this.http.get<Page<Question>>(`${this.apiUrl}/${technologyName}/tag`, { params });
+  }
+
+  getQuestionsByTags(tags: string[], page: number, size: number): Observable<Page<Question>> {
+    const params = new HttpParams()
+      .set('tags', tags.join(','))
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    return this.http.get<Page<Question>>(`${this.apiUrl}/filter`, { params });
   }
 
   getQuestionsWithAcceptedAnswers(page: number, size: number): Observable<Page<Question>> {

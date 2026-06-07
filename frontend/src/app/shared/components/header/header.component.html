@@ -9,13 +9,14 @@
             </div>
 
             <div class="navbar-center">
-                <form class="join flex items-center w-[600px]">
+                <div class="join flex items-center w-[600px]">
 
-                    <input type="text" name="search" placeholder="Pesquisar..."
+                    <input type="text" [formControl]="searchControl" placeholder="Pesquisar..."
+                        (keydown.enter)="onSearch()"
                         class="input input-bordered join-item w-full focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-white transition-colors"
                         style="background-color:#0D1117;" />
 
-                    <button type="submit" class="btn btn-bordered join-item border-l-0 border-emerald-500"
+                    <button type="button" (click)="onSearch()" class="btn btn-bordered join-item border-l-0 border-emerald-500"
                         style="background-color:#0D1117; border: #0D1117;">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"
                             class="h-5 w-5 text-emerald-500">
@@ -25,7 +26,7 @@
                         </svg>
                     </button>
 
-                </form>
+                </div>
             </div>
 
             <div class="navbar-end flex items-center gap-4">

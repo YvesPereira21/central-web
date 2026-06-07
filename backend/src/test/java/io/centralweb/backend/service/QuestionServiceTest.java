@@ -257,20 +257,18 @@ class QuestionServiceTest {
         List<Question> questions = List.of(question1);
         Page<Question> questionPage = new PageImpl<>(questions);
 
-        when(questionRepository.findAllByTitleContainingIgnoreCaseAndPublishedIsTrue(
-                eq(title),
-                any(Pageable.class)
-        )).thenReturn(questionPage);
+        when(questionRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class)))
+                .thenReturn(questionPage);
         when(questionMapper.toQuestionListDTO(any(Question.class))).thenReturn(questionListDTO);
 
         Pageable pageable = PageRequest.of(0, 10);
-        Page<QuestionListDTO> result = questionService.getAllPublishedQuestionsByTitle(title, pageable);
+        Page<QuestionListDTO> result = questionService.searchPublishedQuestions(title, pageable);
 
         assertNotNull(result);
         assertEquals(1, result.getNumberOfElements());
 
         verify(questionRepository, times(1))
-                .findAllByTitleContainingIgnoreCaseAndPublishedIsTrue(eq(title), any(Pageable.class));
+                .findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class));
         verify(questionMapper, times(1)).toQuestionListDTO(any(Question.class));
     }
 

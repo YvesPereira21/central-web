@@ -98,19 +98,16 @@ public class QuestionController {
         return ResponseEntity.ok(questionService.getAllQuestionsByProfile(profileId, userId, pageable));
     }
 
-    @GetMapping("/{title}/title")
-    @Operation(summary = "Busca perguntas pelo título", description = "Pesquisa perguntas publicadas cujo título contenha o texto informado")
+    @GetMapping("/search")
+    @Operation(summary = "Busca perguntas pelo título ou conteúdo", description = "Pesquisa perguntas publicadas contendo o termo no título ou conteúdo")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de perguntas correspondentes")
     })
-    public ResponseEntity<Page<QuestionListDTO>> getQuestionsByTitle(
-            @PathVariable("title") String title,
-            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
-            Pageable pageable
+    public ResponseEntity<Page<QuestionListDTO>> searchPublishedQuestions(
+            @RequestParam("query") String query,
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        return ResponseEntity.ok(questionService.getAllPublishedQuestionsByTitle(
-                title, pageable
-        ));
+        return ResponseEntity.ok(questionService.searchPublishedQuestions(query, pageable));
     }
 
     @GetMapping("/{technologyName}/tag")
@@ -128,6 +125,24 @@ public class QuestionController {
     ) {
         return ResponseEntity.ok(questionService.getAllPublishedQuestionsByTechnologyName(
                 technologyName, pageable
+        ));
+    }
+
+    @GetMapping("/filter")
+    @Operation(
+            summary = "Busca perguntas por múltiplas tags",
+            description = "Retorna perguntas publicadas que possuam TODAS as tags listadas (Filtro Estrito)"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de perguntas correspondentes")
+    })
+    public ResponseEntity<Page<QuestionListDTO>> getQuestionsByTags(
+            @RequestParam List<String> tags,
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable
+    ) {
+        return ResponseEntity.ok(questionService.getAllPublishedQuestionsByTags(
+                tags, pageable
         ));
     }
 

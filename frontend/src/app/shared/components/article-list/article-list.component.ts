@@ -6,6 +6,7 @@ import { PaginationComponent } from '../pagination/pagination.component';
 import { CollectionModalComponent } from '../collection-modal/collection-modal.component';
 import { CollectionService } from '../../../features/collections/services/collection.service';
 import { AuthenticationService } from '../../../features/authentications/services/authentication.service';
+import { combineLatest } from 'rxjs';
 
 @Component({
   selector: 'app-article-list',
@@ -20,6 +21,8 @@ export class ArticleListComponent implements OnInit {
   authService = inject(AuthenticationService);
 
   @Input() profileId: string | null = null;
+  @Input() tags: string[] = [];
+  @Input() searchQuery: string | null = null;
   @Input() showPagination: boolean = true;
   @Input() showCreateButton: boolean = true;
 
@@ -38,12 +41,20 @@ export class ArticleListComponent implements OnInit {
   totalPages = signal<number>(0);
 
   ngOnInit(): void {
-    this.activatedRoute.paramMap.subscribe(params => {
+    combineLatest([
+      this.activatedRoute.paramMap,
+      this.activatedRoute.queryParamMap
+    ]).subscribe(([params, queryParams]) => {
       const routeId = params.get('id');
       if (routeId) {
         this.profileId = routeId;
       }
 
+      const tagsParam = queryParams.get('tags');
+      this.tags = tagsParam ? tagsParam.split(',') : [];
+      
+      this.searchQuery = queryParams.get('search');
+      
       this.loadData(0, 10);
     });
   }
@@ -51,6 +62,10 @@ export class ArticleListComponent implements OnInit {
   loadData(page: number, size: number) {
     if (this.profileId) {
       this.loadProfileArticles(page, size);
+    } else if (this.searchQuery) {
+      this.loadArticlesBySearch(this.searchQuery, page, size);
+    } else if (this.tags && this.tags.length > 0) {
+      this.loadArticlesByTags(this.tags, page, size);
     } else {
       this.loadArticles(page, size);
     }
@@ -71,6 +86,44 @@ export class ArticleListComponent implements OnInit {
       },
       error: (error) => {
         alert("Não foi possível encontrar todos os pontos");
+      }
+    })
+  }
+
+  loadArticlesBySearch(query: string, page: number, size: number) {
+    this.articleService.searchArticles(query, page, size).subscribe({
+      next: (response) => {
+        this.articles.set(response.content);
+        this.isEmpty.set(response.empty);
+        this.isFirst.set(response.first);
+        this.isLast.set(response.last);
+        this.pageSize.set(response.size);
+        this.currentPage.set(response.number);
+        this.numberOfElements.set(response.numberOfElements)
+        this.totalElements.set(response.totalElements);
+        this.totalPages.set(response.totalPages);
+      },
+      error: (error) => {
+        alert("Não foi possível encontrar artigos para sua pesquisa");
+      }
+    })
+  }
+
+  loadArticlesByTags(tags: string[], page: number, size: number) {
+    this.articleService.getArticlesByTags(tags, page, size).subscribe({
+      next: (response) => {
+        this.articles.set(response.content);
+        this.isEmpty.set(response.empty);
+        this.isFirst.set(response.first);
+        this.isLast.set(response.last);
+        this.pageSize.set(response.size);
+        this.currentPage.set(response.number);
+        this.numberOfElements.set(response.numberOfElements)
+        this.totalElements.set(response.totalElements);
+        this.totalPages.set(response.totalPages);
+      },
+      error: (error) => {
+        alert("Não foi possível encontrar os artigos filtrados pelas tags");
       }
     })
   }

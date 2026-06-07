@@ -47,7 +47,7 @@
         <div class="flex items-center gap-5">
             <!-- Like button -->
             <button (click)="toggleArticleLike(articleId())" class="group flex items-center gap-1 py-1 transition-all"
-                [class.text-[#3FB950]]="article()?.liked" [class.hover:text-[#3FB950]]="article()?.liked">
+                [class.text-emerald-500]="article()?.liked" [class.hover:text-emerald-500]="article()?.liked">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
                     class="size-6 fill-current transition-transform group-hover:scale-110">
                     <path

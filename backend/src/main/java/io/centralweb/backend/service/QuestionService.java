@@ -22,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -73,13 +74,11 @@ public class QuestionService {
                 .map(questionMapper::toQuestionListDTO);
     }
 
-    public Page<QuestionListDTO> getAllPublishedQuestionsByTitle(
-            String title,
-            Pageable pageable
-    ) {
-        return questionRepository
-                .findAllByTitleContainingIgnoreCaseAndPublishedIsTrue(title, pageable)
-                .map(questionMapper::toQuestionListDTO);
+    public Page<QuestionListDTO> searchPublishedQuestions(String keyword, Pageable pageable) {
+        org.springframework.data.jpa.domain.Specification<Question> spec = 
+                io.centralweb.backend.specification.GenericSearchSpecification.searchByTitleOrContent(keyword);
+                
+        return questionRepository.findAll(spec, pageable).map(questionMapper::toQuestionListDTO);
     }
 
     public Page<QuestionListDTO> getAllPublishedQuestionsByTechnologyName(
@@ -88,6 +87,18 @@ public class QuestionService {
     ) {
         return questionRepository
                 .findAllByTags_TechnologyNameAndPublishedIsTrue(technologyName, pageable)
+                .map(questionMapper::toQuestionListDTO);
+    }
+
+    public Page<QuestionListDTO> getAllPublishedQuestionsByTags(
+            List<String> tags,
+            Pageable pageable
+    ) {
+        if (tags == null || tags.isEmpty()) {
+            return getAllPublishedQuestions(pageable);
+        }
+        return questionRepository
+                .findAllByTagsStrict(tags, tags.size(), pageable)
                 .map(questionMapper::toQuestionListDTO);
     }
 

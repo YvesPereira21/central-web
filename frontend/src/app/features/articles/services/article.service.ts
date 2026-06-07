@@ -28,12 +28,13 @@ export class ArticleService {
     return this.http.get<Page<Article>>(this.apiUrl, { params });
   }
 
-  getArticlesByTitle(title: string, page: number, size: number): Observable<Page<Article>> {
+  searchArticles(query: string, page: number, size: number): Observable<Page<Article>> {
     const params = new HttpParams()
+      .set('query', query)
       .set('page', page.toString())
       .set('size', size.toString());
 
-    return this.http.get<Page<Article>>(`${this.apiUrl}/${title}/title`, { params });
+    return this.http.get<Page<Article>>(`${this.apiUrl}/search`, { params });
   }
 
   getArticlesByTag(technologyName: string, page: number, size: number): Observable<Page<Article>> {
@@ -42,6 +43,15 @@ export class ArticleService {
       .set('size', size.toString());
 
     return this.http.get<Page<Article>>(`${this.apiUrl}/${technologyName}/tag`, { params });
+  }
+
+  getArticlesByTags(tags: string[], page: number, size: number): Observable<Page<Article>> {
+    const params = new HttpParams()
+      .set('tags', tags.join(','))
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    return this.http.get<Page<Article>>(`${this.apiUrl}/filter`, { params });
   }
 
   getProfileArticles(profileId: string, page: number, size: number): Observable<Page<Article>> {

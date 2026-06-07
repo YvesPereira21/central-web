@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -72,15 +73,25 @@ public class ArticleService {
                 .map(articleMapper::toDTO);
     }
 
-    public Page<ArticleDTO> getAllPublishedArticlesByTitle(String title, Pageable pageable) {
-        return articleRepository
-                .findAllByTitleContainingIgnoreCaseAndPublishedIsTrue(title, pageable)
-                .map(articleMapper::toDTO);
+    public Page<ArticleDTO> searchPublishedArticles(String keyword, Pageable pageable) {
+        org.springframework.data.jpa.domain.Specification<Article> spec = 
+                io.centralweb.backend.specification.GenericSearchSpecification.searchByTitleOrContent(keyword);
+        
+        return articleRepository.findAll(spec, pageable).map(articleMapper::toDTO);
     }
 
     public Page<ArticleDTO> getAllPublishedArticlesByTechnologyName(String technologyName, Pageable pageable) {
         return articleRepository
                 .findAllByTags_TechnologyNameAndPublishedIsTrue(technologyName, pageable)
+                .map(articleMapper::toDTO);
+    }
+
+    public Page<ArticleDTO> getAllPublishedArticlesByTags(List<String> tags, Pageable pageable) {
+        if (tags == null || tags.isEmpty()) {
+            return getAllPublishedArticles(pageable);
+        }
+        return articleRepository
+                .findAllByTagsStrict(tags, tags.size(), pageable)
                 .map(articleMapper::toDTO);
     }
 
