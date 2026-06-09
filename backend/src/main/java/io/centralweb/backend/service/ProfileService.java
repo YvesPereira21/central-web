@@ -3,7 +3,6 @@ package io.centralweb.backend.service;
 import io.centralweb.backend.dto.profile.ProfileCreateDTO;
 import io.centralweb.backend.dto.profile.ProfileDTO;
 import io.centralweb.backend.dto.profile.ProfileUpdateDTO;
-import io.centralweb.backend.enums.ExperienceLevel;
 import io.centralweb.backend.enums.UserRole;
 import io.centralweb.backend.exception.ObjectNotFoundException;
 import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
@@ -16,7 +15,6 @@ import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.UUID;
 
 @Service
@@ -93,20 +91,28 @@ public class ProfileService {
                 .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
 
         long points = profile.getReputationScore() + amountPoints;
+        if (points < 0){
+            points = 0;
+        }
+
         profile.setReputationScore(points);
         profile.setLevel(updateLevel(points));
         profileRepository.save(profile);
     }
 
     private String updateLevel(long score){
-        if (score >= 800) {
-            return "Especialista";
-        } else if (score >= 300) {
-            return "Esperto";
-        } else if (score >= 200) {
-            return "Bom";
+        if (score >= 5000) {
+            return "Compilador Humano";
+        } else if (score >= 2500) {
+            return "Domador de Legado";
+        } else if (score >= 1000) {
+            return "Visionário";
+        } else if (score >= 500) {
+            return "Veterano";
+        } else if (score >= 150) {
+            return "Praticante";
         } else {
-            return "Iniciante";
+            return "Novato";
         }
     }
 }

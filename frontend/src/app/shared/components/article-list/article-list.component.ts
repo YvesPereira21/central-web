@@ -4,13 +4,14 @@ import { Article } from '../../../features/models/article';
 import { ActivatedRoute, RouterLink } from "@angular/router";
 import { PaginationComponent } from '../pagination/pagination.component';
 import { CollectionModalComponent } from '../collection-modal/collection-modal.component';
+import { LevelStageComponent } from '../level-stage/level-stage.component';
 import { CollectionService } from '../../../features/collections/services/collection.service';
 import { AuthenticationService } from '../../../features/authentications/services/authentication.service';
 import { combineLatest } from 'rxjs';
 
 @Component({
   selector: 'app-article-list',
-  imports: [RouterLink, PaginationComponent, CollectionModalComponent],
+  imports: [RouterLink, PaginationComponent, CollectionModalComponent, LevelStageComponent],
   templateUrl: './article-list.component.html',
   styleUrl: './article-list.component.css'
 })

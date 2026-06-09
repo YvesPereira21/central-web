@@ -6,12 +6,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import java.util.Optional;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface AnswerRepository extends JpaRepository<Answer, UUID> {
     @Query("SELECT a FROM Answer a JOIN a.question q " +
             "WHERE q.published = true AND q.questionId = :questionId")
     Page<Answer> findAllByQuestionIdAndQuestionPublished(@Param("questionId") UUID questionId, Pageable pageable);
+    Optional<Answer> findByQuestion_QuestionIdAndAcceptedTrue(UUID questionId);
 }

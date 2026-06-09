@@ -5,6 +5,7 @@ import io.centralweb.backend.dto.article.ArticleDTO;
 import io.centralweb.backend.dto.article.ArticleUpdateDTO;
 import io.centralweb.backend.enums.UserRole;
 import io.centralweb.backend.events.ArticleCreateEvent;
+import io.centralweb.backend.events.ArticleDeleteEvent;
 import io.centralweb.backend.exception.ObjectNotFoundException;
 import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
 import io.centralweb.backend.mapper.ArticleMapper;
@@ -144,5 +145,7 @@ public class ArticleService {
         }
 
         articleRepository.delete(article);
+
+        publisher.publishEvent(new ArticleDeleteEvent(article.getProfile().getProfileId()));
     }
 }

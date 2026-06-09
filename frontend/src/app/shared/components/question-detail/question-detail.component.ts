@@ -5,11 +5,12 @@ import { Question } from '../../../features/models/question';
 import { AnswersQuestionComponent } from '../answers-question/answers-question.component';
 import { CollectionModalComponent } from '../collection-modal/collection-modal.component';
 import { CollectionService } from '../../../features/collections/services/collection.service';
+import { LevelStageComponent } from '../level-stage/level-stage.component';
 import { AuthenticationService } from '../../../features/authentications/services/authentication.service';
 
 @Component({
   selector: 'app-question-detail',
-  imports: [RouterLink, AnswersQuestionComponent, CollectionModalComponent],
+  imports: [RouterLink, AnswersQuestionComponent, CollectionModalComponent, LevelStageComponent],
   templateUrl: './question-detail.component.html',
   styleUrl: './question-detail.component.css'
 })

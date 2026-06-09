@@ -25,7 +25,7 @@ public class Profile {
     private String bio;
     private ProfileType profileType;
     @Column(name = "level")
-    private String level = "Iniciante";
+    private String level = "Novato";
     @Column(name = "reputation_score")
     private long reputationScore = 0;
     @Column(name = "professional")

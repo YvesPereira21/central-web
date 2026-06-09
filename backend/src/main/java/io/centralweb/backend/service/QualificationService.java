@@ -5,6 +5,7 @@ import io.centralweb.backend.dto.qualification.QualificationDTO;
 import io.centralweb.backend.enums.ExperienceLevel;
 import io.centralweb.backend.enums.UserRole;
 import io.centralweb.backend.events.QualificationCreateEvent;
+import io.centralweb.backend.events.QualificationDeleteEvent;
 import io.centralweb.backend.exception.ObjectNotFoundException;
 import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
 import io.centralweb.backend.mapper.QualificationMapper;
@@ -106,6 +107,10 @@ public class QualificationService {
         }
 
         qualificationRepository.delete(qualification);
+
+        publisher.publishEvent(new QualificationDeleteEvent(
+                qualification.getProfile().getProfileId(), qualification.getExperienceLevel())
+        );
     }
 
     public long getExperienceLevelAndReturnPoints(ExperienceLevel experienceLevel){

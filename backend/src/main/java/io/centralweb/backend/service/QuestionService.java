@@ -6,14 +6,18 @@ import io.centralweb.backend.dto.question.QuestionDTO;
 import io.centralweb.backend.dto.question.QuestionUpdateDTO;
 import io.centralweb.backend.enums.UserRole;
 import io.centralweb.backend.events.QuestionCreateEvent;
+import io.centralweb.backend.events.QuestionDeleteEvent;
+import io.centralweb.backend.events.AnswerUnacceptedEvent;
 import io.centralweb.backend.exception.ObjectNotFoundException;
 import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
 import io.centralweb.backend.mapper.QuestionMapper;
 import io.centralweb.backend.model.Profile;
 import io.centralweb.backend.model.Question;
+import io.centralweb.backend.model.Answer;
 import io.centralweb.backend.model.User;
 import io.centralweb.backend.repository.ProfileRepository;
 import io.centralweb.backend.repository.QuestionRepository;
+import io.centralweb.backend.repository.AnswerRepository;
 import io.centralweb.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.context.ApplicationEventPublisher;
@@ -33,14 +37,16 @@ public class QuestionService {
     private final ProfileRepository profileRepository;
     private final TagService tagService;
     private final ApplicationEventPublisher publisher;
+    private final AnswerRepository answerRepository;
 
-    public QuestionService(QuestionRepository questionRepository, QuestionMapper questionMapper, UserRepository userRepository, ProfileRepository profileRepository, TagService tagService, ApplicationEventPublisher publisher) {
+    public QuestionService(QuestionRepository questionRepository, QuestionMapper questionMapper, UserRepository userRepository, ProfileRepository profileRepository, TagService tagService, ApplicationEventPublisher publisher, AnswerRepository answerRepository) {
         this.questionRepository = questionRepository;
         this.questionMapper = questionMapper;
         this.userRepository = userRepository;
         this.profileRepository = profileRepository;
         this.tagService = tagService;
         this.publisher = publisher;
+        this.answerRepository = answerRepository;
     }
 
     @Transactional(rollbackOn = Exception.class)
@@ -167,6 +173,11 @@ public class QuestionService {
             throw new ProfileIsNotTheOwnerException("Você não tem permissão para isso");
         }
 
+        answerRepository.findByQuestion_QuestionIdAndAcceptedTrue(question.getQuestionId())
+                .ifPresent(answer -> publisher.publishEvent(new AnswerUnacceptedEvent(answer.getProfile().getProfileId())));
+
         questionRepository.delete(question);
+
+        publisher.publishEvent(new QuestionDeleteEvent(question.getProfile().getProfileId()));
     }
 }

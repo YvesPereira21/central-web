@@ -5,10 +5,11 @@ import { PaginationComponent } from '../pagination/pagination.component';
 import { RouterLink } from "@angular/router";
 import { CommentsAnswerComponent } from '../comments-answer/comments-answer.component';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { LevelStageComponent } from '../level-stage/level-stage.component';
 
 @Component({
   selector: 'app-answers-question',
-  imports: [RouterLink, PaginationComponent, CommentsAnswerComponent, ReactiveFormsModule],
+  imports: [RouterLink, PaginationComponent, CommentsAnswerComponent, ReactiveFormsModule, LevelStageComponent],
   templateUrl: './answers-question.component.html',
   styleUrl: './answers-question.component.css'
 })

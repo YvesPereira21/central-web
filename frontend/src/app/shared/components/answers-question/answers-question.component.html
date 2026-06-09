@@ -42,10 +42,7 @@
                 <span class="font-semibold text-base mt-1">
                     {{ answer.profile.name }}
                 </span>
-                <div
-                    class="w-fit px-3 text-emerald-500 text-center bg-emerald-500/10 rounded-full border-2 border-emerald-500/30">
-                    {{ answer.profile.level }}
-                </div>
+                <app-level-stage [level]="answer.profile.level"></app-level-stage>
             </div>
 
             <!-- Botão / Ícone de Resposta Aceita no Canto Superior Direito -->

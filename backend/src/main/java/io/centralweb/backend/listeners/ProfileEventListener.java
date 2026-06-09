@@ -1,8 +1,6 @@
 package io.centralweb.backend.listeners;
 
-import io.centralweb.backend.events.ArticleCreateEvent;
-import io.centralweb.backend.events.QualificationCreateEvent;
-import io.centralweb.backend.events.QuestionCreateEvent;
+import io.centralweb.backend.events.*;
 import io.centralweb.backend.service.ProfileService;
 import io.centralweb.backend.service.QualificationService;
 import org.springframework.scheduling.annotation.Async;
@@ -38,5 +36,36 @@ public class ProfileEventListener {
     public void handleQualificationCreatedAndIncreasePoints(QualificationCreateEvent event){
         long pointsToAdd = qualificationService.getExperienceLevelAndReturnPoints(event.experienceLevel());
         profileService.addPoints(event.profileId(), pointsToAdd);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Async
+    public void handleAnswerAcceptedAndIncreasePoints(AnswerAcceptedEvent event){
+        profileService.addPoints(event.profileId(), 50L);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Async
+    public void handleArticleDeletedAndDecreasePoints(ArticleDeleteEvent event){
+        profileService.addPoints(event.profileId(), -20L);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Async
+    public void handleQuestionDeletedAndDecreasePoints(QuestionDeleteEvent event){
+        profileService.addPoints(event.profileId(), -10L);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Async
+    public void handleQualificationDeletedAndDecreasePoints(QualificationDeleteEvent event){
+        long pointsToDecrease = qualificationService.getExperienceLevelAndReturnPoints(event.experienceLevel());
+        profileService.addPoints(event.profileId(), -pointsToDecrease);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Async
+    public void handleAnswerUnacceptedAndDecreasePoints(AnswerUnacceptedEvent event){
+        profileService.addPoints(event.profileId(), -50L);
     }
 }

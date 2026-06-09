@@ -5,10 +5,11 @@ import { Profile } from '../../../features/models/profile';
 import { ArticleListComponent } from '../article-list/article-list.component';
 import { QuestionListComponent } from '../question-list/question-list.component';
 import { AuthenticationService } from '../../../features/authentications/services/authentication.service';
+import { LevelStageComponent } from '../level-stage/level-stage.component';
 
 @Component({
   selector: 'app-profile-detail',
-  imports: [RouterLink, ArticleListComponent, QuestionListComponent],
+  imports: [RouterLink, ArticleListComponent, QuestionListComponent, LevelStageComponent],
   templateUrl: './profile-detail.component.html',
   styleUrl: './profile-detail.component.css'
 })

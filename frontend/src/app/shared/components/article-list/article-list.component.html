@@ -29,10 +29,7 @@
             <span class="text-xl">
                 {{ article.profile.name }}
             </span>
-            <div
-                class="w-fit px-3 text-[#3FB950] text-sm text-center bg-[#3FB950]/15 rounded-full border-2 border-[#3FB950]/30">
-                {{ article.profile.level }}
-            </div>
+            <app-level-stage [level]="article.profile.level"></app-level-stage>
         </div>
 
         @if (authService.isOwner(article.profile.userId)) {

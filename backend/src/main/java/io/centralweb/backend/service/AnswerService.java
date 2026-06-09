@@ -3,6 +3,8 @@ package io.centralweb.backend.service;
 import io.centralweb.backend.dto.answer.AnswerCreateDTO;
 import io.centralweb.backend.dto.answer.AnswerDTO;
 import io.centralweb.backend.enums.UserRole;
+import io.centralweb.backend.events.AnswerAcceptedEvent;
+import io.centralweb.backend.events.AnswerUnacceptedEvent;
 import io.centralweb.backend.exception.ObjectNotFoundException;
 import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
 import io.centralweb.backend.mapper.AnswerMapper;
@@ -15,6 +17,7 @@ import io.centralweb.backend.repository.ProfileRepository;
 import io.centralweb.backend.repository.QuestionRepository;
 import io.centralweb.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -29,13 +32,15 @@ public class AnswerService {
     private final QuestionRepository questionRepository;
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
+    private final ApplicationEventPublisher publisher;
 
-    public AnswerService(AnswerRepository answerRepository, AnswerMapper answerMapper, QuestionRepository questionRepository, UserRepository userRepository, ProfileRepository profileRepository) {
+    public AnswerService(AnswerRepository answerRepository, AnswerMapper answerMapper, QuestionRepository questionRepository, UserRepository userRepository, ProfileRepository profileRepository, ApplicationEventPublisher publisher) {
         this.answerRepository = answerRepository;
         this.answerMapper = answerMapper;
         this.questionRepository = questionRepository;
         this.userRepository = userRepository;
         this.profileRepository = profileRepository;
+        this.publisher = publisher;
     }
 
     @Transactional(rollbackOn = Exception.class)
@@ -70,7 +75,11 @@ public class AnswerService {
         }
 
         answer.setAccepted(true);
-        answerRepository.save(answer);
+
+        Answer answerAccepted = answerRepository.save(answer);
+        publisher.publishEvent(new AnswerAcceptedEvent(answer.getProfile().getProfileId()));
+
+        answerMapper.toDTO(answerAccepted);
     }
 
     public void toggleAnswerLike(UUID answerId, UUID userProfileId){
@@ -96,6 +105,10 @@ public class AnswerService {
         if(!answer.getProfile().getUser().getUserId().equals(userProfileId) &&
                 !user.getRole().equals(UserRole.ADMIN)){
             throw new ProfileIsNotTheOwnerException("Você não tem permissão para isso");
+        }
+
+        if(answer.isAccepted()){
+            publisher.publishEvent(new AnswerUnacceptedEvent(answer.getProfile().getProfileId()));
         }
 
         answerRepository.delete(answer);
