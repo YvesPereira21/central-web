@@ -1,8 +1,27 @@
 <article class="w-full space-y-4">
     <section class="rounded-lg bg-[#161B22] p-4 text-white shadow-md">
         <div class="flex flex-col items-center gap-4">
-            <img alt="Avatar do usuário" src="https://img.daisyui.com/images/profile/demo/yellingcat@192.webp"
-                class="size-28 rounded-full" />
+            <div class="relative inline-block">
+                @if (profile?.photoUrl) {
+                    <img alt="Avatar do usuário" [src]="mediaUrl + profile?.photoUrl"
+                         class="size-28 rounded-full object-cover" />
+                } @else {
+                    <img alt="Avatar do usuário" src="https://img.daisyui.com/images/profile/demo/yellingcat@192.webp"
+                         class="size-28 rounded-full object-cover" />
+                }
+
+                @if (isOwner()) {
+                <a [routerLink]="['/edit-profile', profile?.profileId]"
+                    class="absolute top-0 right-0 p-2 bg-[#010409] text-white rounded-full hover:bg-[#30363D] transition-colors shadow-md border-2 border-[#161B22]"
+                    title="Editar Perfil">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
+                        stroke="currentColor" class="size-4">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+                    </svg>
+                </a>
+                }
+            </div>
             <span class="text-2xl font-inter">{{ profile?.name }}</span>
             <p class="text-justify break-words font-lora">
                 {{ profile?.bio }}
@@ -24,7 +43,7 @@
                     Artigos escritos
                 </span>
                 <span class="text-xl font-bold text-white">
-                    12
+                    {{ profile?.articlesCreatedByProfile }}
                 </span>
             </div>
             <div class="flex flex-col items-center gap-2 rounded-lg bg-[#21262D]/50 p-3">
@@ -32,7 +51,7 @@
                     Respostas aceitas
                 </span>
                 <span class="text-xl font-bold text-white">
-                    3
+                    {{ profile?.answersAccepted }}
                 </span>
             </div>
         </div>
@@ -52,7 +71,8 @@
             </a>
         </div>
 
-        <app-article-list [profileId]="profileId()" [showPagination]="false" [showCreateButton]="false"></app-article-list>
+        <app-article-list [profileId]="profileId()" [showPagination]="false"
+            [showCreateButton]="false"></app-article-list>
 
         <!-- Link to all articles written by the profile -->
         <a [routerLink]="['/articles', profileId(), 'profile']"
@@ -76,7 +96,8 @@
             </a>
         </div>
 
-        <app-question-list [profileId]="profileId()" [showPagination]="false" [showCreateButton]="false"></app-question-list>
+        <app-question-list [profileId]="profileId()" [showPagination]="false"
+            [showCreateButton]="false"></app-question-list>
 
         <!-- Link to all questions written by the profile -->
         <a [routerLink]="['/questions', profileId(), 'profile']"

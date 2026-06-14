@@ -7,5 +7,6 @@ public record ProfileSimpleDTO(
         UUID userId,
         String name,
         String level,
-        boolean professional
+        boolean professional,
+        String photoUrl
 ) {}

@@ -10,6 +10,9 @@ export interface Profile {
     level: string,
     reputationScore: number,
     professional: boolean,
+    articlesCreatedByProfile: number,
+    answersAccepted: number,
+    photoUrl: string | null,
     articles: ArticleSimple[],
     qualifications: Qualification[]
 }
@@ -31,5 +34,6 @@ export interface ProfileSimple {
     userId: string,
     name: string,
     level: string,
-    professional: boolean
+    professional: boolean,
+    photoUrl: string | null
 }

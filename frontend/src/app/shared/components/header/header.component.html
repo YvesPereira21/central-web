@@ -31,13 +31,22 @@
 
             <div class="navbar-end flex items-center gap-4">
 
-                <span class="font-inter font-medium">Olá, Yves Pereira!</span>
+                @if (authService.isAuthenticated()) {
+                <span class="font-inter font-medium">Olá, {{ userName() || 'Usuário' }}!</span>
+                }
 
                 <div class="dropdown dropdown-end">
                     <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
                         <div class="w-12 rounded-full">
-                            <img alt="Avatar do usuário"
-                                src="https://img.daisyui.com/images/profile/demo/yellingcat@192.webp" />
+                            @if (userPhotoUrl()) {
+                                <img alt="Avatar do usuário"
+                                     [src]="mediaUrl + userPhotoUrl()"
+                                     class="object-cover" />
+                            } @else {
+                                <img alt="Avatar do usuário"
+                                     src="https://img.daisyui.com/images/profile/demo/yellingcat@192.webp"
+                                     class="object-cover" />
+                            }
                         </div>
                     </div>
                 </div>

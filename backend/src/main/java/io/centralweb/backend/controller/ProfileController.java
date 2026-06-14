@@ -44,6 +44,17 @@ public class ProfileController {
         return ResponseEntity.status(HttpStatus.CREATED).body(profileUniqueDTO);
     }
 
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('PERSON')")
+    @Operation(summary = "Busca o próprio perfil", description = "Retorna os detalhes do perfil do usuário autenticado")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Perfil encontrado"),
+            @ApiResponse(responseCode = "404", description = "Perfil não encontrado")
+    })
+    public ResponseEntity<ProfileDTO> getMyProfile(@AuthenticationPrincipal(expression = "userId") UUID userId) {
+        return ResponseEntity.ok(profileService.getProfileByUserId(userId));
+    }
+
     @GetMapping("/{profileId}")
     @Operation(summary = "Busca perfil por ID", description = "Retorna os detalhes de um perfil específico")
     @ApiResponses(value = {

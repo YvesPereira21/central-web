@@ -15,8 +15,18 @@ export class ProfileService {
     return this.http.post<Profile>(this.apiUrl, profileData);
   }
 
+  uploadAvatar(profileId: string, file: File): Observable<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post(`${environment.apiUrl}/photos/${profileId}/avatar`, formData, { responseType: 'text' });
+  }
+
   getProfile(profileId: string): Observable<Profile> {
     return this.http.get<Profile>(`${this.apiUrl}/${profileId}`);
+  }
+
+  getMyProfile(): Observable<Profile> {
+    return this.http.get<Profile>(`${this.apiUrl}/me`);
   }
 
   updateProfile(profileId: string, profileUpdated: ProfileUpdate): Observable<Profile> {

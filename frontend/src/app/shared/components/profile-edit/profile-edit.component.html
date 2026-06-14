@@ -1,0 +1,51 @@
+<article class="w-full max-w-[600px] mx-auto my-12 flex flex-col justify-center">
+    <section class="rounded-xl bg-[#161B22] p-6 text-white shadow-lg">
+        <div class="space-y-6">
+            <div class="flex items-center gap-3">
+                <a [routerLink]="['/profiles', profileId]" class="text-gray-400 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                    </svg>
+                </a>
+                <h1 class="text-2xl font-inter font-semibold">Editar Perfil</h1>
+            </div>
+
+            <!-- Form -->
+            <form [formGroup]="profileForm" class="space-y-5">
+                <!-- name -->
+                <div class="space-y-1.5">
+                    <label for="name" class="text-sm font-medium text-gray-300">Nome de usuário</label>
+                    <input id="name" formControlName="name" placeholder="ex: maicon_jackson" type="text" required
+                        class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-3 text-white placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none font-inter" />
+                </div>
+
+                <!-- Bio -->
+                <div class="space-y-1.5">
+                    <label for="bio" class="text-sm font-medium text-gray-300">Bio</label>
+                    <textarea id="bio" formControlName="bio" rows="4" placeholder="Conte um pouco sobre você..."
+                        class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-3 text-white placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none font-lora"></textarea>
+                </div>
+
+                <!-- Foto de Perfil -->
+                <div class="space-y-1.5">
+                    <label for="avatar" class="text-sm font-medium text-gray-300">Alterar Foto de Perfil (Opcional)</label>
+                    <input id="avatar" type="file" accept="image/*" (change)="onFileSelected($event)"
+                        class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-2 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-500 cursor-pointer" />
+                </div>
+
+                <!-- Action buttons -->
+                <div class="flex flex-wrap items-center justify-end gap-3 pt-4">
+                    <button type="submit"
+                        class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-emerald-500 hover:shadow-md"
+                        (click)="onSubmit()" [disabled]="isSubmiting || profileForm.invalid">
+                        @if (isSubmiting) {
+                        Salvando alterações...
+                        } @else {
+                        Salvar Alterações
+                        }
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+</article>

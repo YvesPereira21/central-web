@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { ArticleCreateComponent } from './shared/components/article-create/article-create.component';
 import { QuestionCreateComponent } from './shared/components/question-create/question-create.component';
 import { ProfileCreateComponent } from './shared/components/profile-create/profile-create.component';
+import { ProfileEditComponent } from './shared/components/profile-edit/profile-edit.component';
 import { ArticleListComponent } from './shared/components/article-list/article-list.component';
 import { QuestionListComponent } from './shared/components/question-list/question-list.component';
 import { ArticleDetailComponent } from './shared/components/article-detail/article-detail.component';
@@ -18,6 +19,7 @@ export const routes: Routes = [
     { path: '', component: HomePageComponent, canActivate: [roleGuard] },
     { path: 'login', component: LoginComponent },
     { path: 'create-profile', component: ProfileCreateComponent },
+    { path: 'edit-profile/:id', component: ProfileEditComponent, canActivate: [roleGuard] },
     { path: 'create-article', component: ArticleCreateComponent, canActivate: [roleGuard], data: { roles: ['PERSON'] } },
     { path: 'edit-article/:id', component: ArticleCreateComponent, canActivate: [roleGuard], data: { roles: ['PERSON'] } },
     { path: 'create-question', component: QuestionCreateComponent, canActivate: [roleGuard], data: { roles: ['PERSON'] } },

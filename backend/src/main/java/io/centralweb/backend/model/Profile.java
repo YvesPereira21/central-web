@@ -4,6 +4,7 @@ import io.centralweb.backend.enums.ProfileType;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.hibernate.annotations.Formula;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +34,8 @@ public class Profile {
     @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
     private User user;
+    @OneToOne(mappedBy = "profile", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    private Photo photo;
     @OneToMany(mappedBy = "profile", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Question> questions = new ArrayList<>();
     @OneToMany(mappedBy = "profile", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
@@ -43,24 +46,31 @@ public class Profile {
     private List<Qualification> qualifications = new ArrayList<>();
     @OneToMany(mappedBy = "profile", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Collection> collections = new ArrayList<>();
+    @Formula("(SELECT COUNT(*) FROM articles a WHERE a.profile_id = profile_id)")
+    private Long articlesCreatedByProfile;
+    @Formula("(SELECT COUNT(*) FROM answers a WHERE a.profile_id = profile_id AND a.accepted = true)")
+    private Long answersAccepted;
 
     public Profile() {
     }
 
-    public Profile(UUID profileId, String name, String bio, ProfileType profileType, String level, long reputationScore, boolean professional, User user, List<Question> questions, List<Article> articles, List<Answer> answers, List<Qualification> qualifications, List<Collection> collections) {
+    public Profile(UUID profileId, String bio, String name, ProfileType profileType, String level, long reputationScore, boolean professional, User user, Photo photo, List<Question> questions, List<Article> articles, List<Answer> answers, List<Qualification> qualifications, List<Collection> collections, Long articlesCreatedByProfile, Long answersAccepted) {
         this.profileId = profileId;
-        this.name = name;
         this.bio = bio;
+        this.name = name;
         this.profileType = profileType;
         this.level = level;
         this.reputationScore = reputationScore;
         this.professional = professional;
         this.user = user;
+        this.photo = photo;
         this.questions = questions;
         this.articles = articles;
         this.answers = answers;
         this.qualifications = qualifications;
         this.collections = collections;
+        this.articlesCreatedByProfile = articlesCreatedByProfile;
+        this.answersAccepted = answersAccepted;
     }
 
     public UUID getProfileId() {
@@ -123,6 +133,14 @@ public class Profile {
         this.user = user;
     }
 
+    public Photo getPhoto() {
+        return photo;
+    }
+
+    public void setPhoto(Photo photo) {
+        this.photo = photo;
+    }
+
     public List<Question> getQuestions() {
         return questions;
     }
@@ -161,6 +179,14 @@ public class Profile {
 
     public void setCollections(List<Collection> collections) {
         this.collections = collections;
+    }
+
+    public Long getArticlesCreatedByProfile() {
+        return articlesCreatedByProfile == null ? 0 : articlesCreatedByProfile;
+    }
+
+    public Long getAnswersAccepted() {
+        return answersAccepted == null ? 0 : answersAccepted;
     }
 }
 

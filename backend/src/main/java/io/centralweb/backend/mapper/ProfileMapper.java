@@ -9,9 +9,11 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring")
 public interface ProfileMapper {
     @Mapping(source = "user.userId", target = "userId")
+    @Mapping(source = "photo.photo_url", target = "photoUrl")
     ProfileSimpleDTO toProfileSimpleDTO(Profile profile);
 
     @Mapping(source = "user.userId", target = "userId")
+    @Mapping(source = "photo.photo_url", target = "photoUrl")
     ProfileDTO toProfileUniqueDTO(Profile profile);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

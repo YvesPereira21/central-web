@@ -16,6 +16,8 @@ export class ProfileCreateComponent {
   private router = inject(Router);
 
   isSubmiting: boolean = false;
+  selectedFile: File | null = null;
+  
   profileForm = this.formBuilder.group({
     name: [''],
     email: [''],
@@ -23,6 +25,13 @@ export class ProfileCreateComponent {
     bio: [''],
     profileType: ['']
   });
+
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+    }
+  }
 
   onSubmit() {
     if (this.profileForm.invalid) return alert('Preencha o formulário com informações corretas.');
@@ -40,20 +49,38 @@ export class ProfileCreateComponent {
     }
 
     this.profileService.createProfile(profile).subscribe({
-      next: (response) => {
-        alert('Conta criada com sucesso! Por favor, faça o login.');
-        this.clearForm();
-        this.router.navigate(['/login']);
+      next: (response: any) => {
+        if (this.selectedFile && response.profileId) {
+          this.profileService.uploadAvatar(response.profileId, this.selectedFile).subscribe({
+            next: () => {
+              alert('Conta e foto criadas com sucesso! Por favor, faça o login.');
+              this.finishSubmit();
+            },
+            error: () => {
+              alert('Conta criada, mas houve um erro ao enviar a foto. Por favor, faça o login.');
+              this.finishSubmit();
+            }
+          });
+        } else {
+          alert('Conta criada com sucesso! Por favor, faça o login.');
+          this.finishSubmit();
+        }
       },
       error: (error) => {
-        console.log('Erro ao registrar artigo.');
+        console.log('Erro ao registrar perfil.', error);
         this.clearForm();
       }
     })
   }
 
+  finishSubmit() {
+    this.clearForm();
+    this.router.navigate(['/login']);
+  }
+
   clearForm() {
     this.profileForm.reset();
+    this.selectedFile = null;
     this.isSubmiting = false;
   }
 }

@@ -58,6 +58,12 @@ public class ProfileService {
         return profileMapper.toProfileUniqueDTO(profile);
     }
 
+    public ProfileDTO getProfileByUserId(UUID userId) {
+        Profile profile = profileRepository.findByUser_UserId(userId)
+                .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado para este usuário"));
+        return profileMapper.toProfileUniqueDTO(profile);
+    }
+
     public ProfileDTO updateProfile(UUID profileId, ProfileUpdateDTO profileUpdated, UUID userProfileId) {
         Profile profile = profileRepository.findById(profileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));

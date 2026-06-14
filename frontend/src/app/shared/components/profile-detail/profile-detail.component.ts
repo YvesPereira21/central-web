@@ -6,6 +6,7 @@ import { ArticleListComponent } from '../article-list/article-list.component';
 import { QuestionListComponent } from '../question-list/question-list.component';
 import { AuthenticationService } from '../../../features/authentications/services/authentication.service';
 import { LevelStageComponent } from '../level-stage/level-stage.component';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-profile-detail',
@@ -22,6 +23,7 @@ export class ProfileDetailComponent implements OnInit {
   isOwner = signal<boolean>(false);
   profile: Profile | null = null;
   errorMessage: string = '';
+  mediaUrl = environment.mediaUrl;
 
   ngOnInit(): void {
     const profileId = this.activatedRoute.snapshot.paramMap.get('id');

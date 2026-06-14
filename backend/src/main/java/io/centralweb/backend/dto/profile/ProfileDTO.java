@@ -9,5 +9,8 @@ public record ProfileDTO(
         String bio,
         String level,
         long reputationScore,
-        boolean professional
+        boolean professional,
+        Long articlesCreatedByProfile,
+        Long answersAccepted,
+        String photoUrl
 ) {}
