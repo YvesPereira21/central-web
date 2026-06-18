@@ -7,6 +7,7 @@ import io.centralweb.backend.dto.profile.ProfileSimpleDTO;
 import io.centralweb.backend.dto.tag.TagDTO;
 import io.centralweb.backend.enums.UserRole;
 import io.centralweb.backend.events.ArticleCreateEvent;
+import io.centralweb.backend.events.ArticleDeleteEvent;
 import io.centralweb.backend.exception.ObjectNotFoundException;
 import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
 import io.centralweb.backend.mapper.ArticleMapper;
@@ -381,6 +382,10 @@ class ArticleServiceTest {
         verify(userRepository, times(1)).findById(userId);
         verify(articleRepository, times(1)).findById(articleId);
         verify(articleRepository, times(1)).delete(article1);
+
+        ArgumentCaptor<ArticleDeleteEvent> eventCaptor = ArgumentCaptor.forClass(ArticleDeleteEvent.class);
+        verify(publisher, times(1)).publishEvent(eventCaptor.capture());
+        assertEquals(profilePerson1.getProfileId(), eventCaptor.getValue().profileId());
     }
 
     @Test
@@ -396,6 +401,10 @@ class ArticleServiceTest {
         verify(userRepository, times(1)).findById(userId);
         verify(articleRepository, times(1)).findById(articleId);
         verify(articleRepository, times(1)).delete(article1);
+
+        ArgumentCaptor<ArticleDeleteEvent> eventCaptor = ArgumentCaptor.forClass(ArticleDeleteEvent.class);
+        verify(publisher, times(1)).publishEvent(eventCaptor.capture());
+        assertEquals(profilePerson1.getProfileId(), eventCaptor.getValue().profileId());
     }
 
     // -----------------------UNHAPPY PATH------------------------------

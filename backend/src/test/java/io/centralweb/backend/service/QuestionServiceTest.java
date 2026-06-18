@@ -8,6 +8,7 @@ import io.centralweb.backend.dto.question.QuestionUpdateDTO;
 import io.centralweb.backend.dto.tag.TagDTO;
 import io.centralweb.backend.enums.UserRole;
 import io.centralweb.backend.events.QuestionCreateEvent;
+import io.centralweb.backend.events.QuestionDeleteEvent;
 import io.centralweb.backend.exception.ObjectNotFoundException;
 import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
 import io.centralweb.backend.mapper.QuestionMapper;
@@ -418,6 +419,10 @@ class QuestionServiceTest {
         verify(userRepository, times(1)).findById(userId);
         verify(questionRepository, times(1)).findById(questionId);
         verify(questionRepository, times(1)).delete(question1);
+
+        ArgumentCaptor<QuestionDeleteEvent> eventCaptor = ArgumentCaptor.forClass(QuestionDeleteEvent.class);
+        verify(publisher, times(1)).publishEvent(eventCaptor.capture());
+        assertEquals(profilePerson1.getProfileId(), eventCaptor.getValue().profileId());
     }
 
     @Test
@@ -433,6 +438,10 @@ class QuestionServiceTest {
         verify(userRepository, times(1)).findById(userId);
         verify(questionRepository, times(1)).findById(questionId);
         verify(questionRepository, times(1)).delete(question1);
+
+        ArgumentCaptor<QuestionDeleteEvent> eventCaptor = ArgumentCaptor.forClass(QuestionDeleteEvent.class);
+        verify(publisher, times(1)).publishEvent(eventCaptor.capture());
+        assertEquals(profilePerson1.getProfileId(), eventCaptor.getValue().profileId());
     }
 
     // -----------------------UNHAPPY PATH------------------------------

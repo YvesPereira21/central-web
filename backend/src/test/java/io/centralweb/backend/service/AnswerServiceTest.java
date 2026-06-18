@@ -4,6 +4,8 @@ import io.centralweb.backend.dto.answer.AnswerCreateDTO;
 import io.centralweb.backend.dto.answer.AnswerDTO;
 import io.centralweb.backend.dto.profile.ProfileSimpleDTO;
 import io.centralweb.backend.enums.UserRole;
+import io.centralweb.backend.events.AnswerAcceptedEvent;
+import io.centralweb.backend.events.AnswerUnacceptedEvent;
 import io.centralweb.backend.exception.ObjectNotFoundException;
 import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
 import io.centralweb.backend.mapper.AnswerMapper;
@@ -15,6 +17,7 @@ import io.centralweb.backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -209,6 +212,10 @@ class AnswerServiceTest {
 
         verify(answerRepository, times(1)).findById(answerId);
         verify(answerRepository, times(1)).save(answer1);
+
+        ArgumentCaptor<AnswerAcceptedEvent> eventCaptor = ArgumentCaptor.forClass(AnswerAcceptedEvent.class);
+        verify(publisher, times(1)).publishEvent(eventCaptor.capture());
+        assertEquals(profilePerson2.getProfileId(), eventCaptor.getValue().profileId());
     }
 
     @Test
@@ -279,6 +286,24 @@ class AnswerServiceTest {
         verify(userRepository, times(1)).findById(userId);
         verify(answerRepository, times(1)).findById(answerId);
         verify(answerRepository, times(1)).delete(answer1);
+    }
+
+    @Test
+    void shouldDeleteAnswerAndPublishUnacceptedEventIfAccepted() {
+        UUID answerId = answer1.getAnswerId();
+        UUID userId = userPerson2.getUserId();
+        answer1.setAccepted(true);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(userPerson2));
+        when(answerRepository.findById(answerId)).thenReturn(Optional.of(answer1));
+
+        assertDoesNotThrow(() -> answerService.deleteAnswerById(answerId, userId));
+
+        verify(answerRepository, times(1)).delete(answer1);
+
+        ArgumentCaptor<AnswerUnacceptedEvent> eventCaptor = ArgumentCaptor.forClass(AnswerUnacceptedEvent.class);
+        verify(publisher, times(1)).publishEvent(eventCaptor.capture());
+        assertEquals(profilePerson2.getProfileId(), eventCaptor.getValue().profileId());
     }
 
     // -----------------------UNHAPPY PATH------------------------------

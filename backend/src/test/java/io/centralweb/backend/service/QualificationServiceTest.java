@@ -4,6 +4,8 @@ import io.centralweb.backend.dto.qualification.QualificationCreateDTO;
 import io.centralweb.backend.dto.qualification.QualificationDTO;
 import io.centralweb.backend.enums.ExperienceLevel;
 import io.centralweb.backend.enums.UserRole;
+import io.centralweb.backend.events.QualificationCreateEvent;
+import io.centralweb.backend.events.QualificationDeleteEvent;
 import io.centralweb.backend.exception.ObjectNotFoundException;
 import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
 import io.centralweb.backend.mapper.QualificationMapper;
@@ -16,6 +18,7 @@ import io.centralweb.backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -159,6 +162,11 @@ class QualificationServiceTest {
         verify(profileRepository, times(1)).findByUser_UserId(userId);
         verify(qualificationRepository, times(1)).save(any(Qualification.class));
         verify(qualificationMapper, times(1)).toDTO(any(Qualification.class));
+
+        ArgumentCaptor<QualificationCreateEvent> eventCaptor = ArgumentCaptor.forClass(QualificationCreateEvent.class);
+        verify(publisher, times(1)).publishEvent(eventCaptor.capture());
+        assertEquals(profilePerson1.getProfileId(), eventCaptor.getValue().profileId());
+        assertEquals(ExperienceLevel.JUNIOR, eventCaptor.getValue().experienceLevel());
     }
 
     @Test
@@ -270,6 +278,11 @@ class QualificationServiceTest {
         verify(userRepository, times(1)).findById(userId);
         verify(qualificationRepository, times(1)).findById(qualificationId);
         verify(qualificationRepository, times(1)).delete(qualification);
+
+        ArgumentCaptor<QualificationDeleteEvent> eventCaptor = ArgumentCaptor.forClass(QualificationDeleteEvent.class);
+        verify(publisher, times(1)).publishEvent(eventCaptor.capture());
+        assertEquals(profilePerson1.getProfileId(), eventCaptor.getValue().profileId());
+        assertEquals(ExperienceLevel.JUNIOR, eventCaptor.getValue().experienceLevel());
     }
 
     @Test
@@ -285,6 +298,11 @@ class QualificationServiceTest {
         verify(userRepository, times(1)).findById(userId);
         verify(qualificationRepository, times(1)).findById(qualificationId);
         verify(qualificationRepository, times(1)).delete(qualification);
+
+        ArgumentCaptor<QualificationDeleteEvent> eventCaptor = ArgumentCaptor.forClass(QualificationDeleteEvent.class);
+        verify(publisher, times(1)).publishEvent(eventCaptor.capture());
+        assertEquals(profilePerson1.getProfileId(), eventCaptor.getValue().profileId());
+        assertEquals(ExperienceLevel.JUNIOR, eventCaptor.getValue().experienceLevel());
     }
 
     // -----------------------UNHAPPY PATH------------------------------
