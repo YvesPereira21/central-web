@@ -66,9 +66,9 @@
         </section>
 
         <section class="px-4 py-2">
-            <p class="py-1 break-words text-[#8B949E] text-justify leading-relaxed font-lora font-semibold">
-                {{ answer.content }}
-            </p>
+            <div class="py-1 break-words text-[#8B949E] text-justify leading-relaxed font-lora font-semibold prose prose-invert max-w-none">
+                <markdown [data]="answer.content"></markdown>
+            </div>
             <div class="flex flex-row items-center mt-2 gap-2">
                 <button (click)="toggleAnswerLike(answer.answerId)"
                     class="group flex items-center gap-1 py-1 transition-all" [class.text-[#3FB950]]="answer.liked"

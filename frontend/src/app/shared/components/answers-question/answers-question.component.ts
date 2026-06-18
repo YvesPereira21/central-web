@@ -6,10 +6,11 @@ import { RouterLink } from "@angular/router";
 import { CommentsAnswerComponent } from '../comments-answer/comments-answer.component';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { LevelStageComponent } from '../level-stage/level-stage.component';
+import { MarkdownComponent } from 'ngx-markdown';
 
 @Component({
   selector: 'app-answers-question',
-  imports: [RouterLink, PaginationComponent, CommentsAnswerComponent, ReactiveFormsModule, LevelStageComponent],
+  imports: [RouterLink, PaginationComponent, CommentsAnswerComponent, ReactiveFormsModule, LevelStageComponent, MarkdownComponent],
   templateUrl: './answers-question.component.html',
   styleUrl: './answers-question.component.css'
 })

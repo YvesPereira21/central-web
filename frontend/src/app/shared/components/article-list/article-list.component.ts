@@ -8,10 +8,11 @@ import { LevelStageComponent } from '../level-stage/level-stage.component';
 import { CollectionService } from '../../../features/collections/services/collection.service';
 import { AuthenticationService } from '../../../features/authentications/services/authentication.service';
 import { combineLatest } from 'rxjs';
+import { MarkdownComponent } from 'ngx-markdown';
 
 @Component({
   selector: 'app-article-list',
-  imports: [RouterLink, PaginationComponent, CollectionModalComponent, LevelStageComponent],
+  imports: [RouterLink, PaginationComponent, CollectionModalComponent, LevelStageComponent, MarkdownComponent],
   templateUrl: './article-list.component.html',
   styleUrl: './article-list.component.css'
 })
@@ -53,9 +54,9 @@ export class ArticleListComponent implements OnInit {
 
       const tagsParam = queryParams.get('tags');
       this.tags = tagsParam ? tagsParam.split(',') : [];
-      
+
       this.searchQuery = queryParams.get('search');
-      
+
       this.loadData(0, 10);
     });
   }

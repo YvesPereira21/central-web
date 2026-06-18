@@ -22,9 +22,9 @@
             {{ article()?.title }}
         </h1>
 
-        <p class="py-1 break-words text-[#8B949E] text-justify leading-relaxed font-lora font-semibold">
-            {{ article()?.content }}
-        </p>
+        <div class="py-1 break-words text-[#8B949E] text-justify leading-relaxed font-lora font-semibold prose prose-invert max-w-none">
+            <markdown [data]="article()?.content"></markdown>
+        </div>
     </section>
 
     <!-- put the articles tag -->

@@ -80,9 +80,9 @@
             }
 
         </div>
-        <p class="line-clamp-6 text-[#8B949E] text-base text-justify font-lora font-semibold">
-            {{ article.content }}
-        </p>
+        <div class="line-clamp-6 text-[#8B949E] text-base text-justify font-lora font-semibold prose prose-invert max-w-none">
+            <markdown [data]="article.content"></markdown>
+        </div>
         <hr class="border-[#8B949E] mt-1">
     </section>
 

@@ -8,10 +8,11 @@ import { LevelStageComponent } from '../level-stage/level-stage.component';
 import { CollectionService } from '../../../features/collections/services/collection.service';
 import { AuthenticationService } from '../../../features/authentications/services/authentication.service';
 import { combineLatest } from 'rxjs';
+import { MarkdownComponent } from 'ngx-markdown';
 
 @Component({
   selector: 'app-question-list',
-  imports: [RouterLink, PaginationComponent, CollectionModalComponent, LevelStageComponent],
+  imports: [RouterLink, PaginationComponent, CollectionModalComponent, LevelStageComponent, MarkdownComponent],
   templateUrl: './question-list.component.html',
   styleUrl: './question-list.component.css'
 })

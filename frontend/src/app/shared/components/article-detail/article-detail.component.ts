@@ -5,10 +5,11 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Article } from '../../../features/models/article';
 import { CollectionModalComponent } from '../collection-modal/collection-modal.component';
 import { LevelStageComponent } from '../level-stage/level-stage.component';
+import { MarkdownComponent } from 'ngx-markdown';
 
 @Component({
   selector: 'app-article-detail',
-  imports: [RouterLink, CollectionModalComponent, LevelStageComponent],
+  imports: [RouterLink, CollectionModalComponent, LevelStageComponent, MarkdownComponent],
   templateUrl: './article-detail.component.html',
   styleUrl: './article-detail.component.css'
 })

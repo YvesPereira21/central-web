@@ -22,9 +22,9 @@
             {{ question()?.title }}
         </h1>
 
-        <p class="py-1 break-words text-[#8B949E] text-justify leading-relaxed font-lora font-semibold">
-            {{ question()?.content }}
-        </p>
+        <div class="py-1 break-words text-[#8B949E] text-justify leading-relaxed font-lora font-semibold prose prose-invert max-w-none">
+            <markdown [data]="question()?.content"></markdown>
+        </div>
     </section>
 
     <section class="px-4">
