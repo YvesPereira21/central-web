@@ -56,6 +56,8 @@ class QuestionServiceTest {
     private TagService tagService;
     @Mock
     private ApplicationEventPublisher publisher;
+    @Mock
+    private io.centralweb.backend.repository.AnswerRepository answerRepository;
     @InjectMocks
     private QuestionService questionService;
     private User userAdmin;
@@ -110,7 +112,8 @@ class QuestionServiceTest {
                 profilePerson1.getUser().getUserId(),
                 profilePerson1.getName(),
                 profilePerson1.getLevel(),
-                profilePerson1.isProfessional()
+                profilePerson1.isProfessional(),
+                null
         );
 
         tagJava = new Tag();
@@ -192,7 +195,7 @@ class QuestionServiceTest {
         assertTrue(result.solutioned());
         assertEquals(LocalDate.now(), result.createdAt());
         assertEquals("Usuário Teste", result.profile().name());
-        assertEquals("Iniciante", result.profile().level());
+        assertEquals("Novato", result.profile().level());
         assertFalse(result.profile().professional());
 
         verify(profileRepository, times(1)).findByUser_UserId(userId);
@@ -226,7 +229,7 @@ class QuestionServiceTest {
         assertTrue(result.solutioned());
         assertEquals(LocalDate.now(), result.createdAt());
         assertEquals("Usuário Teste", result.profile().name());
-        assertEquals("Iniciante", result.profile().level());
+        assertEquals("Novato", result.profile().level());
         assertFalse(result.profile().professional());
 
         verify(questionRepository, times(1)).findById(question1.getQuestionId());

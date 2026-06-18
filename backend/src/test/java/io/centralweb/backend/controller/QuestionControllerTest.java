@@ -210,7 +210,7 @@ public class QuestionControllerTest {
                 .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
         .when()
-                .get("/questions/" + title + "/title")
+                .get("/questions/search?query=" + title)
         .then()
                 .statusCode(HttpStatus.OK.value())
                 .body("numberOfElements", is(1));

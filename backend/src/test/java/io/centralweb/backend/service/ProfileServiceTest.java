@@ -111,7 +111,10 @@ class ProfileServiceTest {
                 profilePerson1.getBio(),
                 profilePerson1.getLevel(),
                 profilePerson1.getReputationScore(),
-                profilePerson1.isProfessional()
+                profilePerson1.isProfessional(),
+                null,
+                null,
+                null
         );
     }
 
@@ -128,7 +131,7 @@ class ProfileServiceTest {
         assertEquals("Usuário Teste", result.name());
         assertEquals("Sou um programador de testes", result.bio());
         assertEquals(870, result.reputationScore());
-        assertEquals("Iniciante", result.level());
+        assertEquals("Novato", result.level());
 
         verify(userService, times(1)).verifyUserAlreadyExists(profilePerson1.getUser().getEmail());
         verify(bCryptPasswordEncoder, times(1)).encode(profileCreateDTO.user().password());
@@ -149,7 +152,7 @@ class ProfileServiceTest {
         assertEquals("Usuário Teste", result.name());
         assertEquals("Sou um programador de testes", result.bio());
         assertEquals(870, result.reputationScore());
-        assertEquals("Iniciante", result.level());
+        assertEquals("Novato", result.level());
 
         verify(profileRepository, times(1)).findById(profileId);
         verify(profileMapper, times(1)).toProfileUniqueDTO(profilePerson1);
@@ -171,7 +174,10 @@ class ProfileServiceTest {
                 "Testando update",
                 profilePerson1.getLevel(),
                 profilePerson1.getReputationScore(),
-                profilePerson1.isProfessional()
+                profilePerson1.isProfessional(),
+                null,
+                null,
+                null
         );
 
         when(profileRepository.findById(profileId)).thenReturn(Optional.of(profilePerson1));
@@ -222,11 +228,11 @@ class ProfileServiceTest {
 
     @ParameterizedTest
     @CsvSource({
-            "0, 100, 100, Iniciante",
-            "50, 150, 200, Bom",
-            "100, 250, 350, Esperto",
-            "500, 300, 800, Especialista",
-            "800, 100, 900, Especialista"
+            "0, 100, 100, Novato",
+            "50, 150, 200, Praticante",
+            "100, 250, 350, Praticante",
+            "500, 300, 800, Veterano",
+            "800, 100, 900, Veterano"
     })
     void shouldAddPointsAndUpdateLevelCorrectly(
             long initialScore,

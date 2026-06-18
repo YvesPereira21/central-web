@@ -200,7 +200,7 @@ public class ArticleControllerTest {
                 .header("Authorization", "Bearer " + tokenPerson1)
                 .contentType(ContentType.JSON)
         .when()
-                .get("/articles/" + title + "/title")
+                .get("/articles/search?query=" + title)
         .then()
                 .statusCode(HttpStatus.OK.value())
                 .body("numberOfElements", is(1));

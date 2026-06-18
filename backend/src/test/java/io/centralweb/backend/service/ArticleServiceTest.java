@@ -105,7 +105,8 @@ class ArticleServiceTest {
                 profilePerson1.getUser().getUserId(),
                 profilePerson1.getName(),
                 profilePerson1.getLevel(),
-                profilePerson1.isProfessional()
+                profilePerson1.isProfessional(),
+                null
         );
 
         tagJava = new Tag();
@@ -167,7 +168,7 @@ class ArticleServiceTest {
         assertEquals(List.of(tagJavaDTO, tagRustDTO), result.tags());
         assertEquals(LocalDate.now(), result.createdAt());
         assertEquals("Usuário Teste", result.profile().name());
-        assertEquals("Iniciante", result.profile().level());
+        assertEquals("Novato", result.profile().level());
         assertFalse(result.profile().professional());
 
         verify(profileRepository, times(1)).findByUser_UserId(userId);
@@ -199,7 +200,7 @@ class ArticleServiceTest {
         assertEquals(List.of(tagJavaDTO, tagRustDTO), result.tags());
         assertEquals(LocalDate.now(), result.createdAt());
         assertEquals("Usuário Teste", result.profile().name());
-        assertEquals("Iniciante", result.profile().level());
+        assertEquals("Novato", result.profile().level());
         assertFalse(result.profile().professional());
     }
 

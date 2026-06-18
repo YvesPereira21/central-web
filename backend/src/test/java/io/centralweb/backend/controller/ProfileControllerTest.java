@@ -117,7 +117,7 @@ public class ProfileControllerTest {
                 .statusCode(HttpStatus.CREATED.value())
                 .body("name", equalTo("Usuário Teste"))
                 .body("bio", equalTo("Sou um programador de QA"))
-                .body("level", equalTo("Iniciante"))
+                .body("level", equalTo("Novato"))
                 .body("reputationScore", equalTo(0))
                 .body("professional", equalTo(false));
     }

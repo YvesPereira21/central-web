@@ -23,6 +23,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -46,6 +47,8 @@ class AnswerServiceTest {
     private UserRepository userRepository;
     @Mock
     private ProfileRepository profileRepository;
+    @Mock
+    private ApplicationEventPublisher publisher;
     @InjectMocks
     private AnswerService answerService;
     private User userAdmin;
@@ -124,7 +127,8 @@ class AnswerServiceTest {
                 profilePerson1.getUser().getUserId(),
                 profilePerson1.getName(),
                 profilePerson1.getLevel(),
-                profilePerson1.isProfessional()
+                profilePerson1.isProfessional(),
+                null
         );
 
         answerCreateDTO = new AnswerCreateDTO(
