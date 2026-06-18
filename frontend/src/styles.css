@@ -11,6 +11,7 @@
 
 @import "tailwindcss";
 @plugin "daisyui";
+@plugin "@tailwindcss/typography";
 
 @theme {
   --font-inter: "Inter", sans-serif;
