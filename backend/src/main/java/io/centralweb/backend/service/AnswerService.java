@@ -5,6 +5,7 @@ import io.centralweb.backend.dto.answer.AnswerDTO;
 import io.centralweb.backend.enums.UserRole;
 import io.centralweb.backend.events.AnswerAcceptedEvent;
 import io.centralweb.backend.events.AnswerUnacceptedEvent;
+import io.centralweb.backend.exception.QuestionHaveAnswerAlreadyAcceptedException;
 import io.centralweb.backend.exception.ObjectNotFoundException;
 import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
 import io.centralweb.backend.mapper.AnswerMapper;
@@ -72,6 +73,12 @@ public class AnswerService {
 
         if(answer.getProfile().getUser().getUserId().equals(userProfileId)) {
             throw new ProfileIsNotTheOwnerException("Você não tem permissão para isso");
+        }
+
+        boolean questionHaveAnswerAccepted = answerRepository
+                .existsByQuestion_QuestionIdAndAcceptedTrue(answer.getQuestion().getQuestionId());
+        if(questionHaveAnswerAccepted){
+            throw new QuestionHaveAnswerAlreadyAcceptedException("Não é possível aceitar mais de 1 resposta");
         }
 
         answer.setAccepted(true);

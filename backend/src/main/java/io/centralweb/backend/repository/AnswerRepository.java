@@ -15,4 +15,5 @@ public interface AnswerRepository extends JpaRepository<Answer, UUID> {
             "WHERE q.published = true AND q.questionId = :questionId")
     Page<Answer> findAllByQuestionIdAndQuestionPublished(@Param("questionId") UUID questionId, Pageable pageable);
     Optional<Answer> findByQuestion_QuestionIdAndAcceptedTrue(UUID questionId);
+    boolean existsByQuestion_QuestionIdAndAcceptedTrue(UUID questionId);
 }

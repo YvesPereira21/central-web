@@ -8,6 +8,7 @@ import io.centralweb.backend.events.QualificationCreateEvent;
 import io.centralweb.backend.events.QualificationDeleteEvent;
 import io.centralweb.backend.exception.ObjectNotFoundException;
 import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
+import io.centralweb.backend.exception.InvalidDateException;
 import io.centralweb.backend.mapper.QualificationMapper;
 import io.centralweb.backend.model.Profile;
 import io.centralweb.backend.model.Qualification;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Service
@@ -43,6 +45,11 @@ public class QualificationService {
     public QualificationDTO createQualification(QualificationCreateDTO qualification, UUID userProfileId) {
         Profile profile = profileRepository.findByUser_UserId(userProfileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
+
+        boolean dateIsValid = dateIsValid(qualification.startDate(), qualification.endDate());
+        if (!dateIsValid) {
+            throw new InvalidDateException("Data inválida. Coloque uma data válida");
+        }
 
         Qualification newQualification = new Qualification();
         newQualification.setJobTitle(qualification.jobTitle());
@@ -128,5 +135,16 @@ public class QualificationService {
                 return 0;
             }
         }
+    }
+
+    private boolean dateIsValid(LocalDate startDate, LocalDate endDate) {
+        boolean isBefore = endDate.isBefore(startDate);
+        boolean isFutureDate = startDate.isAfter(LocalDate.now());
+
+        if (endDate == null) {
+            isBefore = false;
+        }
+
+        return isBefore || isFutureDate;
     }
 }

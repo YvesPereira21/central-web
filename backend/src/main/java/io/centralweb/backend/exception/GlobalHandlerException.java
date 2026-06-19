@@ -97,4 +97,30 @@ public class GlobalHandlerException {
                 .build();
         return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
     }
+
+    @ExceptionHandler(QuestionHaveAnswerAlreadyAcceptedException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ResponseEntity<ApiError> questionHaveAnswerAlreadyAcceptedException(
+            QuestionHaveAnswerAlreadyAcceptedException e
+    ) {
+        ApiError error = ApiError.builder()
+                .timestamp(LocalDateTime.now())
+                .code(HttpStatus.CONFLICT.value())
+                .status(HttpStatus.CONFLICT.name())
+                .errors(List.of(e.getMessage()))
+                .build();
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(InvalidDateException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ResponseEntity<ApiError> invalidDateExceptionException(InvalidDateException e) {
+        ApiError error = ApiError.builder()
+                .timestamp(LocalDateTime.now())
+                .code(HttpStatus.CONFLICT.value())
+                .status(HttpStatus.CONFLICT.name())
+                .errors(List.of(e.getMessage()))
+                .build();
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
 }
