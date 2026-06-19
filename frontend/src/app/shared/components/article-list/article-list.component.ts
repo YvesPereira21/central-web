@@ -9,14 +9,17 @@ import { CollectionService } from '../../../features/collections/services/collec
 import { AuthenticationService } from '../../../features/authentications/services/authentication.service';
 import { combineLatest } from 'rxjs';
 import { MarkdownComponent } from 'ngx-markdown';
+import { DatePipe } from '@angular/common';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-article-list',
-  imports: [RouterLink, PaginationComponent, CollectionModalComponent, LevelStageComponent, MarkdownComponent],
+  imports: [RouterLink, PaginationComponent, CollectionModalComponent, LevelStageComponent, MarkdownComponent, DatePipe],
   templateUrl: './article-list.component.html',
   styleUrl: './article-list.component.css'
 })
 export class ArticleListComponent implements OnInit {
+  environment = environment;
   private articleService = inject(ArticleService);
   private collectionService = inject(CollectionService);
   private activatedRoute = inject(ActivatedRoute);

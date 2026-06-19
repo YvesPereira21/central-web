@@ -13,115 +13,106 @@
 }
 
 @for (question of questions(); track question.questionId) {
-<article class="w-full max-w-[940px] h-auto container mx-auto my-4 rounded-md bg-[#161B22] text-white shadow-md">
-    <!-- profile -->
-    <section class="flex items-center gap-4 px-4 py-3">
-        <a [routerLink]="['/profiles', question.profile.profileId]">
-            <div tabindex="0" class="avatar transition-transform hover:scale-105 cursor-pointer">
-                <div class="w-12 rounded-full">
-                    <img alt="Avatar do usuário"
-                        src="https://img.daisyui.com/images/profile/demo/yellingcat@192.webp" />
+<article class="w-full max-w-[940px] h-auto container mx-auto my-4 rounded-md bg-[#161B22] text-white shadow-md transition-all border border-transparent hover:border-[#30363d]">
+    <section class="w-full px-5 pt-6 pb-2">
+        <div class="flex justify-between items-start gap-4 mb-4">
+            <a [routerLink]="['/questions', question.questionId]" class="block group flex-1">
+                <h1 class="text-2xl font-inter font-extrabold text-white tracking-tight group-hover:text-emerald-400 transition-colors pl-1">
+                    {{ question.title }}
+                </h1>
+            </a>
+
+            @if (authService.isOwner(question.profile.userId)) {
+            <div class="dropdown dropdown-end">
+                <div tabindex="0" role="button" class="btn btn-ghost btn-sm btn-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
+                    </svg>
                 </div>
+                <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-[#1f242c] border border-[#30363d] rounded-box w-40">
+                    <li>
+                        <a [routerLink]="['/edit-question', question.questionId]" class="hover:bg-[#30363d] text-gray-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                            </svg>
+                            Editar
+                        </a>
+                    </li>
+                    <li>
+                        <a (click)="deleteQuestion(question.questionId)" class="hover:bg-red-500/10 text-red-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                            </svg>
+                            Remover
+                        </a>
+                    </li>
+                </ul>
             </div>
-        </a>
-        <!-- name and level in website -->
-        <div class="flex flex-col gap-1 font-inter flex-1">
-            <span class="text-lg">
-                {{ question.profile.name }}
-            </span>
-            <app-level-stage [level]="question.profile.level"></app-level-stage>
+            }
         </div>
 
-        @if (authService.isOwner(question.profile.userId)) {
-        <div class="dropdown dropdown-end">
-            <div tabindex="0" role="button" class="btn btn-ghost btn-sm btn-circle">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                    stroke="currentColor" class="size-6">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
-                </svg>
+        <div class="flex items-center gap-3 mb-5">
+            <a [routerLink]="['/profiles', question.profile.profileId]">
+                <div tabindex="0" class="avatar transition-transform hover:scale-105 cursor-pointer">
+                    <div class="w-10 h-10 rounded-full">
+                        <img alt="Avatar do usuário" [src]="question.profile.photoUrl ? environment.mediaUrl + question.profile.photoUrl : 'https://img.daisyui.com/images/profile/demo/yellingcat@192.webp'" />
+                    </div>
+                </div>
+            </a>
+            <div class="flex items-center gap-2 font-inter text-sm">
+                <a [routerLink]="['/profiles', question.profile.profileId]" class="font-medium text-gray-200 hover:text-emerald-400 transition-colors">
+                    {{ question.profile.name }}
+                </a>
+                <app-level-stage [level]="question.profile.level"></app-level-stage>
+                <span class="text-gray-500">•</span>
+                <span class="text-gray-500">{{ question.createdAt | date:'mediumDate' }}</span>
             </div>
-            <ul tabindex="0"
-                class="dropdown-content z-[1] menu p-2 shadow bg-[#1f242c] border border-[#30363d] rounded-box w-40">
-                <li>
-                    <a [routerLink]="['/edit-question', question.questionId]" class="hover:bg-[#30363d] text-gray-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                            stroke="currentColor" class="size-4">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                        </svg>
-                        Editar
-                    </a>
-                </li>
-                <li>
-                    <a (click)="deleteQuestion(question.questionId)" class="hover:bg-red-500/10 text-red-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                            stroke="currentColor" class="size-4">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                        </svg>
-                        Remover
-                    </a>
-                </li>
-            </ul>
         </div>
-        }
-    </section>
-    <!-- title, tags and content -->
-    <section class="w-full px-4 py-2">
-        <h1 class="text-[#C9D1D9] text-xl font-inter font-bold">
-            {{ question.title }}
-        </h1>
-        <div class="flex flex-wrap gap-2 mt-2 mb-4">
+
+        <div class="flex flex-wrap gap-2 mb-3">
             @for(tag of question.tags; track tag.technologyName){
             <div class="px-2 py-1 text-xs font-medium text-gray-400 bg-[#0d1117] border border-[#30363d] rounded-md">
                 #{{ tag.technologyName }}
             </div>
             }
         </div>
-        <div class="line-clamp-6 text-[#8B949E] text-base text-justify font-lora font-semibold prose prose-invert max-w-none">
-            <markdown [data]="question.content"></markdown>
-        </div>
-        <hr class="border-[#8B949E] mt-1">
+
+        <a [routerLink]="['/questions', question.questionId]" class="block">
+            <div class="bg-[#0d1117] border border-[#30363d] rounded-lg p-4 mb-2 hover:border-gray-500 transition-colors">
+                <div class="line-clamp-4 text-gray-300 text-base text-justify font-lora font-semibold prose prose-invert max-w-none prose-p:my-0 prose-headings:mb-2 prose-headings:mt-6 [&_markdown>*:first-child]:!mt-1">
+                    <markdown [data]="question.content"></markdown>
+                </div>
+            </div>
+        </a>
     </section>
 
-    <section class="flex h-[40px] items-center justify-between px-5">
-        <!-- Like and amount like, save article, etc. -->
+    <section class="flex h-[50px] items-center justify-between px-5 pb-3">
         <div class="flex items-center gap-4">
-            <!-- Like button -->
             <button (click)="toggleQuestionLike(question.questionId)"
                 class="group flex items-center gap-1 py-1 transition-all" [class.text-emerald-500]="question.liked"
                 [class.hover:text-emerald-500]="question.liked">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
-                    class="size-6 fill-current transition-transform group-hover:scale-110">
-                    <path
-                        d="M241 87.1l15 20.7 15-20.7C296 52.5 336.2 32 378.9 32 452.4 32 512 91.6 512 165.1l0 2.6c0 112.2-139.9 242.5-212.9 298.2-12.4 9.4-27.6 14.1-43.1 14.1s-30.8-4.6-43.1-14.1C139.9 410.2 0 279.9 0 167.7l0-2.6C0 91.6 59.6 32 133.1 32 175.8 32 216 52.5 241 87.1z" />
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="size-6 fill-current transition-transform group-hover:scale-110">
+                    <path d="M241 87.1l15 20.7 15-20.7C296 52.5 336.2 32 378.9 32 452.4 32 512 91.6 512 165.1l0 2.6c0 112.2-139.9 242.5-212.9 298.2-12.4 9.4-27.6 14.1-43.1 14.1s-30.8-4.6-43.1-14.1C139.9 410.2 0 279.9 0 167.7l0-2.6C0 91.6 59.6 32 133.1 32 175.8 32 216 52.5 241 87.1z" />
                 </svg>
                 <span class="text-base font-medium">{{ question.questionTotalLikes }}</span>
             </button>
 
-            <!-- Save button -->
             <button (click)="toggleSave(question)" class="group flex items-center gap-1 transition-all"
                 [class.text-emerald-500]="question.saved" [class.hover:text-emerald-400]="!question.saved">
                 @if (question.saved) {
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" class="size-6 fill-current 
-                        transition-transform group-hover:scale-110">
-                    <path
-                        d="M64 0C28.7 0 0 28.7 0 64L0 480c0 11.5 6.2 22.2 16.2 27.8s22.3 5.5 32.2-.4L192 421.3 335.5 507.4c9.9 5.9 22.2 6.1 32.2 .4S384 491.5 384 480l0-416c0-35.3-28.7-64-64-64L64 0z" />
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" class="size-6 fill-current transition-transform group-hover:scale-110">
+                    <path d="M64 0C28.7 0 0 28.7 0 64L0 480c0 11.5 6.2 22.2 16.2 27.8s22.3 5.5 32.2-.4L192 421.3 335.5 507.4c9.9 5.9 22.2 6.1 32.2 .4S384 491.5 384 480l0-416c0-35.3-28.7-64-64-64L64 0z" />
                 </svg>
                 <span class="text-sm font-medium">Salvo</span>
                 } @else {
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" class="size-6 fill-current 
-                        transition-transform group-hover:scale-110">
-                    <path
-                        d="M0 48C0 21.5 21.5 0 48 0l0 48V441.4l130.1-92.9c8.3-6 19.6-6 27.9 0L336 441.4V48H48V0H336c26.5 0 48 21.5 48 48V488c0 9-5 17.2-13 21.3s-17.6 3.4-24.9-1.8L192 397.5 37.9 507.5c-7.3 5.2-16.9 5.9-24.9 1.8S0 497 0 488V48z" />
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" class="size-6 fill-current transition-transform group-hover:scale-110">
+                    <path d="M0 48C0 21.5 21.5 0 48 0l0 48V441.4l130.1-92.9c8.3-6 19.6-6 27.9 0L336 441.4V48H48V0H336c26.5 0 48 21.5 48 48V488c0 9-5 17.2-13 21.3s-17.6 3.4-24.9-1.8L192 397.5 37.9 507.5c-7.3 5.2-16.9 5.9-24.9 1.8S0 497 0 488V48z" />
                 </svg>
                 <span class="text-sm font-medium">Salvar</span>
                 }
             </button>
         </div>
 
-        <!-- see more about this article -->
         <div class="flex items-center">
             <a [routerLink]="['/questions', question.questionId]" class="hover:text-emerald-500 text-sm font-medium">
                 Veja mais sobre

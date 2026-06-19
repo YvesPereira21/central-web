@@ -9,14 +9,17 @@ import { CollectionService } from '../../../features/collections/services/collec
 import { AuthenticationService } from '../../../features/authentications/services/authentication.service';
 import { combineLatest } from 'rxjs';
 import { MarkdownComponent } from 'ngx-markdown';
+import { DatePipe } from '@angular/common';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-question-list',
-  imports: [RouterLink, PaginationComponent, CollectionModalComponent, LevelStageComponent, MarkdownComponent],
+  imports: [RouterLink, PaginationComponent, CollectionModalComponent, LevelStageComponent, MarkdownComponent, DatePipe],
   templateUrl: './question-list.component.html',
   styleUrl: './question-list.component.css'
 })
 export class QuestionListComponent implements OnInit {
+  environment = environment;
   private questionService = inject(QuestionService);
   private collectionService = inject(CollectionService);
   private activatedRoute = inject(ActivatedRoute);

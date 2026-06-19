@@ -8,14 +8,17 @@ import { CollectionService } from '../../../features/collections/services/collec
 import { LevelStageComponent } from '../level-stage/level-stage.component';
 import { AuthenticationService } from '../../../features/authentications/services/authentication.service';
 import { MarkdownComponent } from 'ngx-markdown';
+import { DatePipe } from '@angular/common';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-question-detail',
-  imports: [RouterLink, AnswersQuestionComponent, CollectionModalComponent, LevelStageComponent, MarkdownComponent],
+  imports: [RouterLink, AnswersQuestionComponent, CollectionModalComponent, LevelStageComponent, MarkdownComponent, DatePipe],
   templateUrl: './question-detail.component.html',
   styleUrl: './question-detail.component.css'
 })
 export class QuestionDetailComponent {
+  environment = environment;
   private questionService = inject(QuestionService);
   private collectionService = inject(CollectionService);
   private activatedRoute = inject(ActivatedRoute);

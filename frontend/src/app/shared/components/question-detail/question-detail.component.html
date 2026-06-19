@@ -1,28 +1,36 @@
 <article class="w-full max-w-[940px] h-auto container mx-auto my-4 rounded-md bg-[#161B22] text-white shadow-md">
-    <!-- profile -->
-    <section class="flex gap-4 px-3 py-2 h-[70px]">
-        <a [routerLink]="['/profiles', question()?.profile?.profileId]">
-            <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
-                <div class="w-12 rounded-full">
-                    <img alt="Avatar do usuário"
-                        src="https://img.daisyui.com/images/profile/demo/yellingcat@192.webp" />
-                </div>
-            </div>
-        </a>
-        <div class="flex flex-col gap-1 font-inter">
-            <span class="font-semibold">
-                {{ question()?.profile?.name }}
-            </span>
-            <app-level-stage [level]="question()?.profile?.level || ''"></app-level-stage>
-        </div>
-    </section>
-
-    <section class="px-4 py-2">
-        <h1 class="text-[#C9D1D9] text-xl font-inter font-bold">
+    <section class="px-5 pt-8 pb-4">
+        <h1 class="text-3xl md:text-5xl font-inter font-extrabold text-white mb-6 tracking-tight leading-tight">
             {{ question()?.title }}
         </h1>
 
-        <div class="py-1 break-words text-[#8B949E] text-justify leading-relaxed font-lora font-semibold prose prose-invert max-w-none">
+        <!-- profile inline -->
+        <div class="flex items-center gap-3">
+            <a [routerLink]="['/profiles', question()?.profile?.profileId]">
+                <div tabindex="0" class="avatar transition-transform hover:scale-105 cursor-pointer">
+                    <div class="w-10 h-10 rounded-full">
+                        <img alt="Avatar do usuário"
+                            [src]="question()?.profile?.photoUrl ? environment.mediaUrl + question()?.profile?.photoUrl : 'https://img.daisyui.com/images/profile/demo/yellingcat@192.webp'" />
+                    </div>
+                </div>
+            </a>
+            <div class="flex items-center gap-2 font-inter text-sm">
+                <a [routerLink]="['/profiles', question()?.profile?.profileId]"
+                    class="font-medium text-gray-200 hover:text-emerald-400 transition-colors">
+                    {{ question()?.profile?.name }}
+                </a>
+                <app-level-stage [level]="question()?.profile?.level || ''"></app-level-stage>
+                <span class="text-gray-500">•</span>
+                <span class="text-gray-500">{{ question()?.createdAt | date:'mediumDate' }}</span>
+            </div>
+        </div>
+    </section>
+
+    <hr class="border-t border-[#30363d] mx-5 my-2">
+
+    <section class="px-5">
+        <div
+            class="py-2 break-words text-gray-300 text-justify leading-relaxed font-lora font-semibold prose prose-invert max-w-none prose-p:my-2 prose-headings:mb-3 prose-headings:mt-6 [&_markdown>*:first-child]:!mt-1">
             <markdown [data]="question()?.content"></markdown>
         </div>
     </section>
@@ -30,7 +38,8 @@
     <section class="px-4">
         <div class="flex flex-wrap gap-2">
             @for (tag of question()?.tags; track tag.technologyName) {
-            <div class="px-3 py-1 text-xs font-medium text-gray-400 bg-[#0d1117] border border-[#30363d] rounded-md">
+            <div
+                class="px-3 py-1 mt-3 text-xs font-medium text-gray-400 bg-[#0d1117] border border-[#30363d] rounded-md">
                 {{ tag.technologyName }}
             </div>
             }
@@ -71,7 +80,8 @@
         </div>
     </section>
 
-    <app-collection-modal [isOpen]="isOpen()" [questionId]="questionId()" (closeModal)="isOpen.set(false)" (savedSuccess)="onSaveSuccess()">
+    <app-collection-modal [isOpen]="isOpen()" [questionId]="questionId()" (closeModal)="isOpen.set(false)"
+        (savedSuccess)="onSaveSuccess()">
     </app-collection-modal>
 </article>
 

@@ -3,14 +3,17 @@ import { CommentService } from '../../../features/comments/services/comment.serv
 import { Comment, CommentCreate } from '../../../features/models/comment';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DatePipe } from '@angular/common';
+import { environment } from '../../../environments/environment';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-comments-answer',
-  imports: [ReactiveFormsModule, DatePipe],
+  imports: [ReactiveFormsModule, DatePipe, RouterLink],
   templateUrl: './comments-answer.component.html',
   styleUrl: './comments-answer.component.css'
 })
 export class CommentsAnswerComponent implements OnInit {
+  environment = environment;
   @Input() answerId!: string;
   @ViewChild('commentInput') commentInput!: ElementRef<HTMLTextAreaElement>;
 

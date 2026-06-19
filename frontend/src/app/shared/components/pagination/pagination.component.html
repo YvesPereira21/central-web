@@ -1,17 +1,17 @@
 <div class="flex justify-center w-full max-w-[940px] mt-6 mb-8">
-    <div class="join border border-[#30363d] rounded-md">
+    <div class="join border border-[#30363d] rounded-lg shadow-sm">
         <button
-            class="join-item btn bg-[#21262d] border-none text-[#29BC33] hover:bg-[#30363d] disabled:opacity-50 disabled:cursor-not-allowed"
+            class="join-item btn bg-[#0d1117] border-none text-gray-400 hover:text-white hover:bg-[#21262d] disabled:text-gray-600 disabled:bg-[#0d1117] disabled:opacity-50 disabled:cursor-not-allowed transition-all font-inter font-medium"
             (click)="onPageChange(currentPage - 1)" [disabled]="isFirst">
             « Anterior
         </button>
 
-        <button class="join-item btn bg-[#21262d] border-none text-[#29BC33] pointer-events-none">
-            Página {{ currentPage + 1 }} de {{ totalPages === 0 ? 1 : totalPages }}
+        <button class="join-item btn bg-[#161B22] border-none text-gray-300 pointer-events-none font-inter font-medium px-6">
+            Página <span class="font-bold text-white mx-1">{{ currentPage + 1 }}</span> de <span class="font-bold text-white ml-1">{{ totalPages === 0 ? 1 : totalPages }}</span>
         </button>
 
         <button
-            class="join-item btn bg-[#21262d] border-none text-[#29BC33] hover:bg-[#30363d] disabled:opacity-50 disabled:cursor-not-allowed"
+            class="join-item btn bg-[#0d1117] border-none text-gray-400 hover:text-white hover:bg-[#21262d] disabled:text-gray-600 disabled:bg-[#0d1117] disabled:opacity-50 disabled:cursor-not-allowed transition-all font-inter font-medium"
             (click)="onPageChange(currentPage + 1)" [disabled]="isLast">
             Próxima »
         </button>
