@@ -8,13 +8,13 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "photos")
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 public class Photo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "photo_id")
+    @EqualsAndHashCode.Include
     private UUID photoId;
     @Column(name = "photo_url")
     private String photo_url;

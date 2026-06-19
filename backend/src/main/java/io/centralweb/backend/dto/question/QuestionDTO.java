@@ -5,7 +5,7 @@ import io.centralweb.backend.dto.answer.AnswerDTO;
 import io.centralweb.backend.dto.profile.ProfileSimpleDTO;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public record QuestionDTO(
@@ -16,8 +16,8 @@ public record QuestionDTO(
         boolean solutioned,
         LocalDate createdAt,
         ProfileSimpleDTO profile,
-        List<TagDTO> tags,
-        List<AnswerDTO> answers,
+        Set<TagDTO> tags,
+        Set<AnswerDTO> answers,
         Long questionTotalLikes,
         boolean liked,
         boolean saved

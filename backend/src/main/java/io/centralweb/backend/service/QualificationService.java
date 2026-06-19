@@ -138,13 +138,12 @@ public class QualificationService {
     }
 
     private boolean dateIsValid(LocalDate startDate, LocalDate endDate) {
-        boolean isBefore = endDate.isBefore(startDate);
+        boolean isBefore = false;
+        if (endDate != null) {
+            isBefore = endDate.isBefore(startDate);
+        }
         boolean isFutureDate = startDate.isAfter(LocalDate.now());
 
-        if (endDate == null) {
-            isBefore = false;
-        }
-
-        return isBefore || isFutureDate;
+        return !(isBefore || isFutureDate);
     }
 }

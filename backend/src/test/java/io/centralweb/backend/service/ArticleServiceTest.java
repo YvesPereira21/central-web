@@ -30,9 +30,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -111,10 +112,12 @@ class ArticleServiceTest {
         );
 
         tagJava = new Tag();
+        ReflectionTestUtils.setField(tagJava, "tagId", UUID.randomUUID());
         tagJava.setTechnologyName("Java");
         tagJava.setColor("#ED8B00");
 
         tagRust = new Tag();
+        ReflectionTestUtils.setField(tagRust, "tagId", UUID.randomUUID());
         tagRust.setTechnologyName("Rust");
         tagRust.setColor("#ED7C10");
 
@@ -127,13 +130,13 @@ class ArticleServiceTest {
         article1.setContent("Content 1");
         article1.setPublished(true);
         article1.setCreatedAt(LocalDate.now());
-        article1.setTags(List.of(tagJava, tagRust));
+        article1.setTags(Set.of(tagJava, tagRust));
         article1.setProfile(profilePerson1);
 
         articleCreateDTO = new ArticleCreateDTO(
                 "Diferenças entre Python x Java",
                 "Content 1",
-                List.of("Java", "Rust")
+                Set.of("Java", "Rust")
         );
 
         articleDTO = new ArticleDTO(
@@ -141,7 +144,7 @@ class ArticleServiceTest {
                 article1.getTitle(),
                 article1.getContent(),
                 article1.getCreatedAt(),
-                List.of(tagJavaDTO, tagRustDTO),
+                Set.of(tagJavaDTO, tagRustDTO),
                 profileSimpleDTO,
                 0L,
                 false,
@@ -157,7 +160,7 @@ class ArticleServiceTest {
 
         when(profileRepository.findByUser_UserId(userId)).thenReturn(Optional.of(profilePerson1));
         when(tagService.convertTechnologyNamesToTags(articleCreateDTO.technologyNames()))
-                .thenReturn(List.of(tagJava, tagRust));
+                .thenReturn(Set.of(tagJava, tagRust));
         when(articleRepository.save(any(Article.class))).thenReturn(article1);
         when(articleMapper.toDTO(any(Article.class))).thenReturn(articleDTO);
 
@@ -166,14 +169,14 @@ class ArticleServiceTest {
         assertNotNull(result);
         assertEquals("Diferenças entre Python x Java", result.title());
         assertEquals("Content 1", result.content());
-        assertEquals(List.of(tagJavaDTO, tagRustDTO), result.tags());
+        assertEquals(Set.of(tagJavaDTO, tagRustDTO), result.tags());
         assertEquals(LocalDate.now(), result.createdAt());
         assertEquals("Usuário Teste", result.profile().name());
         assertEquals("Novato", result.profile().level());
         assertFalse(result.profile().professional());
 
         verify(profileRepository, times(1)).findByUser_UserId(userId);
-        verify(tagService, times(1)).convertTechnologyNamesToTags(anyList());
+        verify(tagService, times(1)).convertTechnologyNamesToTags(anySet());
         verify(articleRepository, times(1)).save(any(Article.class));
         verify(articleMapper, times(1)).toDTO(any(Article.class));
 
@@ -198,7 +201,7 @@ class ArticleServiceTest {
         assertNotNull(result);
         assertEquals("Diferenças entre Python x Java", result.title());
         assertEquals("Content 1", result.content());
-        assertEquals(List.of(tagJavaDTO, tagRustDTO), result.tags());
+        assertEquals(Set.of(tagJavaDTO, tagRustDTO), result.tags());
         assertEquals(LocalDate.now(), result.createdAt());
         assertEquals("Usuário Teste", result.profile().name());
         assertEquals("Novato", result.profile().level());
@@ -295,14 +298,14 @@ class ArticleServiceTest {
         ArticleUpdateDTO updateDTO = new ArticleUpdateDTO(
                 "Título Atualizado no Teste",
                 "Conteúdo Modificado",
-                List.of("Java")
+                Set.of("Java")
         );
         ArticleDTO updatedArticleDTO = new ArticleDTO(
                 article1.getArticleId(),
                 "Título Atualizado no Teste",
                 "Conteúdo Modificado",
                 article1.getCreatedAt(),
-                List.of(tagJavaDTO),
+                Set.of(tagJavaDTO),
                 profileSimpleDTO,
                 0L,
                 false,
@@ -311,7 +314,7 @@ class ArticleServiceTest {
 
         when(articleRepository.findById(articleId)).thenReturn(Optional.of(article1));
         when(tagService.convertTechnologyNamesToTags(updateDTO.technologyNames()))
-                .thenReturn(List.of(tagJava, tagRust));
+                .thenReturn(Set.of(tagJava, tagRust));
         when(articleRepository.save(any(Article.class))).thenReturn(article1);
         when(articleMapper.toDTO(any(Article.class))).thenReturn(updatedArticleDTO);
 
@@ -320,7 +323,7 @@ class ArticleServiceTest {
         assertNotNull(result);
         assertEquals("Título Atualizado no Teste", result.title());
         assertEquals("Conteúdo Modificado", result.content());
-        assertEquals(List.of(tagJavaDTO), result.tags());
+        assertEquals(Set.of(tagJavaDTO), result.tags());
 
         verify(articleRepository, times(1)).findById(articleId);
         verify(tagService, times(1)).convertTechnologyNamesToTags(updateDTO.technologyNames());
@@ -334,7 +337,7 @@ class ArticleServiceTest {
         UUID userId = userPerson1.getUserId();
         UUID articleId = article1.getArticleId();
 
-        article1.setArticleLikes(new ArrayList<>());
+        article1.setArticleLikes(new HashSet<>());
 
         when(profileRepository.findByUser_UserId(userId)).thenReturn(Optional.of(profilePerson1));
         when(articleRepository.findById(articleId)).thenReturn(Optional.of(article1));
@@ -353,7 +356,7 @@ class ArticleServiceTest {
         UUID userId = userPerson1.getUserId();
         UUID articleId = article1.getArticleId();
 
-        List<Profile> likes = new ArrayList<>();
+        Set<Profile> likes = new HashSet<>();
         likes.add(profilePerson1);
         article1.setArticleLikes(likes);
 
@@ -445,7 +448,7 @@ class ArticleServiceTest {
         UUID userId = userPerson1.getUserId();
         UUID articleId = UUID.randomUUID();
         ArticleUpdateDTO updateDTO = new ArticleUpdateDTO(
-                "Título", "Conteúdo", List.of("Java")
+                "Título", "Conteúdo", Set.of("Java")
         );
 
         when(articleRepository.findById(articleId)).thenReturn(Optional.empty());
@@ -456,7 +459,7 @@ class ArticleServiceTest {
         );
 
         verify(articleRepository, times(1)).findById(articleId);
-        verify(tagService, never()).convertTechnologyNamesToTags(anyList());
+        verify(tagService, never()).convertTechnologyNamesToTags(anySet());
         verify(articleMapper, never()).updateArticleFromDTO(any(), any());
         verify(articleRepository, never()).save(any(Article.class));
     }
@@ -466,7 +469,7 @@ class ArticleServiceTest {
         UUID userId = userPerson2.getUserId();
         UUID articleId = article1.getArticleId();
         ArticleUpdateDTO updateDTO = new ArticleUpdateDTO(
-                "Título", "Conteúdo", List.of("Java")
+                "Título", "Conteúdo", Set.of("Java")
         );
 
         when(articleRepository.findById(articleId)).thenReturn(Optional.of(article1));
@@ -477,7 +480,7 @@ class ArticleServiceTest {
         );
 
         verify(articleRepository, times(1)).findById(articleId);
-        verify(tagService, never()).convertTechnologyNamesToTags(anyList());
+        verify(tagService, never()).convertTechnologyNamesToTags(anySet());
         verify(articleMapper, never()).updateArticleFromDTO(any(), any());
         verify(articleRepository, never()).save(any(Article.class));
     }
@@ -487,11 +490,11 @@ class ArticleServiceTest {
         UUID userId = userPerson1.getUserId();
         UUID articleId = article1.getArticleId();
         ArticleUpdateDTO updateDTO = new ArticleUpdateDTO(
-                "Título", "Conteúdo", List.of("Go")
+                "Título", "Conteúdo", Set.of("Go")
         );
 
         when(articleRepository.findById(articleId)).thenReturn(Optional.of(article1));
-        when(tagService.convertTechnologyNamesToTags(anyList()))
+        when(tagService.convertTechnologyNamesToTags(anySet()))
                 .thenThrow(new ObjectNotFoundException("Tag Go não encontrada"));
 
         assertThrows(
@@ -501,7 +504,7 @@ class ArticleServiceTest {
 
         verify(articleRepository, times(1)).findById(articleId);
         verify(articleMapper, times(1)).updateArticleFromDTO(updateDTO, article1);
-        verify(tagService, times(1)).convertTechnologyNamesToTags(anyList());
+        verify(tagService, times(1)).convertTechnologyNamesToTags(anySet());
         verify(articleRepository, never()).save(any(Article.class));
     }
 
@@ -510,7 +513,7 @@ class ArticleServiceTest {
         UUID userId = UUID.randomUUID();
         UUID articleId = article1.getArticleId();
 
-        article1.setArticleLikes(new ArrayList<>());
+        article1.setArticleLikes(new HashSet<>());
 
         when(profileRepository.findByUser_UserId(userId)).thenReturn(Optional.empty());
 
@@ -529,7 +532,7 @@ class ArticleServiceTest {
         UUID userId = userPerson1.getUserId();
         UUID articleId = UUID.randomUUID();
 
-        article1.setArticleLikes(new ArrayList<>());
+        article1.setArticleLikes(new HashSet<>());
 
         when(profileRepository.findByUser_UserId(userId)).thenReturn(Optional.of(profilePerson1));
         when(articleRepository.findById(articleId)).thenReturn(Optional.empty());

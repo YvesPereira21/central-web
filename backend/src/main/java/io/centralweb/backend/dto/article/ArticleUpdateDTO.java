@@ -2,11 +2,11 @@ package io.centralweb.backend.dto.article;
 
 import jakarta.validation.constraints.Size;
 
-import java.util.List;
+import java.util.Set;
 
 public record ArticleUpdateDTO(
         String title,
         String content,
-        @Size(max = 7) List<String> technologyNames
+        @Size(max = 7) Set<String> technologyNames
 ) {}
 

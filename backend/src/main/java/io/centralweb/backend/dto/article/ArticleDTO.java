@@ -4,7 +4,7 @@ import io.centralweb.backend.dto.tag.TagDTO;
 import io.centralweb.backend.dto.profile.ProfileSimpleDTO;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public record ArticleDTO(
@@ -12,7 +12,7 @@ public record ArticleDTO(
         String title,
         String content,
         LocalDate createdAt,
-        List<TagDTO> tags,
+        Set<TagDTO> tags,
         ProfileSimpleDTO profile,
         Long articleTotalLikes,
         boolean liked,

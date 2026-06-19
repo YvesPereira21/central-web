@@ -4,43 +4,43 @@ import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
 @Table(name = "collections")
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 public class Collection {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "collection_id")
+    @EqualsAndHashCode.Include
     private UUID collectionId;
     @Column(name = "name", nullable = false)
     private String name;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "profile_id", nullable = false)
     private Profile profile;
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "collection_articles",
             joinColumns = @JoinColumn(name = "collection_id"),
             inverseJoinColumns = @JoinColumn(name = "article_id")
     )
-    private List<Article> articles = new ArrayList<>();
-    @ManyToMany
+    private Set<Article> articles = new HashSet<>();
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "collection_questions",
             joinColumns = @JoinColumn(name = "collection_id"),
             inverseJoinColumns = @JoinColumn(name = "question_id")
     )
-    private List<Question> questions = new ArrayList<>();
+    private Set<Question> questions = new HashSet<>();
 
     public Collection() {
     }
 
-    public Collection(UUID collectionId, String name, Profile profile, List<Article> articles, List<Question> questions) {
+    public Collection(UUID collectionId, String name, Profile profile, Set<Article> articles, Set<Question> questions) {
         this.collectionId = collectionId;
         this.name = name;
         this.profile = profile;
@@ -68,26 +68,24 @@ public class Collection {
         this.profile = profile;
     }
 
-    public List<Article> getArticles() {
+    public Set<Article> getArticles() {
         return articles;
     }
 
-    public void setArticles(List<Article> articles) {
+    public void setArticles(Set<Article> articles) {
         this.articles = articles;
     }
 
-    public List<Question> getQuestions() {
+    public Set<Question> getQuestions() {
         return questions;
     }
 
-    public void setQuestions(List<Question> questions) {
+    public void setQuestions(Set<Question> questions) {
         this.questions = questions;
     }
 
     public void addArticle(Article article) {
-        if (!this.articles.contains(article)) {
-            this.articles.add(article);
-        }
+        this.articles.add(article);
     }
 
     public void removeArticle(Article article) {
@@ -95,9 +93,7 @@ public class Collection {
     }
 
     public void addQuestion(Question question) {
-        if (!this.questions.contains(question)) {
-            this.questions.add(question);
-        }
+        this.questions.add(question);
     }
 
     public void removeQuestion(Question question) {

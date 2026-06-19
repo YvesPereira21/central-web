@@ -6,7 +6,9 @@ import lombok.ToString;
 import org.hibernate.annotations.Formula;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -38,25 +40,26 @@ public class Question {
             joinColumns = @JoinColumn(name = "question_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
-    private List<Tag> tags = new java.util.ArrayList<>();
+    private Set<Tag> tags = new HashSet<>();
     @OneToMany(mappedBy = "question", fetch =  FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Answer> answers = new java.util.ArrayList<>();
+    @OrderBy("createdAt ASC")
+    private Set<Answer> answers = new LinkedHashSet<>();
     @ManyToMany
     @JoinTable(
             name = "question_likes",
             joinColumns = @JoinColumn(name = "question_id"),
             inverseJoinColumns = @JoinColumn(name = "profile_id")
     )
-    private List<Profile> questionLikes = new java.util.ArrayList<>();
+    private Set<Profile> questionLikes = new HashSet<>();
     @Formula("(SELECT COUNT(*) FROM question_likes ql WHERE ql.question_id = question_id)")
     private Long questionTotalLikes;
     @ManyToMany(mappedBy = "questions")
-    private List<Collection> collections = new java.util.ArrayList<>();
+    private Set<Collection> collections = new HashSet<>();
 
     public Question() {
     }
 
-    public Question(UUID questionId, String title, String content, boolean published, boolean solutioned, LocalDate createdAt, Profile profile, List<Tag> tags, List<Answer> answers, List<Profile> questionLikes) {
+    public Question(UUID questionId, String title, String content, boolean published, boolean solutioned, LocalDate createdAt, Profile profile, Set<Tag> tags, Set<Answer> answers, Set<Profile> questionLikes) {
         this.questionId = questionId;
         this.title = title;
         this.content = content;
@@ -121,27 +124,27 @@ public class Question {
         this.profile = profile;
     }
 
-    public List<Tag> getTags() {
+    public Set<Tag> getTags() {
         return tags;
     }
 
-    public void setTags(List<Tag> tags) {
+    public void setTags(Set<Tag> tags) {
         this.tags = tags;
     }
 
-    public List<Answer> getAnswers() {
+    public Set<Answer> getAnswers() {
         return answers;
     }
 
-    public void setAnswers(List<Answer> answers) {
+    public void setAnswers(Set<Answer> answers) {
         this.answers = answers;
     }
 
-    public List<Profile> getQuestionLikes() {
+    public Set<Profile> getQuestionLikes() {
         return questionLikes;
     }
 
-    public void setQuestionLikes(List<Profile> questionLikes) {
+    public void setQuestionLikes(Set<Profile> questionLikes) {
         this.questionLikes = questionLikes;
     }
 
@@ -157,11 +160,11 @@ public class Question {
         return questionTotalLikes == null ? 0 : questionTotalLikes;
     }
 
-    public List<Collection> getCollections() {
+    public Set<Collection> getCollections() {
         return collections;
     }
 
-    public void setCollections(List<Collection> collections) {
+    public void setCollections(Set<Collection> collections) {
         this.collections = collections;
     }
 }

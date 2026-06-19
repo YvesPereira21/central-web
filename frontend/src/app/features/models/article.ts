@@ -34,3 +34,9 @@ export interface ArticleSimple {
     liked: boolean,
     saved: boolean
 }
+
+export interface ArticleListSimpleCollection {
+    articleId: string,
+    title: string,
+    createdAt: string
+}

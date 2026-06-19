@@ -19,6 +19,7 @@ import org.springframework.test.context.jdbc.Sql;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static io.restassured.RestAssured.*;
@@ -106,7 +107,7 @@ public class QuestionControllerTest {
         question1.setContent("Content 1");
         question1.setCreatedAt(LocalDate.now());
         question1.setPublished(true);
-        question1.setTags(List.of(tagJava, tagPython));
+        question1.setTags(Set.of(tagJava, tagPython));
         question1.setProfile(profile1);
         Question questionSaved1 = questionRepository.save(question1);
         question1id = questionSaved1.getQuestionId();
@@ -116,7 +117,7 @@ public class QuestionControllerTest {
         question2.setContent("Content 2");
         question2.setCreatedAt(LocalDate.now());
         question2.setPublished(true);
-        question2.setTags(List.of(tagSpring));
+        question2.setTags(Set.of(tagSpring));
         question2.setProfile(profile2);
         questionRepository.save(question2);
 
@@ -125,7 +126,7 @@ public class QuestionControllerTest {
         question3.setContent("Content 2");
         question3.setCreatedAt(LocalDate.now());
         question3.setPublished(true);
-        question3.setTags(List.of(tagPython));
+        question3.setTags(Set.of(tagPython));
         question3.setProfile(profile2);
         questionRepository.save(question3);
 
@@ -156,7 +157,7 @@ public class QuestionControllerTest {
         QuestionCreateDTO question = new QuestionCreateDTO(
                 "Teste de integração",
                 "Conteúdo extenso do artigo para passar na validação...",
-                List.of("Java", "Spring")
+                Set.of("Java", "Spring")
         );
 
         given()
@@ -248,7 +249,7 @@ public class QuestionControllerTest {
         QuestionUpdateDTO questionUpdated = new QuestionUpdateDTO(
                 "Teste de integração 123",
                 "Este conteúdo foi atualizado para ver se funciona",
-                List.of("Python")
+                Set.of("Python")
         );
 
         given()
@@ -310,7 +311,7 @@ public class QuestionControllerTest {
         QuestionCreateDTO question = new QuestionCreateDTO(
                 "Como fazer partição de lista",
                 "Para isso você consegue fazer na linguagem Python dessa forma...",
-                List.of("Python")
+                Set.of("Python")
         );
 
         given()
@@ -327,7 +328,7 @@ public class QuestionControllerTest {
         QuestionCreateDTO question = new QuestionCreateDTO(
                 "Como fazer partição de lista",
                 "Para isso você consegue fazer na linguagem Python dessa forma...",
-                List.of("Python")
+                Set.of("Python")
         );
 
         given()
@@ -345,7 +346,7 @@ public class QuestionControllerTest {
         QuestionCreateDTO question = new QuestionCreateDTO(
                 "",
                 "Para você implementar isso tem de fazer assim...",
-                List.of()
+                Set.of()
         );
 
         given()
@@ -363,7 +364,7 @@ public class QuestionControllerTest {
         QuestionCreateDTO question = new QuestionCreateDTO(
                 "Como fazer partição de lista",
                 "Para isso você consegue fazer na linguagem Rust desse jeito...",
-                List.of("Rust")
+                Set.of("Rust")
         );
 
         given()
@@ -382,7 +383,7 @@ public class QuestionControllerTest {
         QuestionUpdateDTO question = new QuestionUpdateDTO(
                 "Frameworks Python para web",
                 "Existem vários frameworks web para Python que são muito utilizados...",
-                List.of("Python")
+                Set.of("Python")
         );
 
         given()
@@ -400,7 +401,7 @@ public class QuestionControllerTest {
         QuestionUpdateDTO question = new QuestionUpdateDTO(
                 "Frameworks Python para web",
                 "Existem vários frameworks web para Python que são muito utilizados...",
-                List.of("Python")
+                Set.of("Python")
         );
 
         given()
@@ -419,7 +420,7 @@ public class QuestionControllerTest {
         QuestionUpdateDTO question = new QuestionUpdateDTO(
                 "Frameworks Python para web",
                 "Existem vários frameworks web para Python que são muito utilizados...",
-                List.of("Python")
+                Set.of("Python")
         );
 
         given()
@@ -438,7 +439,7 @@ public class QuestionControllerTest {
         QuestionUpdateDTO questionUpdated = new QuestionUpdateDTO(
                 "Como criar um dicionário no Python",
                 "Para você criar um dicionário no python, é preciso fazer isso...",
-                List.of("Python")
+                Set.of("Python")
         );
 
         given()
@@ -457,7 +458,7 @@ public class QuestionControllerTest {
         QuestionUpdateDTO questionUpdated = new QuestionUpdateDTO(
                 "CPython usando Rust",
                 "Uma notícia que bombou recentemente é o Python trocando o C pelo Rust...",
-                List.of("Python", "Rust")
+                Set.of("Python", "Rust")
         );
 
         given()

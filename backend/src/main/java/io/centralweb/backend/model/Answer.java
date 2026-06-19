@@ -6,18 +6,19 @@ import lombok.ToString;
 import org.hibernate.annotations.Formula;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
 @Table(name = "answers")
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 public class Answer {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "answer_id")
+    @EqualsAndHashCode.Include
     private UUID answerId;
     @Column(name = "content", columnDefinition = "TEXT")
     private String content;
@@ -37,17 +38,18 @@ public class Answer {
             joinColumns = @JoinColumn(name = "answer_id"),
             inverseJoinColumns = @JoinColumn(name = "profile_id")
     )
-    private List<Profile> answerLikes = new ArrayList<>();
+    private Set<Profile> answerLikes = new HashSet<>();
     @Formula("(SELECT COUNT(*) FROM answer_likes al WHERE al.answer_id = answer_id)")
     private Long answerTotalLikes;
     
     @OneToMany(mappedBy = "answer", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Comment> comments = new ArrayList<>();
+    @OrderBy("createdAt ASC")
+    private Set<Comment> comments = new LinkedHashSet<>();
 
     public Answer() {
     }
 
-    public Answer(UUID answerId, String content, boolean accepted, LocalDate createdAt, Profile profile, Question question, List<Profile> answerLikes) {
+    public Answer(UUID answerId, String content, boolean accepted, LocalDate createdAt, Profile profile, Question question, Set<Profile> answerLikes) {
         this.answerId = answerId;
         this.content = content;
         this.accepted = accepted;
@@ -101,11 +103,11 @@ public class Answer {
         this.question = question;
     }
 
-    public List<Profile> getAnswerLikes() {
+    public Set<Profile> getAnswerLikes() {
         return answerLikes;
     }
 
-    public void setAnswerLikes(List<Profile> answerLikes) {
+    public void setAnswerLikes(Set<Profile> answerLikes) {
         this.answerLikes = answerLikes;
     }
 
@@ -121,11 +123,11 @@ public class Answer {
         return answerTotalLikes == null ? 0 : answerTotalLikes;
     }
 
-    public List<Comment> getComments() {
+    public Set<Comment> getComments() {
         return comments;
     }
 
-    public void setComments(List<Comment> comments) {
+    public void setComments(Set<Comment> comments) {
         this.comments = comments;
     }
 }

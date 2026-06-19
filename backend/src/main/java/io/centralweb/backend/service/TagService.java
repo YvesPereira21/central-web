@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -75,8 +76,8 @@ public class TagService {
     }
 
     @Transactional(rollbackOn = Exception.class)
-    public List<Tag> convertTechnologyNamesToTags(List<String> technologyNames) {
-        List<Tag> tags = new ArrayList<>();
+    public Set<Tag> convertTechnologyNamesToTags(Set<String> technologyNames) {
+        Set<Tag> tags = new java.util.HashSet<>();
         for(String technologyName : technologyNames) {
             Tag tag = tagRepository
                     .findByTechnologyName(technologyName)

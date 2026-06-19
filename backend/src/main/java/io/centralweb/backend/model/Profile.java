@@ -6,8 +6,8 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.annotations.Formula;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -36,16 +36,16 @@ public class Profile {
     private User user;
     @OneToOne(mappedBy = "profile", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private Photo photo;
-    @OneToMany(mappedBy = "profile", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Question> questions = new ArrayList<>();
-    @OneToMany(mappedBy = "profile", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Article> articles = new ArrayList<>();
-    @OneToMany(mappedBy = "profile", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Answer> answers = new ArrayList<>();
-    @OneToMany(mappedBy = "profile", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Qualification> qualifications = new ArrayList<>();
-    @OneToMany(mappedBy = "profile", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Collection> collections = new ArrayList<>();
+    @OneToMany(mappedBy = "profile", fetch = FetchType.LAZY)
+    private Set<Question> questions = new HashSet<>();
+    @OneToMany(mappedBy = "profile", fetch = FetchType.LAZY)
+    private Set<Article> articles = new HashSet<>();
+    @OneToMany(mappedBy = "profile", fetch = FetchType.LAZY)
+    private Set<Answer> answers = new HashSet<>();
+    @OneToMany(mappedBy = "profile", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Qualification> qualifications = new HashSet<>();
+    @OneToMany(mappedBy = "profile", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Collection> collections = new HashSet<>();
     @Formula("(SELECT COUNT(*) FROM articles a WHERE a.profile_id = profile_id)")
     private Long articlesCreatedByProfile;
     @Formula("(SELECT COUNT(*) FROM answers a WHERE a.profile_id = profile_id AND a.accepted = true)")
@@ -54,7 +54,7 @@ public class Profile {
     public Profile() {
     }
 
-    public Profile(UUID profileId, String bio, String name, ProfileType profileType, String level, long reputationScore, boolean professional, User user, Photo photo, List<Question> questions, List<Article> articles, List<Answer> answers, List<Qualification> qualifications, List<Collection> collections, Long articlesCreatedByProfile, Long answersAccepted) {
+    public Profile(UUID profileId, String bio, String name, ProfileType profileType, String level, long reputationScore, boolean professional, User user, Photo photo, Set<Question> questions, Set<Article> articles, Set<Answer> answers, Set<Qualification> qualifications, Set<Collection> collections, Long articlesCreatedByProfile, Long answersAccepted) {
         this.profileId = profileId;
         this.bio = bio;
         this.name = name;
@@ -141,43 +141,43 @@ public class Profile {
         this.photo = photo;
     }
 
-    public List<Question> getQuestions() {
+    public Set<Question> getQuestions() {
         return questions;
     }
 
-    public void setQuestions(List<Question> questions) {
+    public void setQuestions(Set<Question> questions) {
         this.questions = questions;
     }
 
-    public List<Article> getArticles() {
+    public Set<Article> getArticles() {
         return articles;
     }
 
-    public void setArticles(List<Article> articles) {
+    public void setArticles(Set<Article> articles) {
         this.articles = articles;
     }
 
-    public List<Answer> getAnswers() {
+    public Set<Answer> getAnswers() {
         return answers;
     }
 
-    public void setAnswers(List<Answer> answers) {
+    public void setAnswers(Set<Answer> answers) {
         this.answers = answers;
     }
 
-    public List<Qualification> getQualifications() {
+    public Set<Qualification> getQualifications() {
         return qualifications;
     }
 
-    public void setQualifications(List<Qualification> qualifications) {
+    public void setQualifications(Set<Qualification> qualifications) {
         this.qualifications = qualifications;
     }
 
-    public List<Collection> getCollections() {
+    public Set<Collection> getCollections() {
         return collections;
     }
 
-    public void setCollections(List<Collection> collections) {
+    public void setCollections(Set<Collection> collections) {
         this.collections = collections;
     }
 

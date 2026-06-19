@@ -4,32 +4,32 @@ import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
 @Table(name = "tags")
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 public class Tag {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "tag_id")
+    @EqualsAndHashCode.Include
     private UUID tagId;
     @Column(name = "technology_name", unique = true)
     private String technologyName;
     @Column(name = "color")
     private String color;
     @ManyToMany(mappedBy = "tags", fetch = FetchType.LAZY)
-    private List<Question> questions = new ArrayList<>();
+    private Set<Question> questions = new HashSet<>();
     @ManyToMany(mappedBy = "tags", fetch = FetchType.LAZY)
-    private List<Article> articles = new ArrayList<>();
+    private Set<Article> articles = new HashSet<>();
 
     public Tag() {
     }
 
-    public Tag(UUID tagId, String technologyName, String color, List<Question> questions, List<Article> articles) {
+    public Tag(UUID tagId, String technologyName, String color, Set<Question> questions, Set<Article> articles) {
         this.tagId = tagId;
         this.technologyName = technologyName;
         this.color = color;
@@ -57,19 +57,19 @@ public class Tag {
         this.color = color;
     }
 
-    public List<Question> getQuestions() {
+    public Set<Question> getQuestions() {
         return questions;
     }
 
-    public void setQuestions(List<Question> questions) {
+    public void setQuestions(Set<Question> questions) {
         this.questions = questions;
     }
 
-    public List<Article> getArticles() {
+    public Set<Article> getArticles() {
         return articles;
     }
 
-    public void setArticles(List<Article> articles) {
+    public void setArticles(Set<Article> articles) {
         this.articles = articles;
     }
 }

@@ -35,8 +35,10 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -118,10 +120,12 @@ class QuestionServiceTest {
         );
 
         tagJava = new Tag();
+        ReflectionTestUtils.setField(tagJava, "tagId", UUID.randomUUID());
         tagJava.setTechnologyName("Java");
         tagJava.setColor("#ED8B00");
 
         tagRust = new Tag();
+        ReflectionTestUtils.setField(tagRust, "tagId", UUID.randomUUID());
         tagRust.setTechnologyName("Rust");
         tagRust.setColor("#ED7C10");
 
@@ -135,13 +139,13 @@ class QuestionServiceTest {
         question1.setPublished(true);
         question1.setSolutioned(true);
         question1.setCreatedAt(LocalDate.now());
-        question1.setTags(List.of(tagJava, tagRust));
+        question1.setTags(Set.of(tagJava, tagRust));
         question1.setProfile(profilePerson1);
 
         questionCreateDTO = new QuestionCreateDTO(
                 "Diferenças entre Python x Java",
                 "Content 1",
-                List.of("Java", "Rust")
+                Set.of("Java", "Rust")
         );
 
         questionDTO = new QuestionDTO(
@@ -150,10 +154,10 @@ class QuestionServiceTest {
                 question1.getContent(),
                 question1.isPublished(),
                 question1.isSolutioned(),
-                question1.getCreatedAt(),
+                LocalDate.now(),
                 profileSimpleDTO,
-                List.of(tagJavaDTO, tagRustDTO),
-                new ArrayList<>(),
+                Set.of(tagJavaDTO, tagRustDTO),
+                Set.of(),
                 0L,
                 false,
                 false
@@ -165,9 +169,9 @@ class QuestionServiceTest {
                 question1.getContent(),
                 question1.isPublished(),
                 question1.isSolutioned(),
-                question1.getCreatedAt(),
+                LocalDate.now(),
                 profileSimpleDTO,
-                List.of(tagJavaDTO, tagRustDTO),
+                Set.of(tagJavaDTO, tagRustDTO),
                 0L,
                 false,
                 false
@@ -182,7 +186,7 @@ class QuestionServiceTest {
 
         when(profileRepository.findByUser_UserId(userId)).thenReturn(Optional.of(profilePerson1));
         when(tagService.convertTechnologyNamesToTags(questionCreateDTO.technologyNames()))
-                .thenReturn(List.of(tagJava, tagRust));
+                .thenReturn(Set.of(tagJava, tagRust));
         when(questionRepository.save(any(Question.class))).thenReturn(question1);
         when(questionMapper.toQuestionDTO(any(Question.class))).thenReturn(questionDTO);
 
@@ -191,7 +195,7 @@ class QuestionServiceTest {
         assertNotNull(result);
         assertEquals("Diferenças entre Python x Java", result.title());
         assertEquals("Content 1", result.content());
-        assertEquals(List.of(tagJavaDTO, tagRustDTO), result.tags());
+        assertEquals(Set.of(tagJavaDTO, tagRustDTO), result.tags());
         assertTrue(result.published());
         assertTrue(result.solutioned());
         assertEquals(LocalDate.now(), result.createdAt());
@@ -200,7 +204,7 @@ class QuestionServiceTest {
         assertFalse(result.profile().professional());
 
         verify(profileRepository, times(1)).findByUser_UserId(userId);
-        verify(tagService, times(1)).convertTechnologyNamesToTags(anyList());
+        verify(tagService, times(1)).convertTechnologyNamesToTags(anySet());
         verify(questionRepository, times(1)).save(any(Question.class));
         verify(questionMapper, times(1)).toQuestionDTO(any(Question.class));
 
@@ -225,7 +229,7 @@ class QuestionServiceTest {
         assertNotNull(result);
         assertEquals("Diferenças entre Python x Java", result.title());
         assertEquals("Content 1", result.content());
-        assertEquals(List.of(tagJavaDTO, tagRustDTO), result.tags());
+        assertEquals(Set.of(tagJavaDTO, tagRustDTO), result.tags());
         assertTrue(result.published());
         assertTrue(result.solutioned());
         assertEquals(LocalDate.now(), result.createdAt());
@@ -329,7 +333,7 @@ class QuestionServiceTest {
         QuestionUpdateDTO updateDTO = new QuestionUpdateDTO(
                 "Título Atualizado no Teste",
                 "Conteúdo Modificado",
-                List.of("Java")
+                Set.of("Java")
         );
         QuestionDTO updatedQuestionDTO = new QuestionDTO(
                 question1.getQuestionId(),
@@ -337,10 +341,10 @@ class QuestionServiceTest {
                 "Conteúdo Modificado",
                 question1.isPublished(),
                 question1.isSolutioned(),
-                question1.getCreatedAt(),
+                LocalDate.now(),
                 profileSimpleDTO,
-                List.of(tagJavaDTO),
-                new ArrayList<>(),
+                Set.of(tagJavaDTO),
+                Set.of(),
                 0L,
                 false,
                 false
@@ -348,7 +352,7 @@ class QuestionServiceTest {
 
         when(questionRepository.findById(questionId)).thenReturn(Optional.of(question1));
         when(tagService.convertTechnologyNamesToTags(updateDTO.technologyNames()))
-                .thenReturn(List.of(tagJava, tagRust));
+                .thenReturn(Set.of(tagJava, tagRust));
         when(questionRepository.save(any(Question.class))).thenReturn(question1);
         when(questionMapper.toQuestionDTO(any(Question.class))).thenReturn(updatedQuestionDTO);
 
@@ -357,7 +361,7 @@ class QuestionServiceTest {
         assertNotNull(result);
         assertEquals("Título Atualizado no Teste", result.title());
         assertEquals("Conteúdo Modificado", result.content());
-        assertEquals(List.of(tagJavaDTO), result.tags());
+        assertEquals(Set.of(tagJavaDTO), result.tags());
 
         verify(questionRepository, times(1)).findById(questionId);
         verify(tagService, times(1)).convertTechnologyNamesToTags(updateDTO.technologyNames());
@@ -371,7 +375,7 @@ class QuestionServiceTest {
         UUID userId = userPerson1.getUserId();
         UUID questionId = question1.getQuestionId();
 
-        question1.setQuestionLikes(new ArrayList<>());
+        question1.setQuestionLikes(new HashSet<>());
 
         when(profileRepository.findByUser_UserId(userId)).thenReturn(Optional.of(profilePerson1));
         when(questionRepository.findById(questionId)).thenReturn(Optional.of(question1));
@@ -390,7 +394,7 @@ class QuestionServiceTest {
         UUID userId = userPerson1.getUserId();
         UUID questionId = question1.getQuestionId();
 
-        List<Profile> likes = new ArrayList<>();
+        Set<Profile> likes = new HashSet<>();
         likes.add(profilePerson1);
         question1.setQuestionLikes(likes);
 
@@ -482,7 +486,7 @@ class QuestionServiceTest {
         UUID userId = userPerson1.getUserId();
         UUID questionId = UUID.randomUUID();
         QuestionUpdateDTO updateDTO = new QuestionUpdateDTO(
-                "Título", "Conteúdo", List.of("Java")
+                "Título", "Conteúdo", Set.of("Java")
         );
 
         when(questionRepository.findById(questionId)).thenReturn(Optional.empty());
@@ -493,7 +497,7 @@ class QuestionServiceTest {
         );
 
         verify(questionRepository, times(1)).findById(questionId);
-        verify(tagService, never()).convertTechnologyNamesToTags(anyList());
+        verify(tagService, never()).convertTechnologyNamesToTags(anySet());
         verify(questionMapper, never()).updateQuestionFromDTO(any(), any());
         verify(questionRepository, never()).save(any(Question.class));
     }
@@ -503,7 +507,7 @@ class QuestionServiceTest {
         UUID userId = userPerson2.getUserId();
         UUID questionId = question1.getQuestionId();
         QuestionUpdateDTO updateDTO = new QuestionUpdateDTO(
-                "Título", "Conteúdo", List.of("Java")
+                "Título", "Conteúdo", Set.of("Java")
         );
 
         when(questionRepository.findById(questionId)).thenReturn(Optional.of(question1));
@@ -514,7 +518,7 @@ class QuestionServiceTest {
         );
 
         verify(questionRepository, times(1)).findById(questionId);
-        verify(tagService, never()).convertTechnologyNamesToTags(anyList());
+        verify(tagService, never()).convertTechnologyNamesToTags(anySet());
         verify(questionMapper, never()).updateQuestionFromDTO(any(), any());
         verify(questionRepository, never()).save(any(Question.class));
     }
@@ -524,11 +528,11 @@ class QuestionServiceTest {
         UUID userId = userPerson1.getUserId();
         UUID questionId = question1.getQuestionId();
         QuestionUpdateDTO updateDTO = new QuestionUpdateDTO(
-                "Título", "Conteúdo", List.of("Go")
+                "Título", "Conteúdo", Set.of("Go")
         );
 
         when(questionRepository.findById(questionId)).thenReturn(Optional.of(question1));
-        when(tagService.convertTechnologyNamesToTags(anyList()))
+        when(tagService.convertTechnologyNamesToTags(anySet()))
                 .thenThrow(new ObjectNotFoundException("Tag Go não encontrada"));
 
         assertThrows(
@@ -538,7 +542,7 @@ class QuestionServiceTest {
 
         verify(questionRepository, times(1)).findById(questionId);
         verify(questionMapper, times(1)).updateQuestionFromDTO(updateDTO, question1);
-        verify(tagService, times(1)).convertTechnologyNamesToTags(anyList());
+        verify(tagService, times(1)).convertTechnologyNamesToTags(anySet());
         verify(questionRepository, never()).save(any(Question.class));
     }
 
@@ -547,7 +551,7 @@ class QuestionServiceTest {
         UUID userId = UUID.randomUUID();
         UUID questionId = question1.getQuestionId();
 
-        question1.setQuestionLikes(new ArrayList<>());
+        question1.setQuestionLikes(new HashSet<>());
 
         when(profileRepository.findByUser_UserId(userId)).thenReturn(Optional.empty());
 
@@ -566,7 +570,7 @@ class QuestionServiceTest {
         UUID userId = userPerson1.getUserId();
         UUID questionId = UUID.randomUUID();
 
-        question1.setQuestionLikes(new ArrayList<>());
+        question1.setQuestionLikes(new HashSet<>());
 
         when(profileRepository.findByUser_UserId(userId)).thenReturn(Optional.of(profilePerson1));
         when(questionRepository.findById(questionId)).thenReturn(Optional.empty());

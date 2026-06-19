@@ -29,9 +29,10 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -100,10 +101,12 @@ class AnswerServiceTest {
         profilePerson2.setUser(userPerson2);
 
         tagJava = new Tag();
+        ReflectionTestUtils.setField(tagJava, "tagId", UUID.randomUUID());
         tagJava.setTechnologyName("Java");
         tagJava.setColor("#ED8B00");
 
         tagRust = new Tag();
+        ReflectionTestUtils.setField(tagRust, "tagId", UUID.randomUUID());
         tagRust.setTechnologyName("Rust");
         tagRust.setColor("#ED7C10");
 
@@ -114,7 +117,7 @@ class AnswerServiceTest {
         question1.setPublished(true);
         question1.setSolutioned(true);
         question1.setCreatedAt(LocalDate.now());
-        question1.setTags(List.of(tagJava, tagRust));
+        question1.setTags(Set.of(tagJava, tagRust));
         question1.setProfile(profilePerson1);
 
         answer1 = new Answer();
@@ -223,7 +226,7 @@ class AnswerServiceTest {
         UUID answerId = answer1.getAnswerId();
         UUID userId = userPerson1.getUserId();
 
-        answer1.setAnswerLikes(new ArrayList<>());
+        answer1.setAnswerLikes(new HashSet<>());
 
         when(profileRepository.findByUser_UserId(userId)).thenReturn(Optional.of(profilePerson1));
         when(answerRepository.findById(answerId)).thenReturn(Optional.of(answer1));
@@ -242,7 +245,7 @@ class AnswerServiceTest {
         UUID answerId = answer1.getAnswerId();
         UUID userId = userPerson1.getUserId();
 
-        List<Profile> likes  = new ArrayList<>();
+        Set<Profile> likes  = new HashSet<>();
         likes.add(profilePerson1);
         answer1.setAnswerLikes(likes);
 
@@ -383,7 +386,7 @@ class AnswerServiceTest {
         UUID userId = UUID.randomUUID();
         UUID answerId = answer1.getAnswerId();
 
-        answer1.setAnswerLikes(new ArrayList<>());
+        answer1.setAnswerLikes(new HashSet<>());
 
         when(profileRepository.findByUser_UserId(userId)).thenReturn(Optional.empty());
 
@@ -402,7 +405,7 @@ class AnswerServiceTest {
         UUID userId = userPerson1.getUserId();
         UUID answerId = answer1.getAnswerId();
 
-        answer1.setAnswerLikes(new ArrayList<>());
+        answer1.setAnswerLikes(new HashSet<>());
 
         when(profileRepository.findByUser_UserId(userId)).thenReturn(Optional.of(profilePerson1));
         when(answerRepository.findById(answerId)).thenReturn(Optional.empty());

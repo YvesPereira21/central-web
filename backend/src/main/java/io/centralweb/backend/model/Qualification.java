@@ -11,12 +11,12 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "qualifications")
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 public class Qualification {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "qualification_id")
+    @EqualsAndHashCode.Include
     private UUID qualificationId;
     @Column(name = "job_title")
     private String jobTitle;

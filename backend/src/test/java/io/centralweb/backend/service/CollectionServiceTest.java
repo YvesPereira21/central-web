@@ -21,9 +21,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -88,8 +89,8 @@ class CollectionServiceTest {
         ReflectionTestUtils.setField(collection, "collectionId", UUID.randomUUID());
         collection.setName("Minha Coleção");
         collection.setProfile(profile);
-        collection.setArticles(new ArrayList<>());
-        collection.setQuestions(new ArrayList<>());
+        collection.setArticles(new HashSet<>());
+        collection.setQuestions(new HashSet<>());
 
         createDTO = new CollectionCreateDTO("Minha Coleção");
 
@@ -105,8 +106,8 @@ class CollectionServiceTest {
         collectionDTO = new CollectionDTO(
                 collection.getCollectionId(),
                 collection.getName(),
-                List.of(),
-                List.of()
+                Set.of(),
+                Set.of()
         );
 
         article = new Article();

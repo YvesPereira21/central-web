@@ -14,12 +14,12 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "users")
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "user_id")
+    @EqualsAndHashCode.Include
     private UUID userId;
     @Column(name = "password")
     private String password;

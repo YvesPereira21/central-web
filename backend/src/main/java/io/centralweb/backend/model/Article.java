@@ -6,18 +6,18 @@ import lombok.ToString;
 import org.hibernate.annotations.Formula;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
 @Table(name = "articles")
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 public class Article {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "article_id")
+    @EqualsAndHashCode.Include
     private UUID articleId;
     @Column(name = "title")
     private String title;
@@ -36,23 +36,23 @@ public class Article {
             joinColumns = @JoinColumn(name = "article_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
-    private List<Tag> tags = new ArrayList<>();
+    private Set<Tag> tags = new HashSet<>();
     @ManyToMany
     @JoinTable(
             name = "article_likes",
             joinColumns = @JoinColumn(name = "article_id"),
             inverseJoinColumns = @JoinColumn(name = "profile_id")
     )
-    private List<Profile> articleLikes = new ArrayList<>();
+    private Set<Profile> articleLikes = new HashSet<>();
     @Formula("(SELECT COUNT(*) FROM article_likes al WHERE al.article_id = article_id)")
     private Long articleTotalLikes;
     @ManyToMany(mappedBy = "articles")
-    private List<Collection> collections = new ArrayList<>();
+    private Set<Collection> collections = new HashSet<>();
 
     public Article() {
     }
 
-    public Article(UUID articleId, String title, String content, boolean published, LocalDate createdAt, Profile profile, List<Tag> tags, List<Profile> articleLikes) {
+    public Article(UUID articleId, String title, String content, boolean published, LocalDate createdAt, Profile profile, Set<Tag> tags, Set<Profile> articleLikes) {
         this.articleId = articleId;
         this.title = title;
         this.content = content;
@@ -107,19 +107,19 @@ public class Article {
         this.profile = profile;
     }
 
-    public List<Tag> getTags() {
+    public Set<Tag> getTags() {
         return tags;
     }
 
-    public void setTags(List<Tag> tags) {
+    public void setTags(Set<Tag> tags) {
         this.tags = tags;
     }
 
-    public List<Profile> getArticleLikes() {
+    public Set<Profile> getArticleLikes() {
         return articleLikes;
     }
 
-    public void setArticleLikes(List<Profile> articleLikes) {
+    public void setArticleLikes(Set<Profile> articleLikes) {
         this.articleLikes = articleLikes;
     }
 
@@ -135,11 +135,11 @@ public class Article {
         return articleTotalLikes == null ? 0 : articleTotalLikes;
     }
 
-    public List<Collection> getCollections() {
+    public Set<Collection> getCollections() {
         return collections;
     }
 
-    public void setCollections(List<Collection> collections) {
+    public void setCollections(Set<Collection> collections) {
         this.collections = collections;
     }
 }

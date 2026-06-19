@@ -25,6 +25,7 @@ import org.springframework.test.context.jdbc.Sql;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static io.restassured.RestAssured.*;
@@ -111,7 +112,7 @@ public class ArticleControllerTest {
         article1.setContent("Content 1");
         article1.setCreatedAt(LocalDate.now());
         article1.setPublished(true);
-        article1.setTags(List.of(tagJava, tagPython));
+        article1.setTags(Set.of(tagJava, tagPython));
         article1.setProfile(profile1);
         Article articleSaved1 = articleRepository.save(article1);
         article1Id = articleSaved1.getArticleId();
@@ -121,7 +122,7 @@ public class ArticleControllerTest {
         article2.setContent("Content 2");
         article2.setCreatedAt(LocalDate.now());
         article2.setPublished(true);
-        article2.setTags(List.of(tagSpring));
+        article2.setTags(Set.of(tagSpring));
         article2.setProfile(profile2);
         articleRepository.save(article2);
 
@@ -130,7 +131,7 @@ public class ArticleControllerTest {
         article3.setContent("Content 2");
         article3.setCreatedAt(LocalDate.now());
         article3.setPublished(true);
-        article3.setTags(List.of(tagPython));
+        article3.setTags(Set.of(tagPython));
         article3.setProfile(profile2);
         articleRepository.save(article3);
 
@@ -146,7 +147,7 @@ public class ArticleControllerTest {
         ArticleCreateDTO payload = new ArticleCreateDTO(
                 "Teste de integração",
                 "Conteúdo extenso do artigo para passar na validação...",
-                List.of("Java", "Spring")
+                Set.of("Java", "Spring")
         );
 
         given()
@@ -240,7 +241,7 @@ public class ArticleControllerTest {
         ArticleUpdateDTO payload = new ArticleUpdateDTO(
                 "Teste de integração 123",
                 "Este conteúdo foi atualizado para ver se funciona",
-                List.of("Python")
+                Set.of("Python")
         );
 
         given()
@@ -300,7 +301,7 @@ public class ArticleControllerTest {
         ArticleCreateDTO article = new ArticleCreateDTO(
                 "Como fazer partição de lista",
                 "Para isso você consegue fazer na linguagem Python dessa forma...",
-                List.of("Python")
+                Set.of("Python")
         );
 
         given()
@@ -317,7 +318,7 @@ public class ArticleControllerTest {
         ArticleCreateDTO article = new ArticleCreateDTO(
                 "Como fazer partição de lista",
                 "Para isso você consegue fazer na linguagem Python dessa forma...",
-                List.of("Python")
+                Set.of("Python")
         );
 
         given()
@@ -335,7 +336,7 @@ public class ArticleControllerTest {
         ArticleCreateDTO article = new ArticleCreateDTO(
                 "Como integrar o backend com o front",
                 "Para você implementar isso tem de fazer assim...",
-                List.of()
+                Set.of()
         );
 
         given()
@@ -353,7 +354,7 @@ public class ArticleControllerTest {
         ArticleCreateDTO article = new ArticleCreateDTO(
                 "Como fazer partição de lista",
                 "Para isso você consegue fazer na linguagem Rust desse jeito...",
-                List.of("Rust")
+                Set.of("Rust")
         );
 
         given()
@@ -372,7 +373,7 @@ public class ArticleControllerTest {
         ArticleUpdateDTO article = new ArticleUpdateDTO(
                 "Frameworks Python para web",
                 "Existem vários frameworks web para Python que são muito utilizados...",
-                List.of("Python")
+                Set.of("Python")
         );
 
         given()
@@ -390,7 +391,7 @@ public class ArticleControllerTest {
         ArticleUpdateDTO article = new ArticleUpdateDTO(
                 "Como criar um dicionário no Python",
                 "Para você criar um dicionário no python, é preciso fazer isso...",
-                List.of("Python")
+                Set.of("Python")
         );
 
         given()
@@ -409,7 +410,7 @@ public class ArticleControllerTest {
         ArticleUpdateDTO article = new ArticleUpdateDTO(
                 "Como criar um dicionário no Python",
                 "Para você criar um dicionário no python, é preciso fazer isso...",
-                List.of("Python")
+                Set.of("Python")
         );
 
         given()
@@ -428,7 +429,7 @@ public class ArticleControllerTest {
         ArticleUpdateDTO article = new ArticleUpdateDTO(
                 "CPython usando Rust",
                 "Uma notícia que bombou recentemente é o Python trocando o C pelo Rust...",
-                List.of("Python", "Rust")
+                Set.of("Python", "Rust")
         );
 
         given()

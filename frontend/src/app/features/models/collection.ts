@@ -1,11 +1,11 @@
-import { Article } from "./article";
-import { Question } from "./question";
+import { ArticleListSimpleCollection } from "./article";
+import { QuestionListSimpleCollection } from "./question";
 
 export interface Collection {
     collectionId: string;
     name: string;
-    articles: Article[];
-    questions: Question[];
+    articles: ArticleListSimpleCollection[];
+    questions: QuestionListSimpleCollection[];
 }
 
 export interface CollectionCreate {

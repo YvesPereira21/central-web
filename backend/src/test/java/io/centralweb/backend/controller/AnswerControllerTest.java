@@ -18,6 +18,7 @@ import org.springframework.test.context.jdbc.Sql;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static io.restassured.RestAssured.*;
@@ -101,7 +102,7 @@ public class AnswerControllerTest {
         question1.setContent("Content 1");
         question1.setCreatedAt(LocalDate.now());
         question1.setPublished(true);
-        question1.setTags(List.of(tagRust, tagGo));
+        question1.setTags(Set.of(tagRust, tagGo));
         question1.setProfile(profile1);
         Question questionSaved1 = questionRepository.save(question1);
         question1Id = questionSaved1.getQuestionId();

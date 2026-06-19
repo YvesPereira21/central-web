@@ -42,3 +42,10 @@ export interface QuestionUpdate {
     content: string,
     technologyNames: string[]
 }
+
+export interface QuestionListSimpleCollection {
+    questionId: string,
+    title: string,
+    createdAt: string,
+    solutioned: boolean
+}

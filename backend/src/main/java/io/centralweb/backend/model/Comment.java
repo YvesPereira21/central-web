@@ -9,12 +9,12 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "comments")
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "comment_id")
+    @EqualsAndHashCode.Include
     private UUID commentId;
     @Column(name = "content", columnDefinition = "TEXT")
     private String content;

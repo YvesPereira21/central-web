@@ -21,6 +21,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -129,23 +130,25 @@ class TagServiceTest {
 
     @Test
     void shouldConvertTags(){
-        List<String> technologyNames = List.of("Java", "Rust");
+        Set<String> technologyNames = Set.of("Java", "Rust");
 
         Tag tagJava = new Tag();
+        ReflectionTestUtils.setField(tagJava, "tagId", UUID.randomUUID());
         tagJava.setTechnologyName("Java");
 
         Tag tagRust = new Tag();
+        ReflectionTestUtils.setField(tagRust, "tagId", UUID.randomUUID());
         tagRust.setTechnologyName("Rust");
 
         when(tagRepository.findByTechnologyName("Java")).thenReturn(Optional.of(tagJava));
         when(tagRepository.findByTechnologyName("Rust")).thenReturn(Optional.of(tagRust));
 
-        List<Tag> result = tagService.convertTechnologyNamesToTags(technologyNames);
+        Set<Tag> result = tagService.convertTechnologyNamesToTags(technologyNames);
 
         assertNotNull(result);
         assertEquals(2, result.size());
-        assertEquals("Java", result.get(0).getTechnologyName());
-        assertEquals("Rust", result.get(1).getTechnologyName());
+        assertTrue(result.contains(tagJava));
+        assertTrue(result.contains(tagRust));
 
         verify(tagRepository, times(2)).findByTechnologyName(anyString());
     }
@@ -225,12 +228,14 @@ class TagServiceTest {
 
     @Test
     void shouldNotConvertTagsAndThrowExceptionWhenTechnologyNameDoesNotExist(){
-        List<String> technologyNames = List.of("Java", "Rust", "Ruby");
+        Set<String> technologyNames = new java.util.LinkedHashSet<>(List.of("Java", "Rust", "Ruby"));
 
         Tag tagJava = new Tag();
+        ReflectionTestUtils.setField(tagJava, "tagId", UUID.randomUUID());
         tagJava.setTechnologyName("Java");
 
         Tag tagRuby = new Tag();
+        ReflectionTestUtils.setField(tagRuby, "tagId", UUID.randomUUID());
         tagRuby.setTechnologyName("Ruby");
 
         when(tagRepository.findByTechnologyName("Java")).thenReturn(Optional.of(tagJava));
