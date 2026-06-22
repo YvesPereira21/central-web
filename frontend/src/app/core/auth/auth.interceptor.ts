@@ -1,27 +1,50 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { AuthenticationService } from '../../features/authentications/services/authentication.service';
-import { catchError, throwError } from 'rxjs';
+import { catchError, switchMap, throwError } from 'rxjs';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authenticationService = inject(AuthenticationService);
-  const token = authenticationService.getToken();
+  let token = authenticationService.getToken();
 
+  let request = req;
   if (token) {
-    const clonedRequest = req.clone({
+    request = req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`
       }
     });
-    return next(clonedRequest);
   }
 
-  return next(req).pipe(
+  return next(request).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Se o backend disser que o token expirou ou está inválido
-      if (error.status === 401 || error.status === 403) {
-        authenticationService.logout(); // Limpa a sujeira e envia para a tela de login
+      // Ignora rotas de login e refresh para evitar loop infinito
+      if (req.url.includes('/auth/login') || req.url.includes('/auth/refresh')) {
+        return throwError(() => error);
       }
+
+      // 401 ou 403 geralmente indicam token expirado
+      if (error.status === 401 || error.status === 403) {
+        return authenticationService.refreshToken().pipe(
+          switchMap(() => {
+            // Se o refresh funcionou, pega o novo token
+            token = authenticationService.getToken();
+            const newRequest = req.clone({
+              setHeaders: {
+                Authorization: `Bearer ${token}`
+              }
+            });
+            // Tenta fazer a requisição original novamente
+            return next(newRequest);
+          }),
+          catchError((refreshError) => {
+            // Se o refresh falhar, usuário desloga
+            authenticationService.logout();
+            return throwError(() => refreshError);
+          })
+        );
+      }
+
       return throwError(() => error);
     })
   );

@@ -123,4 +123,16 @@ public class GlobalHandlerException {
                 .build();
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
+
+    @ExceptionHandler(TokenRefreshException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ResponseEntity<ApiError> tokenRefreshException(TokenRefreshException e) {
+        ApiError error = ApiError.builder()
+                .timestamp(LocalDateTime.now())
+                .code(HttpStatus.FORBIDDEN.value())
+                .status(HttpStatus.FORBIDDEN.name())
+                .errors(List.of(e.getMessage()))
+                .build();
+        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+    }
 }
