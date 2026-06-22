@@ -19,12 +19,15 @@ import io.centralweb.backend.repository.ProfileRepository;
 import io.centralweb.backend.repository.QuestionRepository;
 import io.centralweb.backend.repository.AnswerRepository;
 import io.centralweb.backend.repository.UserRepository;
+import io.centralweb.backend.specification.GenericSearchSpecification;
 import jakarta.transaction.Transactional;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -50,6 +53,7 @@ public class QuestionService {
     }
 
     @Transactional(rollbackOn = Exception.class)
+    @CacheEvict(value = "questions", allEntries = true)
     public QuestionDTO createQuestion(QuestionCreateDTO questionDataDTO, UUID userProfileId) {
         Profile profile = profileRepository.findByUser_UserId(userProfileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
@@ -68,6 +72,7 @@ public class QuestionService {
         return questionMapper.toQuestionDTO(question);
     }
 
+    @Cacheable(value = "questions", key = "#questionId")
     public QuestionDTO getQuestionById(UUID questionId) {
         Question question = questionRepository
                 .findById(questionId)
@@ -75,18 +80,20 @@ public class QuestionService {
         return questionMapper.toQuestionDTO(question);
     }
 
+    @Cacheable(value = "questions")
     public Page<QuestionListDTO> getAllPublishedQuestions(Pageable pageable){
         return questionRepository.findAllByPublishedIsTrue(pageable)
                 .map(questionMapper::toQuestionListDTO);
     }
 
+    @Cacheable(value = "questions")
     public Page<QuestionListDTO> searchPublishedQuestions(String keyword, Pageable pageable) {
-        org.springframework.data.jpa.domain.Specification<Question> spec = 
-                io.centralweb.backend.specification.GenericSearchSpecification.searchByTitleOrContent(keyword);
+        Specification<Question> spec = GenericSearchSpecification.searchByTitleOrContent(keyword);
                 
         return questionRepository.findAll(spec, pageable).map(questionMapper::toQuestionListDTO);
     }
 
+    @Cacheable(value = "questions")
     public Page<QuestionListDTO> getAllPublishedQuestionsByTechnologyName(
             String technologyName,
             Pageable pageable
@@ -96,6 +103,7 @@ public class QuestionService {
                 .map(questionMapper::toQuestionListDTO);
     }
 
+    @Cacheable(value = "questions")
     public Page<QuestionListDTO> getAllPublishedQuestionsByTags(
             List<String> tags,
             Pageable pageable
@@ -108,6 +116,7 @@ public class QuestionService {
                 .map(questionMapper::toQuestionListDTO);
     }
 
+    @Cacheable(value = "questions")
     public Page<QuestionListDTO> getAllPublishedQuestionWithAcceptedAnswer(
             Pageable pageable
     ){
@@ -116,6 +125,7 @@ public class QuestionService {
                 .map(questionMapper::toQuestionListDTO);
     }
 
+    @Cacheable(value = "questions")
     public Page<QuestionListDTO> getAllQuestionsByProfile(UUID profileId, UUID userId, Pageable pageable) {
         Profile profile = profileRepository.findById(profileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
@@ -129,6 +139,7 @@ public class QuestionService {
                 .map(questionMapper::toQuestionListDTO);
     }
 
+    @CacheEvict(value = "questions", allEntries = true)
     public QuestionDTO updateQuestion(UUID questionId, QuestionUpdateDTO questionUpdated, UUID userProfileId) {
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new ObjectNotFoundException("Pergunta não encontrada"));
@@ -160,6 +171,7 @@ public class QuestionService {
         questionRepository.save(question);
     }
 
+    @CacheEvict(value = "questions", allEntries = true)
     public void deleteQuestionById(UUID questionId, UUID userProfileId) {
         User user = userRepository.findById(userProfileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Usuário não existe"));

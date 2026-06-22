@@ -11,7 +11,8 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +29,7 @@ public class TagService {
     }
 
     @Transactional(rollbackOn = Exception.class)
+    @CacheEvict(value = "tags", allEntries = true)
     public TagDTO createTag(TagDTO tagDTO) {
         boolean tagExists = tagRepository.
                 existsByTechnologyName(tagDTO.technologyName());
@@ -42,6 +44,7 @@ public class TagService {
         return tagMapper.toDTO(tagRepository.save(newTag));
     }
 
+    @Cacheable(value = "tags", key = "#technologyName")
     public TagDTO getTagByTechnologyName(String technologyName) {
         Tag tag = tagRepository
                 .findByTechnologyNameContainingIgnoreCase(technologyName)
@@ -50,9 +53,11 @@ public class TagService {
         return tagMapper.toDTO(tag);
     }
 
+    @Cacheable(value = "tags", key = "#pageable.pageNumber")
     public Page<TagDTO> getAllTags(Pageable pageable) {
         return tagRepository.findAll(pageable).map(tagMapper::toDTO);}
 
+    @CacheEvict(value = "tags", allEntries = true)
     public TagDTO updateTag(UUID tagId, TagUpdateDTO tagUpdated) {
         Tag tag = tagRepository.findById(tagId)
                 .orElseThrow(() -> new ObjectNotFoundException("Tag não encontrada"));
@@ -67,6 +72,7 @@ public class TagService {
         return tagMapper.toDTO(tagRepository.save(tag));
     }
 
+    @CacheEvict(value = "tags", allEntries = true)
     public void deleteTagByTechnologyName(String technologyName) {
         Tag tag = tagRepository
                 .findByTechnologyName(technologyName)

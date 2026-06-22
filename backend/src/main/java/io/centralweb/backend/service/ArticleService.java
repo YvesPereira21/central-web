@@ -15,12 +15,15 @@ import io.centralweb.backend.model.User;
 import io.centralweb.backend.repository.ArticleRepository;
 import io.centralweb.backend.repository.ProfileRepository;
 import io.centralweb.backend.repository.UserRepository;
+import io.centralweb.backend.specification.GenericSearchSpecification;
 import jakarta.transaction.Transactional;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -44,6 +47,7 @@ public class ArticleService {
     }
 
     @Transactional(rollbackOn = Exception.class)
+    @CacheEvict(value = "articles", allEntries = true)
     public ArticleDTO createArticle(ArticleCreateDTO articleData, UUID userProfileId) {
         Profile profile = profileRepository.findByUser_UserId(userProfileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
@@ -62,6 +66,7 @@ public class ArticleService {
         return articleMapper.toDTO(article);
     }
 
+    @Cacheable(value = "articles", key = "#articleId")
     public ArticleDTO getArticleById(UUID articleId) {
         Article article = articleRepository.findById(articleId)
                 .orElseThrow(() -> new ObjectNotFoundException("Artigo não encontrado"));
@@ -69,24 +74,27 @@ public class ArticleService {
         return articleMapper.toDTO(article);
     }
 
+    @Cacheable(value = "articles")
     public Page<ArticleDTO> getAllPublishedArticles(Pageable pageable){
         return articleRepository.findAllByPublishedIsTrue(pageable)
                 .map(articleMapper::toDTO);
     }
 
+    @Cacheable(value = "articles")
     public Page<ArticleDTO> searchPublishedArticles(String keyword, Pageable pageable) {
-        org.springframework.data.jpa.domain.Specification<Article> spec = 
-                io.centralweb.backend.specification.GenericSearchSpecification.searchByTitleOrContent(keyword);
+        Specification<Article> spec = GenericSearchSpecification.searchByTitleOrContent(keyword);
         
         return articleRepository.findAll(spec, pageable).map(articleMapper::toDTO);
     }
 
+    @Cacheable(value = "articles")
     public Page<ArticleDTO> getAllPublishedArticlesByTechnologyName(String technologyName, Pageable pageable) {
         return articleRepository
                 .findAllByTags_TechnologyNameAndPublishedIsTrue(technologyName, pageable)
                 .map(articleMapper::toDTO);
     }
 
+    @Cacheable(value = "articles")
     public Page<ArticleDTO> getAllPublishedArticlesByTags(List<String> tags, Pageable pageable) {
         if (tags == null || tags.isEmpty()) {
             return getAllPublishedArticles(pageable);
@@ -96,12 +104,14 @@ public class ArticleService {
                 .map(articleMapper::toDTO);
     }
 
+    @Cacheable(value = "articles")
     public Page<ArticleDTO> getAllPublishedArticlesByProfile(UUID profileId, Pageable pageable) {
         return articleRepository
                 .findAllByProfile_ProfileIdAndPublishedIsTrue(profileId, pageable)
                 .map(articleMapper::toDTO);
     }
 
+    @CacheEvict(value = "articles", allEntries = true)
     public ArticleDTO updateArticle(UUID articleId, ArticleUpdateDTO articleUpdated, UUID userProfileId) {
         Article article = articleRepository.findById(articleId)
                 .orElseThrow(() -> new ObjectNotFoundException("Artigo não encontrado"));
@@ -133,6 +143,7 @@ public class ArticleService {
         articleRepository.save(article);
     }
 
+    @CacheEvict(value = "articles", allEntries = true)
     public void deleteArticleById(UUID articleId, UUID userProfileId) {
         User user = userRepository.findById(userProfileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Usuário não existe"));

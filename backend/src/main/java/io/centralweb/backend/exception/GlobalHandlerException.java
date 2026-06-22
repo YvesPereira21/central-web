@@ -18,6 +18,7 @@ public class GlobalHandlerException {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> genericException(Exception e) {
+        e.printStackTrace();
         ApiError er = ApiError
                 .builder()
                 .timestamp(LocalDateTime.now())

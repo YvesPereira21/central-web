@@ -12,9 +12,12 @@ import io.centralweb.backend.model.User;
 import io.centralweb.backend.repository.ProfileRepository;
 import io.centralweb.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import java.util.UUID;
 
 @Service
@@ -51,6 +54,7 @@ public class ProfileService {
         return profileMapper.toProfileUniqueDTO(profileRepository.save(newProfile));
     }
 
+    @Cacheable(value = "profiles", key = "#profileId")
     public ProfileDTO getProfileById(UUID profileId) {
         Profile profile = profileRepository.findById(profileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
@@ -58,12 +62,17 @@ public class ProfileService {
         return profileMapper.toProfileUniqueDTO(profile);
     }
 
+    @Cacheable(value = "profiles", key = "#userId")
     public ProfileDTO getProfileByUserId(UUID userId) {
         Profile profile = profileRepository.findByUser_UserId(userId)
                 .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado para este usuário"));
         return profileMapper.toProfileUniqueDTO(profile);
     }
 
+    @Caching(put = {
+            @CachePut(value = "profiles", key = "#result.profileId()"),
+            @CachePut(value = "profiles", key = "#result.userId()")
+    })
     public ProfileDTO updateProfile(UUID profileId, ProfileUpdateDTO profileUpdated, UUID userProfileId) {
         Profile profile = profileRepository.findById(profileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
@@ -77,6 +86,7 @@ public class ProfileService {
         return profileMapper.toProfileUniqueDTO(profileRepository.save(profile));
     }
 
+    @CacheEvict(value = "profiles", allEntries = true)
     public void deleteProfileById(UUID profileId, UUID userProfileId) {
         User user = userRepository.findById(userProfileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Usuário não existe"));
@@ -92,6 +102,7 @@ public class ProfileService {
     }
 
     @Transactional(rollbackOn = Exception.class)
+    @CacheEvict(value = "profiles", allEntries = true)
     public void addPoints(UUID profileId, Long amountPoints) {
         Profile profile = profileRepository.findById(profileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
