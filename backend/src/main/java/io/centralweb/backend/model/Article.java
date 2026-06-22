@@ -11,7 +11,14 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "articles")
+@Table(
+        name = "articles",
+        indexes = {
+                @Index(name = "idx_article_published", columnList = "published"),
+                @Index(name = "idx_article_created_at", columnList = "created_at"),
+                @Index(name = "idx_article_profile_id", columnList = "profile_id")
+        }
+)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 public class Article {
@@ -37,6 +44,8 @@ public class Article {
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
     private Set<Tag> tags = new HashSet<>();
+    @ManyToMany(mappedBy = "articles")
+    private Set<Collection> collections = new HashSet<>();
     @ManyToMany
     @JoinTable(
             name = "article_likes",
@@ -46,8 +55,6 @@ public class Article {
     private Set<Profile> articleLikes = new HashSet<>();
     @Formula("(SELECT COUNT(*) FROM article_likes al WHERE al.article_id = article_id)")
     private Long articleTotalLikes;
-    @ManyToMany(mappedBy = "articles")
-    private Set<Collection> collections = new HashSet<>();
 
     public Article() {
     }

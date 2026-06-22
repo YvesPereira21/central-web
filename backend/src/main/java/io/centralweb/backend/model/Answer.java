@@ -12,7 +12,13 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "answers")
+@Table(
+        name = "answers",
+        indexes = {
+                @Index(name = "idx_answer_question_accepted", columnList = "question_id, accepted"),
+                @Index(name = "idx_answer_profile_id", columnList = "profile_id")
+        }
+)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 public class Answer {

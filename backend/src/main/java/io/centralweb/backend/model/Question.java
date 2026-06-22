@@ -12,7 +12,14 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "questions")
+@Table(
+        name = "questions",
+        indexes = {
+                @Index(name = "idx_question_published", columnList = "published"),
+                @Index(name = "idx_question_created_at", columnList = "created_at"),
+                @Index(name = "idx_question_profile_id", columnList = "profile_id")
+        }
+)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 public class Question {
