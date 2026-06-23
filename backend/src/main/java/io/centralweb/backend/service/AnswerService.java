@@ -23,9 +23,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDate;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class AnswerService {
     private final AnswerRepository answerRepository;
@@ -46,6 +48,7 @@ public class AnswerService {
 
     @Transactional(rollbackOn = Exception.class)
     public AnswerDTO createAnswer(UUID questionId, AnswerCreateDTO answer, UUID userProfileId) {
+        log.info("Criando resposta para a pergunta com ID: '{}' pelo perfil de usuário com ID: '{}'", questionId, userProfileId);
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new ObjectNotFoundException("Pergunta não encontrada"));
         Profile profile = profileRepository.findByUser_UserId(userProfileId)
@@ -57,10 +60,13 @@ public class AnswerService {
         newAnswer.setQuestion(question);
         newAnswer.setProfile(profile);
 
-        return answerMapper.toDTO(answerRepository.save(newAnswer));
+        Answer savedAnswer = answerRepository.save(newAnswer);
+        log.info("Resposta criada com sucesso com o ID: '{}'", savedAnswer.getAnswerId());
+        return answerMapper.toDTO(savedAnswer);
     }
 
     public Page<AnswerDTO> getAllAnswersFromQuestion(UUID questionId, Pageable pageable) {
+        log.debug("Buscando página {} de respostas para a pergunta com ID: {}", pageable.getPageNumber(), questionId);
         return answerRepository
                 .findAllByQuestionIdAndQuestionPublished(questionId, pageable)
                 .map(answerMapper::toDTO);
@@ -68,6 +74,7 @@ public class AnswerService {
 
     @Transactional(rollbackOn = Exception.class)
     public void acceptAnswer(UUID answerId, UUID userProfileId) {
+        log.info("Aceitando resposta com ID: '{}' solicitada pelo perfil de usuário com ID: '{}'", answerId, userProfileId);
         Answer answer = answerRepository.findById(answerId)
                 .orElseThrow(() -> new ObjectNotFoundException("Resposta não encontrada"));
 
@@ -84,6 +91,7 @@ public class AnswerService {
         answer.setAccepted(true);
 
         Answer answerAccepted = answerRepository.save(answer);
+        log.info("Resposta com ID: '{}' aceita com sucesso", answerId);
         publisher.publishEvent(new AnswerAcceptedEvent(answer.getProfile().getProfileId()));
 
         answerMapper.toDTO(answerAccepted);
@@ -104,6 +112,7 @@ public class AnswerService {
     }
 
     public void deleteAnswerById(UUID answerId, UUID userProfileId) {
+        log.info("Excluindo resposta com ID: '{}' solicitada pelo perfil de usuário com ID: '{}'", answerId, userProfileId);
         User user = userRepository.findById(userProfileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Usuário não existe"));
         Answer answer = answerRepository.findById(answerId)
@@ -119,5 +128,6 @@ public class AnswerService {
         }
 
         answerRepository.delete(answer);
+        log.info("Resposta com ID: '{}' excluída com sucesso", answerId);
     }
 }

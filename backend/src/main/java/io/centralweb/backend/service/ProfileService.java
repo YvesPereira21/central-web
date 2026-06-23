@@ -18,8 +18,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
+import lombok.extern.slf4j.Slf4j;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class ProfileService {
     private final UserRepository userRepository;
@@ -38,6 +40,7 @@ public class ProfileService {
 
     @Transactional(rollbackOn = Exception.class)
     public ProfileDTO createProfile(ProfileCreateDTO profile) {
+        log.info("Criando perfil para o usuário: {}", profile.user().email());
         userService.verifyUserAlreadyExists(profile.user().email());
 
         User user = new User();
@@ -51,11 +54,14 @@ public class ProfileService {
         newProfile.setProfileType(profile.profileType());
         newProfile.setUser(user);
 
-        return profileMapper.toProfileUniqueDTO(profileRepository.save(newProfile));
+        Profile savedProfile = profileRepository.save(newProfile);
+        log.info("Perfil criado com sucesso para o usuário: {}", profile.user().email());
+        return profileMapper.toProfileUniqueDTO(savedProfile);
     }
 
     @Cacheable(value = "profiles", key = "#profileId")
     public ProfileDTO getProfileById(UUID profileId) {
+        log.debug("Buscando perfil por ID: {}", profileId);
         Profile profile = profileRepository.findById(profileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
 
@@ -64,6 +70,7 @@ public class ProfileService {
 
     @Cacheable(value = "profiles", key = "#userId")
     public ProfileDTO getProfileByUserId(UUID userId) {
+        log.debug("Buscando perfil por ID de usuário: {}", userId);
         Profile profile = profileRepository.findByUser_UserId(userId)
                 .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado para este usuário"));
         return profileMapper.toProfileUniqueDTO(profile);
@@ -74,6 +81,7 @@ public class ProfileService {
             @CachePut(value = "profiles", key = "#result.userId()")
     })
     public ProfileDTO updateProfile(UUID profileId, ProfileUpdateDTO profileUpdated, UUID userProfileId) {
+        log.info("Atualizando perfil com ID: '{}' solicitado pelo perfil de usuário com ID: '{}'", profileId, userProfileId);
         Profile profile = profileRepository.findById(profileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
 
@@ -83,7 +91,9 @@ public class ProfileService {
 
         profileMapper.updateProfileFromDTO(profileUpdated, profile);
 
-        return profileMapper.toProfileUniqueDTO(profileRepository.save(profile));
+        Profile savedProfile = profileRepository.save(profile);
+        log.info("Perfil com ID: '{}' atualizado com sucesso", profileId);
+        return profileMapper.toProfileUniqueDTO(savedProfile);
     }
 
     @CacheEvict(value = "profiles", allEntries = true)
@@ -104,6 +114,7 @@ public class ProfileService {
     @Transactional(rollbackOn = Exception.class)
     @CacheEvict(value = "profiles", allEntries = true)
     public void addPoints(UUID profileId, Long amountPoints) {
+        log.info("Adicionando {} pontos ao perfil com ID: '{}'", amountPoints, profileId);
         Profile profile = profileRepository.findById(profileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
 
@@ -114,6 +125,7 @@ public class ProfileService {
 
         profile.setReputationScore(points);
         profile.setLevel(updateLevel(points));
+        log.info("Pontos adicionados com sucesso ao perfil com ID: '{}'. Nova reputação: {}. Novo nível: {}", profileId, points, profile.getLevel());
         profileRepository.save(profile);
     }
 

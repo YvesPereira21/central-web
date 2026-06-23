@@ -24,10 +24,12 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
+import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class ArticleService {
     private final ArticleRepository articleRepository;
@@ -49,6 +51,7 @@ public class ArticleService {
     @Transactional(rollbackOn = Exception.class)
     @CacheEvict(value = "articles", allEntries = true)
     public ArticleDTO createArticle(ArticleCreateDTO articleData, UUID userProfileId) {
+        log.info("Criando novo artigo com o título: '{}' para o perfil de usuário com ID: '{}'", articleData.title(), userProfileId);
         Profile profile = profileRepository.findByUser_UserId(userProfileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
 
@@ -61,6 +64,7 @@ public class ArticleService {
         newArticle.setProfile(profile);
 
         Article article = articleRepository.save(newArticle);
+        log.info("Artigo criado com sucesso com o ID: '{}' para o perfil com ID: '{}'", article.getArticleId(), profile.getProfileId());
         publisher.publishEvent(new ArticleCreateEvent(profile.getProfileId()));
 
         return articleMapper.toDTO(article);
@@ -68,6 +72,7 @@ public class ArticleService {
 
     @Cacheable(value = "articles", key = "#articleId")
     public ArticleDTO getArticleById(UUID articleId) {
+        log.debug("Buscando artigo por ID: {}", articleId);
         Article article = articleRepository.findById(articleId)
                 .orElseThrow(() -> new ObjectNotFoundException("Artigo não encontrado"));
 
@@ -76,6 +81,7 @@ public class ArticleService {
 
     @Cacheable(value = "articles")
     public Page<ArticleDTO> getAllPublishedArticles(Pageable pageable){
+        log.debug("Buscando página {} de artigos publicados", pageable.getPageNumber());
         return articleRepository.findAllByPublishedIsTrue(pageable)
                 .map(articleMapper::toDTO);
     }
@@ -113,6 +119,7 @@ public class ArticleService {
 
     @CacheEvict(value = "articles", allEntries = true)
     public ArticleDTO updateArticle(UUID articleId, ArticleUpdateDTO articleUpdated, UUID userProfileId) {
+        log.info("Atualizando artigo com ID: '{}' solicitado pelo perfil de usuário com ID: '{}'", articleId, userProfileId);
         Article article = articleRepository.findById(articleId)
                 .orElseThrow(() -> new ObjectNotFoundException("Artigo não encontrado"));
 
@@ -126,7 +133,9 @@ public class ArticleService {
             article.setTags(tagService.convertTechnologyNamesToTags(articleUpdated.technologyNames()));
         }
 
-        return articleMapper.toDTO(articleRepository.save(article));
+        Article savedArticle = articleRepository.save(article);
+        log.info("Artigo com ID: '{}' atualizado com sucesso", articleId);
+        return articleMapper.toDTO(savedArticle);
     }
 
     public void toggleArticleLike(UUID articleId, UUID userProfileId) {
@@ -145,6 +154,7 @@ public class ArticleService {
 
     @CacheEvict(value = "articles", allEntries = true)
     public void deleteArticleById(UUID articleId, UUID userProfileId) {
+        log.info("Excluindo artigo com ID: '{}' solicitado pelo perfil de usuário com ID: '{}'", articleId, userProfileId);
         User user = userRepository.findById(userProfileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Usuário não existe"));
         Article article = articleRepository.findById(articleId)
@@ -156,6 +166,7 @@ public class ArticleService {
         }
 
         articleRepository.delete(article);
+        log.info("Artigo com ID: '{}' excluído com sucesso", articleId);
 
         publisher.publishEvent(new ArticleDeleteEvent(article.getProfile().getProfileId()));
     }

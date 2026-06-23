@@ -20,9 +20,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDate;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class CommentService {
     private final CommentRepository commentRepository;
@@ -41,6 +43,7 @@ public class CommentService {
 
     @Transactional(rollbackOn = Exception.class)
     public CommentDTO createComment(UUID answerId, CommentCreateDTO commentDTO, UUID userProfileId) {
+        log.info("Criando comentário para a resposta com ID: '{}' pelo perfil de usuário com ID: '{}'", answerId, userProfileId);
         Answer answer = answerRepository.findById(answerId)
                 .orElseThrow(() -> new ObjectNotFoundException("Resposta não encontrada"));
         Profile profile = profileRepository.findByUser_UserId(userProfileId)
@@ -52,10 +55,13 @@ public class CommentService {
         newComment.setAnswer(answer);
         newComment.setProfile(profile);
 
-        return commentMapper.toDTO(commentRepository.save(newComment));
+        Comment savedComment = commentRepository.save(newComment);
+        log.info("Comentário criado com sucesso com o ID: '{}'", savedComment.getCommentId());
+        return commentMapper.toDTO(savedComment);
     }
 
     public Page<CommentDTO> getAllCommentsFromAnswer(UUID answerId, Pageable pageable) {
+        log.debug("Buscando página {} de comentários para a resposta com ID: {}", pageable.getPageNumber(), answerId);
         return commentRepository
                 .findAllByAnswer_AnswerId(answerId, pageable)
                 .map(commentMapper::toDTO);
@@ -63,6 +69,7 @@ public class CommentService {
 
     @Transactional(rollbackOn = Exception.class)
     public CommentDTO updateComment(UUID commentId, CommentUpdateDTO dto, UUID userProfileId) {
+        log.info("Atualizando comentário com ID: '{}' solicitado pelo perfil de usuário com ID: '{}'", commentId, userProfileId);
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new ObjectNotFoundException("Comentário não encontrado"));
 
@@ -71,10 +78,13 @@ public class CommentService {
         }
 
         commentMapper.updateCommentFromDTO(dto, comment);
-        return commentMapper.toDTO(commentRepository.save(comment));
+        Comment savedComment = commentRepository.save(comment);
+        log.info("Comentário com ID: '{}' atualizado com sucesso", commentId);
+        return commentMapper.toDTO(savedComment);
     }
 
     public void deleteCommentById(UUID commentId, UUID userProfileId) {
+        log.info("Excluindo comentário com ID: '{}' solicitado pelo perfil de usuário com ID: '{}'", commentId, userProfileId);
         User user = userRepository.findById(userProfileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Usuário não existe"));
         Comment comment = commentRepository.findById(commentId)
@@ -86,5 +96,6 @@ public class CommentService {
         }
 
         commentRepository.delete(comment);
+        log.info("Comentário com ID: '{}' excluído com sucesso", commentId);
     }
 }

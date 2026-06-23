@@ -9,16 +9,18 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalHandlerException {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> genericException(Exception e) {
-        e.printStackTrace();
+        log.error("Ocorreu um erro interno do servidor: ", e);
         ApiError er = ApiError
                 .builder()
                 .timestamp(LocalDateTime.now())
@@ -90,6 +92,7 @@ public class GlobalHandlerException {
     @ExceptionHandler(ProfileIsNotTheOwnerException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ResponseEntity<ApiError> profileIsNotTheOwnerException(ProfileIsNotTheOwnerException e) {
+        log.warn("Tentativa de acesso não autorizado ao perfil: {}", e.getMessage());
         ApiError error = ApiError.builder()
                 .timestamp(LocalDateTime.now())
                 .code(HttpStatus.UNAUTHORIZED.value())
@@ -128,6 +131,7 @@ public class GlobalHandlerException {
     @ExceptionHandler(TokenRefreshException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ResponseEntity<ApiError> tokenRefreshException(TokenRefreshException e) {
+        log.warn("Falha ao atualizar o token (refresh token): {}", e.getMessage());
         ApiError error = ApiError.builder()
                 .timestamp(LocalDateTime.now())
                 .code(HttpStatus.FORBIDDEN.value())

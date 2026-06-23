@@ -28,10 +28,12 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
+import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class QuestionService {
     private final QuestionRepository questionRepository;
@@ -55,6 +57,7 @@ public class QuestionService {
     @Transactional(rollbackOn = Exception.class)
     @CacheEvict(value = "questions", allEntries = true)
     public QuestionDTO createQuestion(QuestionCreateDTO questionDataDTO, UUID userProfileId) {
+        log.info("Criando nova pergunta com o título: '{}' para o perfil de usuário com ID: '{}'", questionDataDTO.title(), userProfileId);
         Profile profile = profileRepository.findByUser_UserId(userProfileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
 
@@ -67,6 +70,7 @@ public class QuestionService {
         newQuestion.setProfile(profile);
 
         Question question = questionRepository.save(newQuestion);
+        log.info("Pergunta criada com sucesso com o ID: '{}' para o perfil com ID: '{}'", question.getQuestionId(), profile.getProfileId());
         publisher.publishEvent(new QuestionCreateEvent(profile.getProfileId()));
 
         return questionMapper.toQuestionDTO(question);
@@ -74,6 +78,7 @@ public class QuestionService {
 
     @Cacheable(value = "questions", key = "#questionId")
     public QuestionDTO getQuestionById(UUID questionId) {
+        log.debug("Buscando pergunta por ID: {}", questionId);
         Question question = questionRepository
                 .findById(questionId)
                 .orElseThrow(() -> new ObjectNotFoundException("Pergunta não encontrada"));
@@ -82,6 +87,7 @@ public class QuestionService {
 
     @Cacheable(value = "questions")
     public Page<QuestionListDTO> getAllPublishedQuestions(Pageable pageable){
+        log.debug("Buscando página {} de perguntas publicadas", pageable.getPageNumber());
         return questionRepository.findAllByPublishedIsTrue(pageable)
                 .map(questionMapper::toQuestionListDTO);
     }
@@ -141,6 +147,7 @@ public class QuestionService {
 
     @CacheEvict(value = "questions", allEntries = true)
     public QuestionDTO updateQuestion(UUID questionId, QuestionUpdateDTO questionUpdated, UUID userProfileId) {
+        log.info("Atualizando pergunta com ID: '{}' solicitada pelo perfil de usuário com ID: '{}'", questionId, userProfileId);
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new ObjectNotFoundException("Pergunta não encontrada"));
 
@@ -153,7 +160,9 @@ public class QuestionService {
             question.setTags(tagService.convertTechnologyNamesToTags(questionUpdated.technologyNames()));
         }
 
-        return questionMapper.toQuestionDTO(questionRepository.save(question));
+        Question savedQuestion = questionRepository.save(question);
+        log.info("Pergunta com ID: '{}' atualizada com sucesso", questionId);
+        return questionMapper.toQuestionDTO(savedQuestion);
     }
 
     public void toggleQuestionLike(UUID questionId, UUID userProfileId) {
@@ -173,6 +182,7 @@ public class QuestionService {
 
     @CacheEvict(value = "questions", allEntries = true)
     public void deleteQuestionById(UUID questionId, UUID userProfileId) {
+        log.info("Excluindo pergunta com ID: '{}' solicitada pelo perfil de usuário com ID: '{}'", questionId, userProfileId);
         User user = userRepository.findById(userProfileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Usuário não existe"));
         Question question = questionRepository.findById(questionId)
@@ -187,6 +197,7 @@ public class QuestionService {
                 .ifPresent(answer -> publisher.publishEvent(new AnswerUnacceptedEvent(answer.getProfile().getProfileId())));
 
         questionRepository.delete(question);
+        log.info("Pergunta com ID: '{}' excluída com sucesso", questionId);
 
         publisher.publishEvent(new QuestionDeleteEvent(question.getProfile().getProfileId()));
     }

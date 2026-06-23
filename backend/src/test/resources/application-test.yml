@@ -14,3 +14,8 @@ spring:
     type: none
 
 TOKEN_SECRET: chave-falsa-apenas-para-testes-jwt-123456789
+
+logging:
+  level:
+    root: info
+    io.centralweb.backend: info

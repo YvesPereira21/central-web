@@ -8,12 +8,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class PhotoService {
     private final ProfileRepository profileRepository;
@@ -25,6 +27,7 @@ public class PhotoService {
     }
 
     public void uploadAvatar(UUID profileId, MultipartFile file) throws IOException {
+        log.info("Fazendo upload do avatar para o perfil com ID: '{}'", profileId);
         Profile profile = profileRepository.findById(profileId)
                 .orElseThrow(()-> new ObjectNotFoundException("Profile not found"));
 
@@ -47,7 +50,7 @@ public class PhotoService {
                     Path oldPath = Paths.get(oldPhotoUrl);
                     Files.deleteIfExists(oldPath);
                 } catch (IOException e) {
-                    System.err.println("Aviso: Falha ao deletar a foto antiga: " + oldPhotoUrl);
+                    log.warn("Aviso: Falha ao deletar a foto antiga: {}", oldPhotoUrl, e);
                 }
             }
             profile.getPhoto().setPhoto_url(fileUrl);
@@ -59,5 +62,6 @@ public class PhotoService {
         }
 
         profileRepository.save(profile);
+        log.info("Avatar enviado com sucesso para o perfil com ID: '{}'", profileId);
     }
 }

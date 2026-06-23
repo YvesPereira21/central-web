@@ -30,6 +30,8 @@ file:
 
 logging:
   level:
+    root: info
+    io.centralweb.backend: debug
     org:
       springframework:
         security: DEBUG

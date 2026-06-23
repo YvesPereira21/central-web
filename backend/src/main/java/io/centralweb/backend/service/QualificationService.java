@@ -22,9 +22,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDate;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class QualificationService {
     private final QualificationRepository qualificationRepository;
@@ -43,11 +45,13 @@ public class QualificationService {
 
     @Transactional(rollbackOn = Exception.class)
     public QualificationDTO createQualification(QualificationCreateDTO qualification, UUID userProfileId) {
+        log.info("Criando nova qualificação para o perfil de usuário com ID: '{}'", userProfileId);
         Profile profile = profileRepository.findByUser_UserId(userProfileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
 
         boolean dateIsValid = dateIsValid(qualification.startDate(), qualification.endDate());
         if (!dateIsValid) {
+            log.warn("Intervalo de datas inválido fornecido para criação de qualificação: inicio={}, fim={}", qualification.startDate(), qualification.endDate());
             throw new InvalidDateException("Data inválida. Coloque uma data válida");
         }
 
@@ -60,6 +64,7 @@ public class QualificationService {
         newQualification.setProfile(profile);
 
         Qualification qualificationCreated = qualificationRepository.save(newQualification);
+        log.info("Qualificação criada com sucesso com o ID: '{}'", qualificationCreated.getQualificationId());
         publisher.publishEvent(
                 new QualificationCreateEvent(
                         qualificationCreated.getProfile().getProfileId(),
@@ -71,38 +76,45 @@ public class QualificationService {
     }
 
     public Page<QualificationDTO> getAllQualificationsVerified(Pageable pageable) {
+        log.debug("Buscando página {} de qualificações verificadas", pageable.getPageNumber());
         return qualificationRepository
                 .findAllByVerifiedIsTrue(pageable)
                 .map(qualificationMapper::toDTO);
     }
 
     public Page<QualificationDTO> getAllNotVerifiedQualifications(Pageable pageable) {
+        log.debug("Buscando página {} de qualificações não verificadas", pageable.getPageNumber());
         return qualificationRepository
                 .findAllByVerifiedIsFalse(pageable)
                 .map(qualificationMapper::toDTO);
     }
 
     public Page<QualificationDTO> getAllProfileVerifiedQualifications(UUID profileId, Pageable pageable){
+        log.debug("Buscando qualificações verificadas para o perfil com ID: {} página {}", profileId, pageable.getPageNumber());
         return qualificationRepository
                 .findAllByProfile_ProfileIdAndVerifiedIsTrue(profileId, pageable)
                 .map(qualificationMapper::toDTO);
     }
 
     public Page<QualificationDTO> getAllProfileNotVerifiedQualifications(UUID profileId, Pageable pageable){
+        log.debug("Buscando qualificações não verificadas para o perfil com ID: {} página {}", profileId, pageable.getPageNumber());
         return qualificationRepository
                 .findAllByProfile_ProfileIdAndVerifiedIsFalse(profileId, pageable)
                 .map(qualificationMapper::toDTO);
     }
 
     public void markAsVerified(UUID qualificationId) {
+        log.info("Marcando qualificação com ID: '{}' como verificada", qualificationId);
         Qualification qualification = qualificationRepository.findById(qualificationId)
                 .orElseThrow(() -> new ObjectNotFoundException("Currículo não encontrado"));
 
         qualification.setVerified(true);
         qualificationRepository.save(qualification);
+        log.info("Qualificação com ID: '{}' marcada como verificada com sucesso", qualificationId);
     }
 
     public void deleteQualificationById(UUID qualificationId, UUID userProfileId){
+        log.info("Excluindo qualificação com ID: '{}' solicitada pelo perfil de usuário com ID: '{}'", qualificationId, userProfileId);
         User user = userRepository.findById(userProfileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Usuário não existe"));
         Qualification qualification = qualificationRepository.findById(qualificationId)
@@ -114,6 +126,7 @@ public class QualificationService {
         }
 
         qualificationRepository.delete(qualification);
+        log.info("Qualificação com ID: '{}' excluída com sucesso", qualificationId);
 
         publisher.publishEvent(new QualificationDeleteEvent(
                 qualification.getProfile().getProfileId(), qualification.getExperienceLevel())
