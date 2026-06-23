@@ -28,6 +28,7 @@ export class QuestionListComponent implements OnInit {
   @Input() profileId: string | null = null;
   @Input() tags: string[] = [];
   @Input() searchQuery: string | null = null;
+  @Input() onlyAccepted: boolean = false;
   @Input() showPagination: boolean = true;
   @Input() showCreateButton: boolean = true;
 
@@ -59,6 +60,9 @@ export class QuestionListComponent implements OnInit {
 
       this.searchQuery = queryParams.get('search');
 
+      const acceptedParam = queryParams.get('accepted');
+      this.onlyAccepted = acceptedParam === 'true';
+
       this.loadData(0, 10);
     });
   }
@@ -66,6 +70,8 @@ export class QuestionListComponent implements OnInit {
   loadData(page: number, size: number) {
     if (this.profileId) {
       this.loadProfileQuestions(page, size);
+    } else if (this.onlyAccepted) {
+      this.loadQuestionsWithAcceptedAnswers(page, size);
     } else if (this.searchQuery) {
       this.loadQuestionsBySearch(this.searchQuery, page, size);
     } else if (this.tags && this.tags.length > 0) {
@@ -90,6 +96,25 @@ export class QuestionListComponent implements OnInit {
       },
       error: (error) => {
         alert("Não foi possível encontrar todas as perguntas");
+      }
+    });
+  }
+
+  loadQuestionsWithAcceptedAnswers(page: number, size: number) {
+    this.questionService.getQuestionsWithAcceptedAnswers(page, size).subscribe({
+      next: (response) => {
+        this.questions.set(response.content);
+        this.isEmpty.set(response.empty);
+        this.isFirst.set(response.first);
+        this.isLast.set(response.last);
+        this.pageSize.set(response.size);
+        this.currentPage.set(response.number);
+        this.numberOfElements.set(response.numberOfElements)
+        this.totalElements.set(response.totalElements);
+        this.totalPages.set(response.totalPages);
+      },
+      error: (error) => {
+        alert("Não foi possível encontrar as perguntas com respostas aceitas");
       }
     });
   }

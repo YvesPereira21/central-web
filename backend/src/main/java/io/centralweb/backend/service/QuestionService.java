@@ -85,21 +85,21 @@ public class QuestionService {
         return questionMapper.toQuestionDTO(question);
     }
 
-    @Cacheable(value = "questions")
+    @Cacheable(value = "questions", key = "#root.methodName + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
     public Page<QuestionListDTO> getAllPublishedQuestions(Pageable pageable){
         log.debug("Buscando página {} de perguntas publicadas", pageable.getPageNumber());
         return questionRepository.findAllByPublishedIsTrue(pageable)
                 .map(questionMapper::toQuestionListDTO);
     }
 
-    @Cacheable(value = "questions")
+    @Cacheable(value = "questions", key = "#root.methodName + '_' + #keyword + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
     public Page<QuestionListDTO> searchPublishedQuestions(String keyword, Pageable pageable) {
         Specification<Question> spec = GenericSearchSpecification.searchByTitleOrContent(keyword);
                 
         return questionRepository.findAll(spec, pageable).map(questionMapper::toQuestionListDTO);
     }
 
-    @Cacheable(value = "questions")
+    @Cacheable(value = "questions", key = "#root.methodName + '_' + #technologyName + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
     public Page<QuestionListDTO> getAllPublishedQuestionsByTechnologyName(
             String technologyName,
             Pageable pageable
@@ -109,7 +109,7 @@ public class QuestionService {
                 .map(questionMapper::toQuestionListDTO);
     }
 
-    @Cacheable(value = "questions")
+    @Cacheable(value = "questions", key = "#root.methodName + '_' + (#tags != null ? #tags.toString() : 'null') + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
     public Page<QuestionListDTO> getAllPublishedQuestionsByTags(
             List<String> tags,
             Pageable pageable
@@ -122,7 +122,7 @@ public class QuestionService {
                 .map(questionMapper::toQuestionListDTO);
     }
 
-    @Cacheable(value = "questions")
+    @Cacheable(value = "questions", key = "#root.methodName + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
     public Page<QuestionListDTO> getAllPublishedQuestionWithAcceptedAnswer(
             Pageable pageable
     ){

@@ -16,6 +16,7 @@ export class RightBarComponent implements OnInit {
 
   tags = signal<Tag[]>([]);
   selectedTags = signal<string[]>([]);
+  onlyAccepted = signal<boolean>(false);
   isLoading = signal<boolean>(true);
 
   isTagModalOpen = signal<boolean>(false);
@@ -34,9 +35,23 @@ export class RightBarComponent implements OnInit {
       } else {
         this.selectedTags.set([]);
       }
+
+      const acceptedParam = params.get('accepted');
+      this.onlyAccepted.set(acceptedParam === 'true');
     });
 
     this.loadTags();
+  }
+
+  toggleAcceptedFilter() {
+    const newVal = !this.onlyAccepted();
+    this.onlyAccepted.set(newVal);
+
+    this.router.navigate([], {
+      relativeTo: this.activatedRoute,
+      queryParams: { accepted: newVal ? 'true' : null },
+      queryParamsHandling: 'merge'
+    });
   }
 
   loadTags() {
