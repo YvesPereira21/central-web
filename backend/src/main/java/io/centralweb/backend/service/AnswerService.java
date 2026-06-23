@@ -22,6 +22,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.cache.annotation.CacheEvict;
 
 import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDate;
@@ -73,6 +74,7 @@ public class AnswerService {
     }
 
     @Transactional(rollbackOn = Exception.class)
+    @CacheEvict(value = "questions", allEntries = true)
     public void acceptAnswer(UUID answerId, UUID userProfileId) {
         log.info("Aceitando resposta com ID: '{}' solicitada pelo perfil de usuário com ID: '{}'", answerId, userProfileId);
         Answer answer = answerRepository.findById(answerId)
@@ -89,6 +91,8 @@ public class AnswerService {
         }
 
         answer.setAccepted(true);
+        answer.getQuestion().setSolutioned(true);
+        questionRepository.save(answer.getQuestion());
 
         Answer answerAccepted = answerRepository.save(answer);
         log.info("Resposta com ID: '{}' aceita com sucesso", answerId);
@@ -111,6 +115,8 @@ public class AnswerService {
         answerRepository.save(answer);
     }
 
+    @Transactional(rollbackOn = Exception.class)
+    @CacheEvict(value = "questions", allEntries = true)
     public void deleteAnswerById(UUID answerId, UUID userProfileId) {
         log.info("Excluindo resposta com ID: '{}' solicitada pelo perfil de usuário com ID: '{}'", answerId, userProfileId);
         User user = userRepository.findById(userProfileId)
@@ -124,6 +130,8 @@ public class AnswerService {
         }
 
         if(answer.isAccepted()){
+            answer.getQuestion().setSolutioned(false);
+            questionRepository.save(answer.getQuestion());
             publisher.publishEvent(new AnswerUnacceptedEvent(answer.getProfile().getProfileId()));
         }
 

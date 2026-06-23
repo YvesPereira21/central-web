@@ -1,9 +1,10 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, OnDestroy } from '@angular/core';
 import { RouterLink, Router } from "@angular/router";
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { AuthenticationService } from '../../../features/authentications/services/authentication.service';
 import { ProfileService } from '../../../features/profiles/services/profile.service';
 import { environment } from '../../../environments/environment';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-header',
@@ -11,7 +12,7 @@ import { environment } from '../../../environments/environment';
   templateUrl: './header.component.html',
   styleUrl: './header.component.css'
 })
-export class HeaderComponent implements OnInit {
+export class HeaderComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   public authService = inject(AuthenticationService);
   private profileService = inject(ProfileService);
@@ -21,8 +22,16 @@ export class HeaderComponent implements OnInit {
   searchControl = new FormControl('');
   userName = signal<string | null>(null);
   userPhotoUrl = signal<string | null>(null);
+  private profileSubscription?: Subscription;
 
   ngOnInit() {
+    this.loadProfile();
+    this.profileSubscription = this.profileService.profileUpdated$.subscribe(() => {
+      this.loadProfile();
+    });
+  }
+
+  loadProfile() {
     if (this.authService.isAuthenticated() && this.authService.isPerson()) {
       this.profileService.getMyProfile().subscribe({
         next: (profile) => {
@@ -36,6 +45,10 @@ export class HeaderComponent implements OnInit {
         error: () => console.error('Erro ao buscar o nome do usuário para o header')
       });
     }
+  }
+
+  ngOnDestroy() {
+    this.profileSubscription?.unsubscribe();
   }
 
   onSearch() {

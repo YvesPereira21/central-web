@@ -5,6 +5,8 @@ import io.centralweb.backend.model.Photo;
 import io.centralweb.backend.model.Profile;
 import io.centralweb.backend.repository.ProfileRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,6 +28,11 @@ public class PhotoService {
         this.profileRepository = profileRepository;
     }
 
+    @Caching(evict = {
+        @CacheEvict(value = "profiles", allEntries = true),
+        @CacheEvict(value = "articles", allEntries = true),
+        @CacheEvict(value = "questions", allEntries = true)
+    })
     public void uploadAvatar(UUID profileId, MultipartFile file) throws IOException {
         log.info("Fazendo upload do avatar para o perfil com ID: '{}'", profileId);
         Profile profile = profileRepository.findById(profileId)
@@ -41,7 +48,7 @@ public class PhotoService {
 
         Files.copy(file.getInputStream(), filePath);
 
-        String fileUrl = uploadDir + "/" + fileName;
+        String fileUrl = uploadDir.endsWith("/") ? uploadDir + fileName : uploadDir + "/" + fileName;
 
         if (profile.getPhoto() != null) {
             String oldPhotoUrl = profile.getPhoto().getPhoto_url();

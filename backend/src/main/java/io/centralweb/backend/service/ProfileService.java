@@ -76,10 +76,16 @@ public class ProfileService {
         return profileMapper.toProfileUniqueDTO(profile);
     }
 
-    @Caching(put = {
-            @CachePut(value = "profiles", key = "#result.profileId()"),
-            @CachePut(value = "profiles", key = "#result.userId()")
-    })
+    @Caching(
+            put = {
+                    @CachePut(value = "profiles", key = "#result.profileId()"),
+                    @CachePut(value = "profiles", key = "#result.userId()")
+            },
+            evict = {
+                    @CacheEvict(value = "articles", allEntries = true),
+                    @CacheEvict(value = "questions", allEntries = true)
+            }
+    )
     public ProfileDTO updateProfile(UUID profileId, ProfileUpdateDTO profileUpdated, UUID userProfileId) {
         log.info("Atualizando perfil com ID: '{}' solicitado pelo perfil de usuário com ID: '{}'", profileId, userProfileId);
         Profile profile = profileRepository.findById(profileId)
@@ -112,7 +118,11 @@ public class ProfileService {
     }
 
     @Transactional(rollbackOn = Exception.class)
-    @CacheEvict(value = "profiles", allEntries = true)
+    @Caching(evict = {
+            @CacheEvict(value = "profiles", allEntries = true),
+            @CacheEvict(value = "articles", allEntries = true),
+            @CacheEvict(value = "questions", allEntries = true)
+    })
     public void addPoints(UUID profileId, Long amountPoints) {
         log.info("Adicionando {} pontos ao perfil com ID: '{}'", amountPoints, profileId);
         Profile profile = profileRepository.findById(profileId)
