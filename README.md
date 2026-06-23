@@ -2,12 +2,10 @@
 
 **Central Web** é um fórum colaborativo de compartilhamento de conhecimento e Q&A (semelhante ao StackOverflow e Medium). A plataforma permite que desenvolvedores criem perfis, façam perguntas, publiquem artigos técnicos, respondam a dúvidas de outros membros, façam comentários, curtam publicações e organizem seus conteúdos favoritos em listas personalizadas.
 
----
 
 ## Suporte a Markdown
 A aplicação conta com suporte nativo a **Markdown** no frontend (utilizando a biblioteca `ngx-markdown`). Isso permite que os desenvolvedores formatem seus artigos, perguntas e respostas com blocos de código (com destaque de sintaxe), títulos, listas, tabelas, formatações de texto (negrito, itálico) e links, facilitando a escrita e a leitura de conteúdos técnicos.
 
----
 
 ## Sistema de Reputação e Nível de Experiência
 
@@ -37,7 +35,6 @@ O nível de experiência exibido no perfil do usuário é atualizado em tempo re
 *   **Domador de Legado**: `2500` a `4999 pontos`
 *   **Compilador Humano**: `>= 5000 pontos`
 
----
 
 ## Permissões e Autorizações (Roles)
 
@@ -52,7 +49,6 @@ O sistema possui dois perfis principais de acesso (`UserRole`):
     *   Possui todas as permissões de leitura e criação.
     *   **Superpoderes Administrativos**: Pode excluir qualquer recurso da plataforma (perguntas, artigos, qualificações, comentários, perfis), independente de quem seja o proprietário, para fins de moderação da comunidade.
 
----
 
 ## Requisitos e Variáveis de Ambiente
 
@@ -99,7 +95,6 @@ Se você estiver rodando a aplicação pela IDE IntelliJ, pode definir as variá
 5. Clique em **Apply** (Aplicar) e em **OK**.
 6. Rode a aplicação pelo botão de Play do IntelliJ.
 
----
 
 ### 2. Configurações do Frontend (`environment.ts`)
 
@@ -117,7 +112,6 @@ No Angular, por questões de segurança e boas práticas de controle de versão,
    };
    ```
 
----
 
 ## Rotas do Aplicativo
 
@@ -207,7 +201,6 @@ No Angular, por questões de segurança e boas práticas de controle de versão,
 *   `GET /qualifications/{profileId}/verified` : Qualificações verificadas de um perfil.
 *   `DELETE /qualifications/{qualificationId}` : Remove uma qualificação.
 
----
 
 ## Documentação da API (Swagger / OpenAPI)
 
@@ -221,7 +214,6 @@ A aplicação possui integração com o **Swagger UI** (utilizando `springdoc-op
 > 2. Clique no botão verde **Authorize** no topo direito da página do Swagger.
 > 3. Cole o token gerado e clique em **Authorize**.
 
----
 
 ## Como Executar a Aplicação Localmente
 
