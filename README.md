@@ -241,3 +241,18 @@ A aplicação possui integração com o **Swagger UI** (utilizando `springdoc-op
     npm start
     ```
 4.  Abra o navegador em `http://localhost:4200`.
+
+
+## Suíte de testes
+
+O projeto possui uma cobertura de testes automatizados no backend, garantindo a estabilidade da aplicação em manutenções e refatorações.
+
+Os testes do backend cobrem:
+*   **Testes de Integração de API (Controllers)**: Validam o comportamento e as restrições de acesso de todos os endpoints REST, segurança JWT e tratamento de erros do servidor.
+*   **Testes de Serviços (Services)**: Verificam a lógica de negócios e validações (curtidas, exclusões, relacionamentos).
+*   **Testes de Eventos (Listeners)**: Certificam que os eventos assíncronos de transação (ex: atualizar a pontuação de reputação do perfil do desenvolvedor após cadastrar qualificações ou criar artigos/perguntas) funcionam corretamente.
+
+Para rodar os testes do backend, navegue até a pasta `backend/` e execute:
+```bash
+./mvnw test
+```
