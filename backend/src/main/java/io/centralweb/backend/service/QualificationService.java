@@ -103,6 +103,7 @@ public class QualificationService {
                 .map(qualificationMapper::toDTO);
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public void markAsVerified(UUID qualificationId) {
         log.info("Marcando qualificação com ID: '{}' como verificada", qualificationId);
         Qualification qualification = qualificationRepository.findById(qualificationId)
@@ -111,8 +112,16 @@ public class QualificationService {
         qualification.setVerified(true);
         qualificationRepository.save(qualification);
         log.info("Qualificação com ID: '{}' marcada como verificada com sucesso", qualificationId);
+
+        Profile profile = qualification.getProfile();
+        if (!profile.isProfessional()) {
+            profile.setProfessional(true);
+            profileRepository.save(profile);
+            log.info("Perfil com ID: '{}' classificado como profissional devido à qualificação verificada", profile.getProfileId());
+        }
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public void deleteQualificationById(UUID qualificationId, UUID userProfileId){
         log.info("Excluindo qualificação com ID: '{}' solicitada pelo perfil de usuário com ID: '{}'", qualificationId, userProfileId);
         User user = userRepository.findById(userProfileId)
@@ -125,11 +134,24 @@ public class QualificationService {
             throw new ProfileIsNotTheOwnerException("Você não tem permissão para isso");
         }
 
+        Profile profile = qualification.getProfile();
+        boolean wasVerified = qualification.isVerified();
+
         qualificationRepository.delete(qualification);
         log.info("Qualificação com ID: '{}' excluída com sucesso", qualificationId);
 
+        if (wasVerified) {
+            boolean hasOtherVerified = qualificationRepository
+                    .existsByProfile_ProfileIdAndVerifiedIsTrueAndQualificationIdNot(profile.getProfileId(), qualificationId);
+            if (!hasOtherVerified) {
+                profile.setProfessional(false);
+                profileRepository.save(profile);
+                log.info("Perfil com ID: '{}' desclassificado de profissional pois não possui mais nenhuma qualificação verificada", profile.getProfileId());
+            }
+        }
+
         publisher.publishEvent(new QualificationDeleteEvent(
-                qualification.getProfile().getProfileId(), qualification.getExperienceLevel())
+                profile.getProfileId(), qualification.getExperienceLevel())
         );
     }
 

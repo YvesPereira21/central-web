@@ -35,6 +35,19 @@ O nível de experiência exibido no perfil do usuário é atualizado em tempo re
 *   **Domador de Legado**: `2500` a `4999 pontos`
 *   **Compilador Humano**: `>= 5000 pontos`
 
+### 3. Selo de Perfil Profissional
+
+Quando um usuário tem pelo menos uma de suas qualificações (experiências profissionais) aprovada por um administrador, o sistema automaticamente classifica seu perfil como **Perfil Profissional** (`professional = true`).
+
+Com essa classificação:
+*   Um selo de destaque **"Profissional"** (badge verde esmeralda) é exibido no topo de sua página de perfil.
+*   Um ícone de verificação verde (checkmark com tooltip) é exibido ao lado de seu nome nas seguintes exibições:
+    *   Listagens e visualizações detalhadas de perguntas.
+    *   Listagens e visualizações detalhadas de artigos.
+    *   Listagem de respostas a perguntas.
+
+Se o perfil deixar de ter qualquer qualificação aprovada (por exemplo, caso todas as qualificações aprovadas sejam excluídas), o status de profissional é automaticamente revogado (`professional = false`).
+
 
 ## Permissões e Autorizações (Roles)
 

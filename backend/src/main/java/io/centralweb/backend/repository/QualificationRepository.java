@@ -13,4 +13,5 @@ public interface QualificationRepository extends JpaRepository<Qualification, UU
     Page<Qualification> findAllByVerifiedIsFalse(Pageable pageable);
     Page<Qualification> findAllByProfile_ProfileIdAndVerifiedIsTrue(UUID profileProfileId, Pageable pageable);
     Page<Qualification> findAllByProfile_ProfileIdAndVerifiedIsFalse(UUID profileProfileId, Pageable pageable);
+    boolean existsByProfile_ProfileIdAndVerifiedIsTrueAndQualificationIdNot(UUID profileId, UUID qualificationId);
 }
