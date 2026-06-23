@@ -36,7 +36,8 @@ logging:
       springframework:
         security: DEBUG
 
-TOKEN_SECRET: minha-chave-secreta-padrao-desenvolvimento-12345678
+TOKEN_SECRET: ${TOKEN_SECRET:minha-chave-secreta-padrao-desenvolvimento-12345678}
+
 api:
   security:
     refresh:
