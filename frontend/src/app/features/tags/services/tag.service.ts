@@ -1,9 +1,9 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Tag, TagUpdate } from '../../models/tag';
+import { Tag, TagUpdate } from '../../../core/models/tag';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Page } from '../../models/page';
+import { Page } from '../../../core/models/page';
 
 @Injectable({
   providedIn: 'root'

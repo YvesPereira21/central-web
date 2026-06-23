@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Profile, ProfileCreate, ProfileUpdate } from '../../models/profile';
+import { Profile, ProfileCreate, ProfileUpdate } from '../../../core/models/profile';
 import { environment } from '../../../environments/environment';
 
 @Injectable({

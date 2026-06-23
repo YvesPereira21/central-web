@@ -1,9 +1,9 @@
 import { inject, Injectable } from '@angular/core';
-import { Question, QuestionCreate, QuestionUpdate } from '../../models/question';
+import { Question, QuestionCreate, QuestionUpdate } from '../../../core/models/question';
 import { Observable } from 'rxjs';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { Page } from '../../models/page';
+import { Page } from '../../../core/models/page';
 
 @Injectable({
   providedIn: 'root'

@@ -2,7 +2,7 @@ package io.centralweb.backend.controller;
 
 import io.centralweb.backend.dto.tag.TagDTO;
 import io.centralweb.backend.dto.tag.TagUpdateDTO;
-import io.centralweb.backend.enums.UserRole;
+import io.centralweb.backend.model.enums.UserRole;
 import io.centralweb.backend.model.Profile;
 import io.centralweb.backend.model.Tag;
 import io.centralweb.backend.model.User;

@@ -2,10 +2,10 @@ package io.centralweb.backend.service;
 
 import io.centralweb.backend.dto.collection.CollectionCreateDTO;
 import io.centralweb.backend.dto.collection.CollectionDTO;
-import io.centralweb.backend.enums.UserRole;
+import io.centralweb.backend.model.enums.UserRole;
 import io.centralweb.backend.exception.ObjectNotFoundException;
 import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
-import io.centralweb.backend.mapper.CollectionMapper;
+import io.centralweb.backend.dto.mapper.CollectionMapper;
 import io.centralweb.backend.model.*;
 import io.centralweb.backend.repository.*;
 import jakarta.transaction.Transactional;
@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

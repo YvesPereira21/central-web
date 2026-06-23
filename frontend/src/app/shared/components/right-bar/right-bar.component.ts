@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TagService } from '../../../features/tags/services/tag.service';
-import { Tag } from '../../../features/models/tag';
+import { Tag } from '../../../core/models/tag';
 
 @Component({
   selector: 'app-right-bar',

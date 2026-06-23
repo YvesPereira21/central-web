@@ -1,8 +1,8 @@
 package io.centralweb.backend.controller;
 
 import io.centralweb.backend.dto.qualification.QualificationCreateDTO;
-import io.centralweb.backend.enums.ExperienceLevel;
-import io.centralweb.backend.enums.UserRole;
+import io.centralweb.backend.model.enums.ExperienceLevel;
+import io.centralweb.backend.model.enums.UserRole;
 import io.centralweb.backend.model.Profile;
 import io.centralweb.backend.model.Qualification;
 import io.centralweb.backend.model.User;

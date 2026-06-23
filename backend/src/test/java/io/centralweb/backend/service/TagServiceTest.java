@@ -4,7 +4,7 @@ import io.centralweb.backend.dto.tag.TagDTO;
 import io.centralweb.backend.dto.tag.TagUpdateDTO;
 import io.centralweb.backend.exception.ObjectAlreadyExistsException;
 import io.centralweb.backend.exception.ObjectNotFoundException;
-import io.centralweb.backend.mapper.TagMapper;
+import io.centralweb.backend.dto.mapper.TagMapper;
 import io.centralweb.backend.model.Tag;
 import io.centralweb.backend.repository.TagRepository;
 import org.junit.jupiter.api.BeforeEach;

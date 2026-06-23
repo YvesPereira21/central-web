@@ -1,6 +1,6 @@
 package io.centralweb.backend.dto.qualification;
 
-import io.centralweb.backend.enums.ExperienceLevel;
+import io.centralweb.backend.model.enums.ExperienceLevel;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 

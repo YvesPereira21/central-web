@@ -1,7 +1,7 @@
 package io.centralweb.backend.dto.profile;
 
 import io.centralweb.backend.dto.user.UserDTO;
-import io.centralweb.backend.enums.ProfileType;
+import io.centralweb.backend.model.enums.ProfileType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

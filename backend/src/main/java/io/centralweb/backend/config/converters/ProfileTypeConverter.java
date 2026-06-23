@@ -1,6 +1,6 @@
 package io.centralweb.backend.config.converters;
 
-import io.centralweb.backend.enums.ProfileType;
+import io.centralweb.backend.model.enums.ProfileType;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 

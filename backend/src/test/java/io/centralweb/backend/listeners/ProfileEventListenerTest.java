@@ -1,7 +1,8 @@
 package io.centralweb.backend.listeners;
 
-import io.centralweb.backend.enums.ExperienceLevel;
-import io.centralweb.backend.events.*;
+import io.centralweb.backend.model.enums.ExperienceLevel;
+import io.centralweb.backend.event.*;
+import io.centralweb.backend.event.listeners.ProfileEventListener;
 import io.centralweb.backend.service.ProfileService;
 import io.centralweb.backend.service.QualificationService;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,6 +1,6 @@
 package io.centralweb.backend.controller;
 
-import io.centralweb.backend.enums.UserRole;
+import io.centralweb.backend.model.enums.UserRole;
 import io.centralweb.backend.model.Profile;
 import io.centralweb.backend.model.User;
 import io.centralweb.backend.repository.ProfileRepository;

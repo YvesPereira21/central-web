@@ -1,19 +1,19 @@
 import { Routes } from '@angular/router';
-import { ArticleCreateComponent } from './shared/components/article-create/article-create.component';
-import { QuestionCreateComponent } from './shared/components/question-create/question-create.component';
-import { ProfileCreateComponent } from './shared/components/profile-create/profile-create.component';
-import { ProfileEditComponent } from './shared/components/profile-edit/profile-edit.component';
-import { ArticleListComponent } from './shared/components/article-list/article-list.component';
-import { QuestionListComponent } from './shared/components/question-list/question-list.component';
-import { ArticleDetailComponent } from './shared/components/article-detail/article-detail.component';
-import { QuestionDetailComponent } from './shared/components/question-detail/question-detail.component';
-import { ProfileDetailComponent } from './shared/components/profile-detail/profile-detail.component';
-import { QualificationCreateComponent } from './shared/components/qualification-create/qualification-create.component';
-import { HomePageComponent } from './shared/components/home-page/home-page.component';
-import { LoginComponent } from './shared/components/login/login.component';
+import { ArticleCreateComponent } from './features/articles/components/article-create/article-create.component';
+import { QuestionCreateComponent } from './features/questions/components/question-create/question-create.component';
+import { ProfileCreateComponent } from './features/profiles/components/profile-create/profile-create.component';
+import { ProfileEditComponent } from './features/profiles/components/profile-edit/profile-edit.component';
+import { ArticleListComponent } from './features/articles/components/article-list/article-list.component';
+import { QuestionListComponent } from './features/questions/components/question-list/question-list.component';
+import { ArticleDetailComponent } from './features/articles/components/article-detail/article-detail.component';
+import { QuestionDetailComponent } from './features/questions/components/question-detail/question-detail.component';
+import { ProfileDetailComponent } from './features/profiles/components/profile-detail/profile-detail.component';
+import { QualificationCreateComponent } from './features/qualifications/components/qualification-create/qualification-create.component';
+import { HomePageComponent } from './features/home-page/components/home-page/home-page.component';
+import { LoginComponent } from './features/authentications/components/login/login.component';
 import { roleGuard } from './core/guards/role.guard';
-import { CollectionListComponent } from './shared/components/collection-list/collection-list.component';
-import { CollectionDetailComponent } from './shared/components/collection-detail/collection-detail.component';
+import { CollectionListComponent } from './features/collections/components/collection-list/collection-list.component';
+import { CollectionDetailComponent } from './features/collections/components/collection-detail/collection-detail.component';
 
 export const routes: Routes = [
     { path: '', component: HomePageComponent, canActivate: [roleGuard] },

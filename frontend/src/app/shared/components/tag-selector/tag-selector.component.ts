@@ -1,7 +1,7 @@
 import { Component, inject, Input, OnInit, signal, computed } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { TagService } from '../../../features/tags/services/tag.service';
-import { Tag } from '../../../features/models/tag';
+import { Tag } from '../../../core/models/tag';
 
 @Component({
   selector: 'app-tag-selector',

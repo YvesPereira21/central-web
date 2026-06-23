@@ -1,6 +1,6 @@
 package io.centralweb.backend.config.converters;
 
-import io.centralweb.backend.enums.ExperienceLevel;
+import io.centralweb.backend.model.enums.ExperienceLevel;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 

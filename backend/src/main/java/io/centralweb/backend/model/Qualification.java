@@ -1,7 +1,7 @@
 package io.centralweb.backend.model;
 
 
-import io.centralweb.backend.enums.ExperienceLevel;
+import io.centralweb.backend.model.enums.ExperienceLevel;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;

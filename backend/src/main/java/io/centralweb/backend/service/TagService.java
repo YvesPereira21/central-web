@@ -4,7 +4,7 @@ import io.centralweb.backend.dto.tag.TagDTO;
 import io.centralweb.backend.dto.tag.TagUpdateDTO;
 import io.centralweb.backend.exception.ObjectAlreadyExistsException;
 import io.centralweb.backend.exception.ObjectNotFoundException;
-import io.centralweb.backend.mapper.TagMapper;
+import io.centralweb.backend.dto.mapper.TagMapper;
 import io.centralweb.backend.model.Tag;
 import io.centralweb.backend.repository.TagRepository;
 import jakarta.transaction.Transactional;
@@ -13,8 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
-import java.util.ArrayList;
-import java.util.List;
+
 import java.util.Set;
 import java.util.UUID;
 

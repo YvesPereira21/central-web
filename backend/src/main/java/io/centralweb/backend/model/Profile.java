@@ -1,6 +1,6 @@
 package io.centralweb.backend.model;
 
-import io.centralweb.backend.enums.ProfileType;
+import io.centralweb.backend.model.enums.ProfileType;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;

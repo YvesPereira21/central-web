@@ -2,13 +2,13 @@ package io.centralweb.backend.service;
 
 import io.centralweb.backend.dto.answer.AnswerCreateDTO;
 import io.centralweb.backend.dto.answer.AnswerDTO;
-import io.centralweb.backend.enums.UserRole;
-import io.centralweb.backend.events.AnswerAcceptedEvent;
-import io.centralweb.backend.events.AnswerUnacceptedEvent;
+import io.centralweb.backend.model.enums.UserRole;
+import io.centralweb.backend.event.AnswerAcceptedEvent;
+import io.centralweb.backend.event.AnswerUnacceptedEvent;
 import io.centralweb.backend.exception.QuestionHaveAnswerAlreadyAcceptedException;
 import io.centralweb.backend.exception.ObjectNotFoundException;
 import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
-import io.centralweb.backend.mapper.AnswerMapper;
+import io.centralweb.backend.dto.mapper.AnswerMapper;
 import io.centralweb.backend.model.Answer;
 import io.centralweb.backend.model.Profile;
 import io.centralweb.backend.model.Question;

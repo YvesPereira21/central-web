@@ -2,7 +2,7 @@ package io.centralweb.backend.controller;
 
 import io.centralweb.backend.dto.article.ArticleCreateDTO;
 import io.centralweb.backend.dto.article.ArticleUpdateDTO;
-import io.centralweb.backend.enums.UserRole;
+import io.centralweb.backend.model.enums.UserRole;
 import io.centralweb.backend.model.Article;
 import io.centralweb.backend.model.Profile;
 import io.centralweb.backend.model.Tag;
@@ -24,7 +24,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 

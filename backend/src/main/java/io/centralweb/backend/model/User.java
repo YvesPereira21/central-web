@@ -1,6 +1,6 @@
 package io.centralweb.backend.model;
 
-import io.centralweb.backend.enums.UserRole;
+import io.centralweb.backend.model.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;

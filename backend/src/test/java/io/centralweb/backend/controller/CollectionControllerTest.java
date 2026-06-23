@@ -1,7 +1,7 @@
 package io.centralweb.backend.controller;
 
 import io.centralweb.backend.dto.collection.CollectionCreateDTO;
-import io.centralweb.backend.enums.UserRole;
+import io.centralweb.backend.model.enums.UserRole;
 import io.centralweb.backend.model.*;
 import io.centralweb.backend.repository.*;
 import io.centralweb.backend.security.TokenService;

@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Collection, CollectionCreate } from '../../models/collection';
+import { Collection, CollectionCreate } from '../../../core/models/collection';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Page } from '../../models/page';
+import { Page } from '../../../core/models/page';
 import { environment } from '../../../environments/environment';
 
 @Injectable({

@@ -2,7 +2,7 @@ package io.centralweb.backend.controller;
 
 import io.centralweb.backend.dto.comment.CommentCreateDTO;
 import io.centralweb.backend.dto.comment.CommentUpdateDTO;
-import io.centralweb.backend.enums.UserRole;
+import io.centralweb.backend.model.enums.UserRole;
 import io.centralweb.backend.model.Answer;
 import io.centralweb.backend.model.Comment;
 import io.centralweb.backend.model.Profile;
