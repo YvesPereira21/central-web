@@ -1,531 +1,413 @@
 package io.centralweb.backend.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.centralweb.backend.dto.profile.ProfileSimpleDTO;
 import io.centralweb.backend.dto.question.QuestionCreateDTO;
+import io.centralweb.backend.dto.question.QuestionDTO;
+import io.centralweb.backend.dto.question.QuestionListDTO;
 import io.centralweb.backend.dto.question.QuestionUpdateDTO;
+import io.centralweb.backend.dto.tag.TagDTO;
+import io.centralweb.backend.exception.ObjectNotFoundException;
+import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
+import io.centralweb.backend.model.User;
 import io.centralweb.backend.model.enums.UserRole;
-import io.centralweb.backend.model.*;
-import io.centralweb.backend.repository.*;
+import io.centralweb.backend.repository.UserRepository;
+import io.centralweb.backend.security.OAuth2SuccessHandler;
+import io.centralweb.backend.security.SecurityFilter;
 import io.centralweb.backend.security.TokenService;
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
+import io.centralweb.backend.service.QuestionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpStatus;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.jdbc.Sql;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static io.restassured.RestAssured.*;
-import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-@Sql(scripts = "/clean-db.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@WebMvcTest(QuestionController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class QuestionControllerTest {
-    @LocalServerPort
-    private int port;
+
     @Autowired
+    private MockMvc mockMvc;
+
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule());
+
+    @MockitoBean
+    private QuestionService questionService;
+
+    @MockitoBean
     private TokenService tokenService;
-    @Autowired
+
+    @MockitoBean
+    private SecurityFilter securityFilter;
+
+    @MockitoBean
+    private OAuth2SuccessHandler oAuth2SuccessHandler;
+
+    @MockitoBean
     private UserRepository userRepository;
-    @Autowired
-    private ProfileRepository profileRepository;
-    @Autowired
-    private TagRepository tagRepository;
-    @Autowired
-    private QuestionRepository questionRepository;
-    @Autowired
-    private AnswerRepository answerRepository;
-    private String tokenAdmin;
-    private String tokenPerson1;
-    private String tokenPerson2;
-    private UUID question1id;
+
+    @MockitoBean
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
+    @MockitoBean
+    private org.springframework.cache.CacheManager cacheManager;
+
+    private UUID userId;
+    private UUID questionId;
+    private UUID profileId;
+
+    private QuestionDTO questionDTO;
+    private QuestionListDTO questionListDTO;
+    private QuestionCreateDTO questionCreateDTO;
+    private QuestionUpdateDTO questionUpdateDTO;
 
     @BeforeEach
-    public void setUp() {
-        RestAssured.port = port;
-        RestAssured.baseURI = "http://localhost";
+    void setUp() {
+        userId = UUID.randomUUID();
+        questionId = UUID.randomUUID();
+        profileId = UUID.randomUUID();
 
-        answerRepository.deleteAll();
-        questionRepository.deleteAll();
-        tagRepository.deleteAll();
-        profileRepository.deleteAll();
-        userRepository.deleteAll();
+        User user = new User(userId, "password", "user@test.com");
+        user.setRole(UserRole.PERSON);
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
 
-        User user1 = new User();
-        user1.setEmail("testcentraldev@gmail.com");
-        user1.setPassword("password");
-        user1.setRole(UserRole.ADMIN);
-        userRepository.save(user1);
+        ProfileSimpleDTO profileSimpleDTO = new ProfileSimpleDTO(
+                profileId,
+                userId,
+                "Bob Johnson",
+                "Mid Level",
+                true,
+                "http://example.com/bob.jpg"
+        );
 
-        User user2 = new User();
-        user2.setEmail("testcentralweb@gmail.com");
-        user2.setPassword("password");
-        user2.setRole(UserRole.PERSON);
+        TagDTO tagDTO = new TagDTO("Java", "#FF0000");
 
-        User user3 = new User();
-        user3.setEmail("testcentraljunior@gmail.com");
-        user3.setPassword("password");
-        user3.setRole(UserRole.PERSON);
+        questionDTO = new QuestionDTO(
+                questionId,
+                "Como funciona o Spring Boot?",
+                "Dúvida detalhada sobre a inicialização do Spring Boot.",
+                true,
+                false,
+                LocalDate.of(2026, 8, 13),
+                profileSimpleDTO,
+                Set.of(tagDTO),
+                Collections.emptySet(),
+                15L,
+                true,
+                false
+        );
 
-        Profile profile1 = new Profile();
-        profile1.setName("Usuário Teste");
-        profile1.setBio("Sou um programador de testes");
-        profile1.setUser(user2);
-        profileRepository.save(profile1);
+        questionListDTO = new QuestionListDTO(
+                questionId,
+                "Como funciona o Spring Boot?",
+                "Dúvida detalhada sobre a inicialização do Spring Boot.",
+                true,
+                false,
+                LocalDate.of(2026, 8, 13),
+                profileSimpleDTO,
+                Set.of(tagDTO),
+                15L,
+                true,
+                false
+        );
 
-        Profile profile2 = new Profile();
-        profile2.setName("Usuário Teste");
-        profile2.setBio("Sou um programador de QA");
-        profile2.setUser(user3);
-        profileRepository.save(profile2);
+        questionCreateDTO = new QuestionCreateDTO(
+                "Como funciona o Spring Boot?",
+                "Dúvida detalhada sobre a inicialização do Spring Boot.",
+                Set.of("Java")
+        );
 
-        Tag tagJava = new Tag();
-        tagJava.setTechnologyName("Java");
-        tagJava.setColor("#ED8B00");
-        tagRepository.save(tagJava);
-
-        Tag tagSpring = new Tag();
-        tagSpring.setTechnologyName("Spring");
-        tagSpring.setColor("#6DB33F");
-        tagRepository.save(tagSpring);
-
-        Tag tagPython = new Tag();
-        tagPython.setTechnologyName("Python");
-        tagPython.setColor("#6DB33A");
-        tagRepository.save(tagPython);
-
-        Question question1 = new Question();
-        question1.setTitle("Diferenças entre Python x Java");
-        question1.setContent("Content 1");
-        question1.setCreatedAt(LocalDate.now());
-        question1.setPublished(true);
-        question1.setTags(Set.of(tagJava, tagPython));
-        question1.setProfile(profile1);
-        Question questionSaved1 = questionRepository.save(question1);
-        question1id = questionSaved1.getQuestionId();
-
-        Question question2 = new Question();
-        question2.setTitle("Como implementar index no Spring");
-        question2.setContent("Content 2");
-        question2.setCreatedAt(LocalDate.now());
-        question2.setPublished(true);
-        question2.setTags(Set.of(tagSpring));
-        question2.setProfile(profile2);
-        questionRepository.save(question2);
-
-        Question question3 = new Question();
-        question3.setTitle("Como implementar redis no Python");
-        question3.setContent("Content 2");
-        question3.setCreatedAt(LocalDate.now());
-        question3.setPublished(true);
-        question3.setTags(Set.of(tagPython));
-        question3.setProfile(profile2);
-        questionRepository.save(question3);
-
-        Answer answer1 = new Answer();
-        answer1.setContent("Content Response 1");
-        answer1.setCreatedAt(LocalDate.now());
-        answer1.setQuestion(question1);
-        answer1.setProfile(profile1);
-        answerRepository.save(answer1);
-
-        Answer answer2 = new Answer();
-        answer2.setContent("Content Response 2");
-        answer2.setCreatedAt(LocalDate.now());
-        answer2.setAccepted(true);
-        answer2.setQuestion(question1);
-        answer2.setProfile(profile2);
-        answerRepository.save(answer2);
-
-        tokenAdmin = tokenService.generateToken(user1);
-        tokenPerson1 = tokenService.generateToken(user2);
-        tokenPerson2 = tokenService.generateToken(user3);
+        questionUpdateDTO = new QuestionUpdateDTO(
+                "Como funciona o Spring Boot 3?",
+                "Conteúdo atualizado da dúvida.",
+                Set.of("Java", "Spring")
+        );
     }
 
     // -----------------------HAPPY PATH------------------------------
 
     @Test
-    public void shouldCreateQuestionWhenUserIsPerson(){
-        QuestionCreateDTO question = new QuestionCreateDTO(
-                "Teste de integração",
-                "Conteúdo extenso do artigo para passar na validação...",
-                Set.of("Java", "Spring")
-        );
+    void shouldCreateQuestionAndReturn201Created() throws Exception {
+        when(questionService.createQuestion(any(QuestionCreateDTO.class), eq(userId))).thenReturn(questionDTO);
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-                .body(question)
-        .when()
-                .post("/questions")
-        .then()
-                .statusCode(HttpStatus.CREATED.value())
-                .body("title", equalTo("Teste de integração"))
-                .body("content", equalTo("Conteúdo extenso do artigo para passar na validação..."))
-                .body("tags", hasSize(2))
-                .body("tags.technologyName", hasItems("Java", "Spring"));
+        mockMvc.perform(post("/questions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(questionCreateDTO)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.questionId").value(questionDTO.questionId().toString()))
+                .andExpect(jsonPath("$.title").value(questionDTO.title()))
+                .andExpect(jsonPath("$.content").value(questionDTO.content()))
+                .andExpect(jsonPath("$.published").value(questionDTO.published()))
+                .andExpect(jsonPath("$.solutioned").value(questionDTO.solutioned()))
+                .andExpect(jsonPath("$.createdAt").value(questionDTO.createdAt().toString()))
+                .andExpect(jsonPath("$.profile.profileId").value(questionDTO.profile().profileId().toString()))
+                .andExpect(jsonPath("$.tags[0].technologyName").value("Java"))
+                .andExpect(jsonPath("$.questionTotalLikes").value(questionDTO.questionTotalLikes()))
+                .andExpect(jsonPath("$.liked").value(questionDTO.liked()))
+                .andExpect(jsonPath("$.saved").value(questionDTO.saved()));
     }
 
     @Test
-    public void shouldReturnQuestion(){
-        UUID questionId = question1id;
+    void shouldGetQuestionAndReturn200Ok() throws Exception {
+        when(questionService.getQuestionById(eq(questionId))).thenReturn(questionDTO);
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-        .when()
-                .get("/questions/" + questionId)
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("title", equalTo("Diferenças entre Python x Java"))
-                .body("content", equalTo("Content 1"))
-                .body("tags", hasSize(2))
-                .body("tags.technologyName", hasItems("Java", "Python"));
+        mockMvc.perform(get("/questions/{questionId}", questionId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.questionId").value(questionDTO.questionId().toString()))
+                .andExpect(jsonPath("$.title").value(questionDTO.title()))
+                .andExpect(jsonPath("$.content").value(questionDTO.content()))
+                .andExpect(jsonPath("$.published").value(questionDTO.published()))
+                .andExpect(jsonPath("$.solutioned").value(questionDTO.solutioned()))
+                .andExpect(jsonPath("$.createdAt").value(questionDTO.createdAt().toString()))
+                .andExpect(jsonPath("$.profile.profileId").value(questionDTO.profile().profileId().toString()))
+                .andExpect(jsonPath("$.tags[0].technologyName").value("Java"))
+                .andExpect(jsonPath("$.questionTotalLikes").value(questionDTO.questionTotalLikes()))
+                .andExpect(jsonPath("$.liked").value(questionDTO.liked()))
+                .andExpect(jsonPath("$.saved").value(questionDTO.saved()));
     }
 
     @Test
-    public void shouldReturnQuestionsPublished(){
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-        .when()
-                .get("/questions")
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("numberOfElements", is(3));
+    void shouldGetAllPublishedQuestionsAndReturn200Ok() throws Exception {
+        Page<QuestionListDTO> page = new PageImpl<>(List.of(questionListDTO));
+        when(questionService.getAllPublishedQuestions(any(Pageable.class))).thenReturn(page);
+
+        mockMvc.perform(get("/questions")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].questionId").value(questionListDTO.questionId().toString()))
+                .andExpect(jsonPath("$.content[0].title").value(questionListDTO.title()))
+                .andExpect(jsonPath("$.content[0].content").value(questionListDTO.content()))
+                .andExpect(jsonPath("$.content[0].published").value(questionListDTO.published()))
+                .andExpect(jsonPath("$.content[0].solutioned").value(questionListDTO.solutioned()))
+                .andExpect(jsonPath("$.content[0].createdAt").value(questionListDTO.createdAt().toString()))
+                .andExpect(jsonPath("$.content[0].profile.profileId").value(questionListDTO.profile().profileId().toString()))
+                .andExpect(jsonPath("$.content[0].tags[0].technologyName").value("Java"))
+                .andExpect(jsonPath("$.content[0].questionTotalLikes").value(questionListDTO.questionTotalLikes()))
+                .andExpect(jsonPath("$.content[0].liked").value(questionListDTO.liked()))
+                .andExpect(jsonPath("$.content[0].saved").value(questionListDTO.saved()));
     }
 
     @Test
-    public void shouldReturnPublishedQuestionsWithGivenTitle(){
-        String title = "implementar index";
+    void shouldGetProfileQuestionsAndReturn200Ok() throws Exception {
+        Page<QuestionListDTO> page = new PageImpl<>(List.of(questionListDTO));
+        when(questionService.getAllQuestionsByProfile(eq(profileId), eq(userId), any(Pageable.class))).thenReturn(page);
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-        .when()
-                .get("/questions/search?query=" + title)
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("numberOfElements", is(1));
+        mockMvc.perform(get("/questions/{profileId}/profile", profileId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].questionId").value(questionListDTO.questionId().toString()));
     }
 
     @Test
-    public void shouldReturnAllQuestionsPublishedWithGivenTechnologyName(){
-        String technologyName = "Python";
+    void shouldSearchPublishedQuestionsAndReturn200Ok() throws Exception {
+        Page<QuestionListDTO> page = new PageImpl<>(List.of(questionListDTO));
+        when(questionService.searchPublishedQuestions(eq("Spring"), any(Pageable.class))).thenReturn(page);
 
-        given()
-                .header("Authorization", "Bearer " + tokenAdmin)
-                .contentType(ContentType.JSON)
-        .when()
-                .get("/questions/" + technologyName + "/tag")
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("numberOfElements", is(2));
+        mockMvc.perform(get("/questions/search")
+                        .param("query", "Spring")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].questionId").value(questionListDTO.questionId().toString()));
     }
 
     @Test
-    public void shouldReturnOnlyQuestionsWithAcceptedAnswers(){
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-        .when()
-                .get("/questions/accepteds-answers")
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("numberOfElements", is(1));
+    void shouldGetQuestionsByTagAndReturn200Ok() throws Exception {
+        Page<QuestionListDTO> page = new PageImpl<>(List.of(questionListDTO));
+        when(questionService.getAllPublishedQuestionsByTechnologyName(eq("Java"), any(Pageable.class))).thenReturn(page);
+
+        mockMvc.perform(get("/questions/{technologyName}/tag", "Java")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].questionId").value(questionListDTO.questionId().toString()));
     }
 
     @Test
-    public void shouldUpdateQuestionWhenUserIsOwnerAndIsPerson(){
-        UUID questionId = question1id;
-        QuestionUpdateDTO questionUpdated = new QuestionUpdateDTO(
-                "Teste de integração 123",
-                "Este conteúdo foi atualizado para ver se funciona",
-                Set.of("Python")
-        );
+    void shouldGetQuestionsByTagsAndReturn200Ok() throws Exception {
+        Page<QuestionListDTO> page = new PageImpl<>(List.of(questionListDTO));
+        when(questionService.getAllPublishedQuestionsByTags(eq(List.of("Java", "Spring")), any(Pageable.class))).thenReturn(page);
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-                .body(questionUpdated)
-        .when()
-                .put("/questions/" + questionId)
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("title", equalTo("Teste de integração 123"))
-                .body("content", equalTo("Este conteúdo foi atualizado para ver se funciona"))
-                .body("tags", hasSize(1))
-                .body("tags.technologyName", hasItem("Python"));
+        mockMvc.perform(get("/questions/filter")
+                        .param("tags", "Java", "Spring")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].questionId").value(questionListDTO.questionId().toString()));
     }
 
     @Test
-    public void shouldToggleLikeWhenUserIsPerson(){
-        UUID questionId = question1id;
+    void shouldGetQuestionsWithAcceptedAnswerAndReturn200Ok() throws Exception {
+        Page<QuestionListDTO> page = new PageImpl<>(List.of(questionListDTO));
+        when(questionService.getAllPublishedQuestionWithAcceptedAnswer(any(Pageable.class))).thenReturn(page);
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson2)
-        .when()
-                .patch("/questions/" + questionId + "/like")
-        .then()
-                .statusCode(HttpStatus.OK.value());
+        mockMvc.perform(get("/questions/accepteds-answers")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].questionId").value(questionListDTO.questionId().toString()));
     }
 
     @Test
-    public void shouldDeleteQuestionWhenUserIsOwner(){
-        UUID questionId = question1id;
+    void shouldUpdateQuestionAndReturn200Ok() throws Exception {
+        when(questionService.updateQuestion(eq(questionId), any(QuestionUpdateDTO.class), eq(userId))).thenReturn(questionDTO);
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-        .when()
-                .delete("/questions/" + questionId)
-        .then()
-                .statusCode(HttpStatus.NO_CONTENT.value());
+        mockMvc.perform(put("/questions/{questionId}", questionId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(questionUpdateDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.questionId").value(questionDTO.questionId().toString()))
+                .andExpect(jsonPath("$.title").value(questionDTO.title()));
     }
 
     @Test
-    public void shouldDeleteQuestionWhenUserIsAdmin(){
-        UUID questionId = question1id;
+    void shouldToggleQuestionLikeAndReturn200Ok() throws Exception {
+        doNothing().when(questionService).toggleQuestionLike(eq(questionId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenAdmin)
-                .contentType(ContentType.JSON)
-        .when()
-                .delete("/questions/" + questionId)
-        .then()
-                .statusCode(HttpStatus.NO_CONTENT.value());
+        mockMvc.perform(patch("/questions/{questionId}/like", questionId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldDeleteQuestionAndReturn204NoContent() throws Exception {
+        doNothing().when(questionService).deleteQuestionById(eq(questionId), eq(userId));
+
+        mockMvc.perform(delete("/questions/{questionId}", questionId))
+                .andExpect(status().isNoContent());
     }
 
     // -----------------------UNHAPPY PATH------------------------------
 
     @Test
-    public void shouldNotCreateQuestionWhenUserIsNotAuthenticated(){
-        QuestionCreateDTO question = new QuestionCreateDTO(
-                "Como fazer partição de lista",
-                "Para isso você consegue fazer na linguagem Python dessa forma...",
-                Set.of("Python")
-        );
+    void shouldNotCreateQuestionAndReturn400BadRequestWhenDataIsInvalid() throws Exception {
+        QuestionCreateDTO invalidDTO = new QuestionCreateDTO("", "", Set.of());
 
-        given()
-                .contentType(ContentType.JSON)
-                .body(question)
-        .when()
-                .post("/questions")
-        .then()
-                .statusCode(HttpStatus.FORBIDDEN.value());
+        mockMvc.perform(post("/questions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidDTO)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    public void shouldNotCreateQuestionWhenUserIsNotPerson(){
-        QuestionCreateDTO question = new QuestionCreateDTO(
-                "Como fazer partição de lista",
-                "Para isso você consegue fazer na linguagem Python dessa forma...",
-                Set.of("Python")
-        );
+    void shouldNotCreateQuestionAndReturn404NotFoundWhenProfileDoesNotExist() throws Exception {
+        when(questionService.createQuestion(any(QuestionCreateDTO.class), eq(userId)))
+                .thenThrow(new ObjectNotFoundException("Perfil não encontrado"));
 
-        given()
-                .header("Authorization", "Bearer " + tokenAdmin)
-                .contentType(ContentType.JSON)
-                .body(question)
-        .when()
-                .post("/questions")
-        .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        mockMvc.perform(post("/questions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(questionCreateDTO)))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotCreateQuestionWithMissingData(){
-        QuestionCreateDTO question = new QuestionCreateDTO(
-                "",
-                "Para você implementar isso tem de fazer assim...",
-                Set.of()
-        );
+    void shouldNotGetQuestionAndReturn404NotFoundWhenQuestionDoesNotExist() throws Exception {
+        when(questionService.getQuestionById(eq(questionId)))
+                .thenThrow(new ObjectNotFoundException("Pergunta não encontrada"));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-                .body(question)
-        .when()
-                .post("/questions")
-        .then()
-                .statusCode(HttpStatus.BAD_REQUEST.value());
+        mockMvc.perform(get("/questions/{questionId}", questionId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotCreateQuestionWhenTechnologyNameDoesNotExist(){
-        QuestionCreateDTO question = new QuestionCreateDTO(
-                "Como fazer partição de lista",
-                "Para isso você consegue fazer na linguagem Rust desse jeito...",
-                Set.of("Rust")
-        );
+    void shouldNotGetProfileQuestionsAndReturn404NotFoundWhenProfileDoesNotExist() throws Exception {
+        when(questionService.getAllQuestionsByProfile(eq(profileId), eq(userId), any(Pageable.class)))
+                .thenThrow(new ObjectNotFoundException("Perfil não encontrado"));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-                .body(question)
-        .when()
-                .post("/questions")
-        .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
+        mockMvc.perform(get("/questions/{profileId}/profile", profileId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotUpdateQuestionWhenUserIsNotAuthenticated(){
-        UUID questionId = question1id;
-        QuestionUpdateDTO question = new QuestionUpdateDTO(
-                "Frameworks Python para web",
-                "Existem vários frameworks web para Python que são muito utilizados...",
-                Set.of("Python")
-        );
+    void shouldNotGetProfileQuestionsAndReturn401UnauthorizedWhenUserIsNotOwner() throws Exception {
+        when(questionService.getAllQuestionsByProfile(eq(profileId), eq(userId), any(Pageable.class)))
+                .thenThrow(new ProfileIsNotTheOwnerException("Usuário não é o dono do perfil"));
 
-        given()
-                .contentType(ContentType.JSON)
-                .body(question)
-        .when()
-                .put("/questions/" + questionId)
-        .then()
-                .statusCode(HttpStatus.FORBIDDEN.value());
+        mockMvc.perform(get("/questions/{profileId}/profile", profileId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    public void shouldNotUpdateQuestionWhenUserIsAdmin(){
-        UUID questionId = question1id;
-        QuestionUpdateDTO question = new QuestionUpdateDTO(
-                "Frameworks Python para web",
-                "Existem vários frameworks web para Python que são muito utilizados...",
-                Set.of("Python")
-        );
+    void shouldNotUpdateQuestionAndReturn400BadRequestWhenDataIsInvalid() throws Exception {
+        QuestionUpdateDTO invalidDTO = new QuestionUpdateDTO("Title", "Content", Set.of("t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8"));
 
-        given()
-                .header("Authorization", "Bearer " + tokenAdmin)
-                .contentType(ContentType.JSON)
-                .body(question)
-        .when()
-                .put("/questions/" + questionId)
-        .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        mockMvc.perform(put("/questions/{questionId}", questionId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidDTO)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    public void shouldNotUpdateQuestionWhenUserIsNotOwner(){
-        UUID questionId = question1id;
-        QuestionUpdateDTO question = new QuestionUpdateDTO(
-                "Frameworks Python para web",
-                "Existem vários frameworks web para Python que são muito utilizados...",
-                Set.of("Python")
-        );
+    void shouldNotUpdateQuestionAndReturn404NotFoundWhenQuestionDoesNotExist() throws Exception {
+        when(questionService.updateQuestion(eq(questionId), any(QuestionUpdateDTO.class), eq(userId)))
+                .thenThrow(new ObjectNotFoundException("Pergunta não encontrada"));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson2)
-                .contentType(ContentType.JSON)
-                .body(question)
-        .when()
-                .put("/questions/" + questionId)
-        .then()
-                .statusCode(HttpStatus.UNAUTHORIZED.value());
+        mockMvc.perform(put("/questions/{questionId}", questionId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(questionUpdateDTO)))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotUpdateQuestionWhenItDoesNotExist(){
-        UUID questionId = UUID.randomUUID();
-        QuestionUpdateDTO questionUpdated = new QuestionUpdateDTO(
-                "Como criar um dicionário no Python",
-                "Para você criar um dicionário no python, é preciso fazer isso...",
-                Set.of("Python")
-        );
+    void shouldNotUpdateQuestionAndReturn401UnauthorizedWhenUserIsNotOwner() throws Exception {
+        when(questionService.updateQuestion(eq(questionId), any(QuestionUpdateDTO.class), eq(userId)))
+                .thenThrow(new ProfileIsNotTheOwnerException("Usuário não é o autor"));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-                .body(questionUpdated)
-        .when()
-                .put("/questions/" + questionId)
-        .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
+        mockMvc.perform(put("/questions/{questionId}", questionId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(questionUpdateDTO)))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    public void shouldNotUpdateQuestionWhenTechnologyNameDoesNotExist(){
-        UUID questionId = question1id;
-        QuestionUpdateDTO questionUpdated = new QuestionUpdateDTO(
-                "CPython usando Rust",
-                "Uma notícia que bombou recentemente é o Python trocando o C pelo Rust...",
-                Set.of("Python", "Rust")
-        );
+    void shouldNotToggleQuestionLikeAndReturn404NotFoundWhenQuestionDoesNotExist() throws Exception {
+        doThrow(new ObjectNotFoundException("Pergunta não encontrada"))
+                .when(questionService).toggleQuestionLike(eq(questionId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-                .body(questionUpdated)
-        .when()
-                .put("/questions/" + questionId)
-        .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
+        mockMvc.perform(patch("/questions/{questionId}/like", questionId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotToggleLikeWhenQuestionDoesNotExist(){
-        UUID questionId = UUID.randomUUID();
+    void shouldNotDeleteQuestionAndReturn404NotFoundWhenQuestionDoesNotExist() throws Exception {
+        doThrow(new ObjectNotFoundException("Pergunta não encontrada"))
+                .when(questionService).deleteQuestionById(eq(questionId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-        .when()
-                .patch("/questions/" + questionId + "/like")
-        .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
+        mockMvc.perform(delete("/questions/{questionId}", questionId))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotToggleLikeWhenUserIsAdmin(){
-        UUID questionId = question1id;
+    void shouldNotDeleteQuestionAndReturn401UnauthorizedWhenUserIsNotOwner() throws Exception {
+        doThrow(new ProfileIsNotTheOwnerException("Usuário não é o autor"))
+                .when(questionService).deleteQuestionById(eq(questionId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenAdmin)
-        .when()
-                .patch("/questions/" + questionId + "/like")
-        .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
-    }
-
-    @Test
-    public void shouldNotDeleteQuestionWhenUserIsNotAuthenticated(){
-        UUID questionId = question1id;
-
-        given()
-        .when()
-                .delete("/questions/" + questionId)
-        .then()
-                .statusCode(HttpStatus.FORBIDDEN.value());
-    }
-
-    @Test
-    public void shouldNotDeleteQuestionWhenDoesNotExist(){
-        UUID questionId = UUID.randomUUID();
-
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-        .when()
-                .delete("/questions/" + questionId)
-        .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
-    }
-
-    @Test
-    public void shouldNotDeleteQuestionWhenUserIsNotOwnerOrIsNotAdmin(){
-        UUID questionId = question1id;
-
-        given()
-                .header("Authorization", "Bearer " + tokenPerson2)
-        .when()
-                .delete("/questions/" + questionId)
-        .then()
-                .statusCode(HttpStatus.UNAUTHORIZED.value());
+        mockMvc.perform(delete("/questions/{questionId}", questionId))
+                .andExpect(status().isUnauthorized());
     }
 }

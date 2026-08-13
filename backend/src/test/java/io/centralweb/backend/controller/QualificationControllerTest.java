@@ -1,348 +1,260 @@
 package io.centralweb.backend.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.centralweb.backend.dto.qualification.QualificationCreateDTO;
+import io.centralweb.backend.dto.qualification.QualificationDTO;
+import io.centralweb.backend.exception.ObjectNotFoundException;
+import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
+import io.centralweb.backend.model.User;
 import io.centralweb.backend.model.enums.ExperienceLevel;
 import io.centralweb.backend.model.enums.UserRole;
-import io.centralweb.backend.model.Profile;
-import io.centralweb.backend.model.Qualification;
-import io.centralweb.backend.model.User;
-import io.centralweb.backend.repository.ProfileRepository;
-import io.centralweb.backend.repository.QualificationRepository;
 import io.centralweb.backend.repository.UserRepository;
+import io.centralweb.backend.security.OAuth2SuccessHandler;
+import io.centralweb.backend.security.SecurityFilter;
 import io.centralweb.backend.security.TokenService;
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
+import io.centralweb.backend.service.QualificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpStatus;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.jdbc.Sql;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
-import static io.restassured.RestAssured.*;
-import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-@Sql(scripts = "/clean-db.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@WebMvcTest(QualificationController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class QualificationControllerTest {
-    @LocalServerPort
-    private int port;
+
     @Autowired
+    private MockMvc mockMvc;
+
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule());
+
+    @MockitoBean
+    private QualificationService qualificationService;
+
+    @MockitoBean
     private TokenService tokenService;
-    @Autowired
+
+    @MockitoBean
+    private SecurityFilter securityFilter;
+
+    @MockitoBean
+    private OAuth2SuccessHandler oAuth2SuccessHandler;
+
+    @MockitoBean
     private UserRepository userRepository;
-    @Autowired
-    private ProfileRepository profileRepository;
-    @Autowired
-    private QualificationRepository qualificationRepository;
-    private String tokenAdmin;
-    private String tokenPerson1;
-    private String tokenPerson2;
-    private UUID profile1Id;
-    private UUID profile2Id;
-    private UUID qualification1Id;
+
+    @MockitoBean
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
+    @MockitoBean
+    private org.springframework.cache.CacheManager cacheManager;
+
+    private UUID userId;
+    private UUID profileId;
+    private UUID qualificationId;
+
+    private QualificationDTO qualificationDTO;
+    private QualificationCreateDTO qualificationCreateDTO;
 
     @BeforeEach
-    public void setup() {
-        RestAssured.port = port;
-        RestAssured.baseURI = "http://localhost";
+    void setUp() {
+        userId = UUID.randomUUID();
+        profileId = UUID.randomUUID();
+        qualificationId = UUID.randomUUID();
 
-        qualificationRepository.deleteAll();
-        profileRepository.deleteAll();
-        userRepository.deleteAll();
+        User user = new User(userId, "password", "user@test.com");
+        user.setRole(UserRole.PERSON);
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
 
-        User user1 = new User();
-        user1.setEmail("testcentraldevadmin@gmail.com");
-        user1.setPassword("password");
-        user1.setRole(UserRole.ADMIN);
-        userRepository.save(user1);
+        qualificationDTO = new QualificationDTO(
+                "Desenvolvedor Backend",
+                ExperienceLevel.SENIOR,
+                "Tech Corp",
+                LocalDate.of(2022, 1, 1),
+                LocalDate.of(2024, 12, 31)
+        );
 
-        User user2 = new User();
-        user2.setEmail("testcentraldev@gmail.com");
-        user2.setPassword("password");
-        user2.setRole(UserRole.PERSON);
-
-        User user3 = new User();
-        user3.setEmail("testcentralweb@gmail.com");
-        user3.setPassword("password");
-        user3.setRole(UserRole.PERSON);
-
-        Profile profile1 = new Profile();
-        profile1.setName("Usuário Teste");
-        profile1.setBio("Sou um programador de testes");
-        profile1.setUser(user2);
-        Profile profilesaved1 = profileRepository.save(profile1);
-        profile1Id = profilesaved1.getProfileId();
-
-        Profile profile2 = new Profile();
-        profile2.setName("Usuário Teste");
-        profile2.setBio("Sou um programador web");
-        profile2.setUser(user3);
-        Profile profileSaved2 = profileRepository.save(profile2);
-        profile2Id = profileSaved2.getProfileId();
-
-        Qualification qualification1 = new Qualification();
-        qualification1.setJobTitle("Desenvolvedor Backend");
-        qualification1.setExperienceLevel(ExperienceLevel.JUNIOR);
-        qualification1.setInstitution("Itaú");
-        qualification1.setStartDate(LocalDate.of(2021, 4, 23));
-        qualification1.setEndDate(LocalDate.of(2022, 6, 17));
-        qualification1.setProfile(profile1);
-        Qualification qualificationSaved1 = qualificationRepository.save(qualification1);
-        qualification1Id = qualificationSaved1.getQualificationId();
-
-        Qualification qualification2 = new Qualification();
-        qualification2.setJobTitle("Desenvolvedor Backend");
-        qualification2.setExperienceLevel(ExperienceLevel.JUNIOR);
-        qualification2.setInstitution("Americanas");
-        qualification2.setStartDate(LocalDate.of(2022, 8, 11));
-        qualification2.setEndDate(LocalDate.of(2023, 9, 8));
-        qualification2.setProfile(profile1);
-        qualificationRepository.save(qualification2);
-
-        Qualification qualification3 = new Qualification();
-        qualification3.setJobTitle("Desenvolvedor Frontend");
-        qualification3.setExperienceLevel(ExperienceLevel.JUNIOR);
-        qualification3.setInstitution("ICMBio");
-        qualification3.setStartDate(LocalDate.of(2022, 8, 15));
-        qualification3.setEndDate(LocalDate.of(2024, 9, 1));
-        qualification3.setVerified(true);
-        qualification3.setProfile(profile2);
-        qualificationRepository.save(qualification3);
-
-        tokenAdmin = tokenService.generateToken(user1);
-        tokenPerson1 = tokenService.generateToken(user2);
-        tokenPerson2 = tokenService.generateToken(user3);
+        qualificationCreateDTO = new QualificationCreateDTO(
+                "Desenvolvedor Backend",
+                ExperienceLevel.SENIOR,
+                "Tech Corp",
+                LocalDate.of(2022, 1, 1),
+                LocalDate.of(2024, 12, 31)
+        );
     }
 
     // -----------------------HAPPY PATH------------------------------
 
     @Test
-    public void shouldCreateQualificationWhenUserIsPerson() {
-        QualificationCreateDTO qualification = new QualificationCreateDTO(
-                "Engenheiro de Software",
-                ExperienceLevel.MID,
-                "Mercado Livre",
-                LocalDate.of(2023, 10, 1),
-                LocalDate.of(2024, 12, 6)
-        );
+    void shouldCreateQualificationAndReturn201Created() throws Exception {
+        when(qualificationService.createQualification(any(QualificationCreateDTO.class), eq(userId))).thenReturn(qualificationDTO);
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-                .body(qualification)
-        .when()
-                .post("/qualifications")
-        .then()
-                .statusCode(HttpStatus.CREATED.value())
-                .body("jobTitle", equalTo("Engenheiro de Software"))
-                .body("experienceLevel", equalTo("PL"))
-                .body("institution", equalTo("Mercado Livre"))
-                .body("startDate", equalTo(LocalDate.of(2023, 10, 1).toString()))
-                .body("endDate", equalTo(LocalDate.of(2024, 12, 6).toString()));
+        mockMvc.perform(post("/qualifications")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(qualificationCreateDTO)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.jobTitle").value(qualificationDTO.jobTitle()))
+                .andExpect(jsonPath("$.experienceLevel").value(qualificationDTO.experienceLevel().getExperienceLevel()))
+                .andExpect(jsonPath("$.institution").value(qualificationDTO.institution()))
+                .andExpect(jsonPath("$.startDate").value(qualificationDTO.startDate().toString()))
+                .andExpect(jsonPath("$.endDate").value(qualificationDTO.endDate().toString()));
     }
 
     @Test
-    public void shouldReturnVerifiedQualificationsWhenUserIsAdmin() {
-        given()
-                .header("Authorization", "Bearer " + tokenAdmin)
-                .contentType(ContentType.JSON)
-        .when()
-                .get("/qualifications/verified")
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("numberOfElements", is(1));
+    void shouldGetVerifiedQualificationsAndReturn200Ok() throws Exception {
+        Page<QualificationDTO> page = new PageImpl<>(List.of(qualificationDTO));
+        when(qualificationService.getAllQualificationsVerified(any(Pageable.class))).thenReturn(page);
+
+        mockMvc.perform(get("/qualifications/verified")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].jobTitle").value(qualificationDTO.jobTitle()))
+                .andExpect(jsonPath("$.content[0].experienceLevel").value(qualificationDTO.experienceLevel().getExperienceLevel()))
+                .andExpect(jsonPath("$.content[0].institution").value(qualificationDTO.institution()))
+                .andExpect(jsonPath("$.content[0].startDate").value(qualificationDTO.startDate().toString()))
+                .andExpect(jsonPath("$.content[0].endDate").value(qualificationDTO.endDate().toString()));
     }
 
     @Test
-    public void shouldReturnNotVerifiedQualificationsWhenUserIsAdmin() {
-        given()
-                .header("Authorization", "Bearer " + tokenAdmin)
-                .contentType(ContentType.JSON)
-        .when()
-                .get("/qualifications/not-verified")
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("numberOfElements", is(2));
+    void shouldGetNotVerifiedQualificationsAndReturn200Ok() throws Exception {
+        Page<QualificationDTO> page = new PageImpl<>(List.of(qualificationDTO));
+        when(qualificationService.getAllNotVerifiedQualifications(any(Pageable.class))).thenReturn(page);
+
+        mockMvc.perform(get("/qualifications/not-verified")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].jobTitle").value(qualificationDTO.jobTitle()));
     }
 
     @Test
-    public void shouldReturnProfileVerifiedQualificationsWhenUserIsAdmin() {
-        UUID profileId = profile2Id;
+    void shouldGetProfileVerifiedQualificationsAndReturn200Ok() throws Exception {
+        Page<QualificationDTO> page = new PageImpl<>(List.of(qualificationDTO));
+        when(qualificationService.getAllProfileVerifiedQualifications(eq(profileId), any(Pageable.class))).thenReturn(page);
 
-        given()
-                .header("Authorization", "Bearer " + tokenAdmin)
-                .contentType(ContentType.JSON)
-        .when()
-                .get("/qualifications/" + profileId + "/verified")
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("numberOfElements", is(1));
+        mockMvc.perform(get("/qualifications/{profileId}/verified", profileId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].jobTitle").value(qualificationDTO.jobTitle()));
     }
 
     @Test
-    public void shouldReturnProfileNotVerifiedQualificationsWhenUserIsAdmin() {
-        UUID profileId = profile1Id;
+    void shouldGetProfileNotVerifiedQualificationsAndReturn200Ok() throws Exception {
+        Page<QualificationDTO> page = new PageImpl<>(List.of(qualificationDTO));
+        when(qualificationService.getAllProfileNotVerifiedQualifications(eq(profileId), any(Pageable.class))).thenReturn(page);
 
-        given()
-                .header("Authorization", "Bearer " + tokenAdmin)
-                .contentType(ContentType.JSON)
-        .when()
-                .get("/qualifications/" + profileId + "/not-verified")
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("numberOfElements", is(2));
+        mockMvc.perform(get("/qualifications/{profileId}/not-verified", profileId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].jobTitle").value(qualificationDTO.jobTitle()));
     }
 
     @Test
-    public void shouldVerifyQualificationWhenUserIsAdmin() {
-        UUID qualificationId = qualification1Id;
+    void shouldVerifyQualificationAndReturn200Ok() throws Exception {
+        doNothing().when(qualificationService).markAsVerified(eq(qualificationId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenAdmin)
-        .when()
-                .patch("/qualifications/" + qualificationId)
-        .then()
-                .statusCode(HttpStatus.OK.value());
+        mockMvc.perform(patch("/qualifications/{qualificationId}", qualificationId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
     }
 
     @Test
-    public void shouldDeleteQualificationWhenUserIsOwner() {
-        UUID qualificationId = qualification1Id;
+    void shouldDeleteQualificationAndReturn204NoContent() throws Exception {
+        doNothing().when(qualificationService).deleteQualificationById(eq(qualificationId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-        .when()
-                .delete("/qualifications/" + qualificationId)
-        .then()
-                .statusCode(HttpStatus.NO_CONTENT.value());
-    }
-
-    @Test
-    public void shouldDeleteQualificationWhenUserIsAdmin() {
-        UUID qualificationId = qualification1Id;
-
-        given()
-                .header("Authorization", "Bearer " + tokenAdmin)
-                .contentType(ContentType.JSON)
-        .when()
-                .delete("/qualifications/" + qualificationId)
-        .then()
-                .statusCode(HttpStatus.NO_CONTENT.value());
+        mockMvc.perform(delete("/qualifications/{qualificationId}", qualificationId))
+                .andExpect(status().isNoContent());
     }
 
     // -----------------------UNHAPPY PATH------------------------------
 
     @Test
-    public void shouldNotCreateQualificationNotBeingAuthenticated() {
-        QualificationCreateDTO qualification = new QualificationCreateDTO(
-                "Engenheiro de Software",
-                ExperienceLevel.MID,
-                "Mercado Livre",
-                LocalDate.of(2023, 10, 1),
-                LocalDate.of(2024, 12, 6)
-        );
+    void shouldNotCreateQualificationAndReturn400BadRequestWhenDataIsInvalid() throws Exception {
+        QualificationCreateDTO invalidDTO = new QualificationCreateDTO("", null, "", null, null);
 
-        given()
-                .contentType(ContentType.JSON)
-                .body(qualification)
-        .when()
-                .post("/qualifications")
-        .then()
-                .statusCode(HttpStatus.FORBIDDEN.value());
+        mockMvc.perform(post("/qualifications")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidDTO)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    public void shouldNotCreateQualificationWhenUserIsAdmin() {
-        QualificationCreateDTO qualification = new QualificationCreateDTO(
-                "Engenheiro de Software",
-                ExperienceLevel.MID,
-                "Mercado Livre",
-                LocalDate.of(2023, 10, 1),
-                LocalDate.of(2024, 12, 6)
-        );
+    void shouldNotCreateQualificationAndReturn404NotFoundWhenProfileDoesNotExist() throws Exception {
+        when(qualificationService.createQualification(any(QualificationCreateDTO.class), eq(userId)))
+                .thenThrow(new ObjectNotFoundException("Perfil não encontrado"));
 
-        given()
-                .header("Authorization", "Bearer " + tokenAdmin)
-                .contentType(ContentType.JSON)
-                .body(qualification)
-        .when()
-                .post("/qualifications")
-        .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        mockMvc.perform(post("/qualifications")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(qualificationCreateDTO)))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotCreateQualificationWithMissingData(){
-        QualificationCreateDTO qualification = new QualificationCreateDTO(
-                "Engenheiro de Software",
-                null,
-                "",
-                LocalDate.of(2023, 10, 1),
-                LocalDate.of(2024, 12, 6)
-        );
+    void shouldNotGetProfileVerifiedQualificationsAndReturn404NotFoundWhenProfileDoesNotExist() throws Exception {
+        when(qualificationService.getAllProfileVerifiedQualifications(eq(profileId), any(Pageable.class)))
+                .thenThrow(new ObjectNotFoundException("Perfil não encontrado"));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-                .body(qualification)
-         .when()
-                .post("/qualifications")
-         .then()
-                .statusCode(HttpStatus.BAD_REQUEST.value());
+        mockMvc.perform(get("/qualifications/{profileId}/verified", profileId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotVerifyQualificationWhenUserIsNotAdmin() {
-        UUID qualificationId = qualification1Id;
+    void shouldNotGetProfileNotVerifiedQualificationsAndReturn404NotFoundWhenProfileDoesNotExist() throws Exception {
+        when(qualificationService.getAllProfileNotVerifiedQualifications(eq(profileId), any(Pageable.class)))
+                .thenThrow(new ObjectNotFoundException("Perfil não encontrado"));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson2)
-        .when()
-                .patch("/qualifications/" + qualificationId)
-        .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        mockMvc.perform(get("/qualifications/{profileId}/not-verified", profileId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotDeleteQualificationWhenUserIsNotAuthenticated(){
-        UUID qualificationId = qualification1Id;
+    void shouldNotVerifyQualificationAndReturn404NotFoundWhenQualificationDoesNotExist() throws Exception {
+        doThrow(new ObjectNotFoundException("Qualificação não encontrada"))
+                .when(qualificationService).markAsVerified(eq(qualificationId));
 
-        given()
-        .when()
-                .delete("/qualifications/" + qualificationId)
-        .then()
-                .statusCode(HttpStatus.FORBIDDEN.value());
+        mockMvc.perform(patch("/qualifications/{qualificationId}", qualificationId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotDeleteQuestionWhenDoesNotExist(){
-        UUID qualificationId = UUID.randomUUID();
+    void shouldNotDeleteQualificationAndReturn404NotFoundWhenQualificationDoesNotExist() throws Exception {
+        doThrow(new ObjectNotFoundException("Qualificação não encontrada"))
+                .when(qualificationService).deleteQualificationById(eq(qualificationId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .when()
-                .delete("/qualifications/" + qualificationId)
-                .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
+        mockMvc.perform(delete("/qualifications/{qualificationId}", qualificationId))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotDeleteQualificationWhenUserIsNotOwnerOrIsNotAdmin(){
-        UUID qualificationId = qualification1Id;
+    void shouldNotDeleteQualificationAndReturn401UnauthorizedWhenUserIsNotOwner() throws Exception {
+        doThrow(new ProfileIsNotTheOwnerException("Usuário não é o dono"))
+                .when(qualificationService).deleteQualificationById(eq(qualificationId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson2)
-        .when()
-                .delete("/qualifications/" + qualificationId)
-        .then()
-                .statusCode(HttpStatus.UNAUTHORIZED.value());
+        mockMvc.perform(delete("/qualifications/{qualificationId}", qualificationId))
+                .andExpect(status().isUnauthorized());
     }
 }

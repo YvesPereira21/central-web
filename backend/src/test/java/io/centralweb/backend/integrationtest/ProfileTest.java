@@ -1,0 +1,330 @@
+package io.centralweb.backend.integrationtest;
+
+import io.centralweb.backend.dto.profile.ProfileCreateDTO;
+import io.centralweb.backend.dto.profile.ProfileUpdateDTO;
+import io.centralweb.backend.dto.user.UserDTO;
+import io.centralweb.backend.model.enums.ProfileType;
+import io.centralweb.backend.model.enums.UserRole;
+import io.centralweb.backend.model.Profile;
+import io.centralweb.backend.model.User;
+import io.centralweb.backend.repository.ProfileRepository;
+import io.centralweb.backend.repository.UserRepository;
+import io.centralweb.backend.security.TokenService;
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.HttpStatus;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
+
+import java.util.UUID;
+
+import static io.restassured.RestAssured.*;
+import static org.hamcrest.Matchers.*;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
+@Sql(scripts = "/clean-db.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+public class ProfileTest {
+    @LocalServerPort
+    private int port;
+    @Autowired
+    private TokenService tokenService;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private ProfileRepository profileRepository;
+    private String tokenAdmin;
+    private String tokenPerson1;
+    private String tokenPerson2;
+    private UUID profile1Id;
+
+    @BeforeEach
+    public void setUp() {
+        RestAssured.port = port;
+        RestAssured.baseURI = "http://localhost";
+
+        profileRepository.deleteAll();
+        userRepository.deleteAll();
+
+        User user1 = new User();
+        user1.setEmail("testcentraldevadmin@gmail.com");
+        user1.setPassword("password");
+        user1.setRole(UserRole.ADMIN);
+        userRepository.save(user1);
+
+        User user2 = new User();
+        user2.setEmail("testcentraldev@gmail.com");
+        user2.setPassword("password");
+        user2.setRole(UserRole.PERSON);
+
+        User user3 = new User();
+        user3.setEmail("testcentralweb@gmail.com");
+        user3.setPassword("password");
+        user3.setRole(UserRole.PERSON);
+
+        Profile profile1 = new Profile();
+        profile1.setName("Usuário Teste1");
+        profile1.setBio("Sou um programador de testes");
+        profile1.setProfileType(ProfileType.UNDERGRADUATE);
+        profile1.setLevel("Especialista");
+        profile1.setReputationScore(1200);
+        profile1.setUser(user2);
+        Profile profileSaved1 = profileRepository.save(profile1);
+        profile1Id = profileSaved1.getProfileId();
+
+        Profile profile2 = new Profile();
+        profile2.setName("Usuário Bom");
+        profile2.setBio("Sou um desenvolvedor em Segurança da Informação");
+        profile2.setProfileType(ProfileType.PROFESSIONAL);
+        profile2.setLevel("Especialista");
+        profile2.setReputationScore(2760);
+        profile2.setProfessional(true);
+        profile2.setUser(user3);
+        profileRepository.save(profile2);
+
+        tokenAdmin = tokenService.generateToken(user1);
+        tokenPerson1 = tokenService.generateToken(user2);
+        tokenPerson2 = tokenService.generateToken(user3);
+    }
+
+    // -----------------------HAPPY PATH------------------------------
+
+    @Test
+    public void shouldCreateProfile(){
+        UserDTO user = new UserDTO(
+                "testcentraljunior@gmail.com",
+                "password"
+        );
+
+        ProfileCreateDTO profile = new ProfileCreateDTO(
+                "Usuário Teste",
+                "Sou um programador de QA",
+                ProfileType.SELFTAUGHT,
+                user
+        );
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(profile)
+        .when()
+                .post("/profiles")
+        .then()
+                .statusCode(HttpStatus.CREATED.value())
+                .body("name", equalTo("Usuário Teste"))
+                .body("bio", equalTo("Sou um programador de QA"))
+                .body("level", equalTo("Novato"))
+                .body("reputationScore", equalTo(0))
+                .body("professional", equalTo(false));
+    }
+
+    @Test
+    public void shouldReturnProfile(){
+        UUID profileId = profile1Id;
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson1)
+                .contentType(ContentType.JSON)
+        .when()
+                .get("/profiles/" + profileId)
+        .then()
+                .statusCode(HttpStatus.OK.value())
+                .body("profileId", equalTo(profileId.toString()))
+                .body("name", equalTo("Usuário Teste1"))
+                .body("bio", equalTo("Sou um programador de testes"))
+                .body("level", equalTo("Especialista"))
+                .body("reputationScore", equalTo(1200))
+                .body("professional", equalTo(false));
+    }
+
+    @Test
+    public void shouldUpdateProfileWhenUserIsPersonAndIsOwner(){
+        UUID profileId = profile1Id;
+        ProfileUpdateDTO profileUpdated = new ProfileUpdateDTO(
+                "Galego",
+                "Melhor programador Django"
+        );
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson1)
+                .contentType(ContentType.JSON)
+                .body(profileUpdated)
+        .when()
+                .put("/profiles/" + profileId)
+        .then()
+                .statusCode(HttpStatus.OK.value())
+                .body("name", equalTo("Galego"))
+                .body("bio", equalTo("Melhor programador Django"));
+    }
+
+    @Test
+    public void shouldDeleteProfileWhenUserIsOwner(){
+        UUID profileId = profile1Id;
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson1)
+                .contentType(ContentType.JSON)
+        .when()
+                .delete("/profiles/" + profileId)
+        .then()
+                .statusCode(HttpStatus.NO_CONTENT.value());
+    }
+
+    @Test
+    public void shouldDeleteProfileWhenUserIsAdmin(){
+        UUID profileId = profile1Id;
+
+        given()
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .contentType(ContentType.JSON)
+        .when()
+                .delete("/profiles/" + profileId)
+        .then()
+                .statusCode(HttpStatus.NO_CONTENT.value());
+    }
+
+    // -----------------------UNHAPPY PATH------------------------------
+
+    @Test
+    public void shouldNotCreateProfileWithMissingData(){
+        UserDTO user = new UserDTO(
+                "testcentraljunior@gmail.com",
+                ""
+        );
+
+        ProfileCreateDTO profile = new ProfileCreateDTO(
+                "Galego",
+                "Sou um programador de QA",
+                ProfileType.SELFTAUGHT,
+                user
+        );
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(profile)
+        .when()
+                .post("/profiles")
+        .then()
+                .statusCode(HttpStatus.BAD_REQUEST.value());
+    }
+
+    @Test
+    public void shouldNotCreateProfileWhenEmailAlreadyExists(){
+        UserDTO user = new UserDTO(
+                "testcentraldev@gmail.com",
+                "password"
+        );
+
+        ProfileCreateDTO profile = new ProfileCreateDTO(
+                "Renato",
+                "Sou um programador de QA",
+                ProfileType.SELFTAUGHT,
+                user
+        );
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(profile)
+        .when()
+                .post("/profiles")
+        .then()
+                .statusCode(HttpStatus.CONFLICT.value());
+    }
+
+    @Test
+    public void shouldNotCreateProfileWhenEmailIsInvalid(){
+        UserDTO user = new UserDTO(
+                "test.htmail@com",
+                "password"
+        );
+
+        ProfileCreateDTO profile = new ProfileCreateDTO(
+                "Renato",
+                "Sou um programador de QA",
+                ProfileType.SELFTAUGHT,
+                user
+        );
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(profile)
+        .when()
+                .post("/profiles")
+        .then()
+                .statusCode(HttpStatus.BAD_REQUEST.value());
+    }
+
+    @Test
+    public void shouldNotUpdateProfileWhenUserIsNotAuthenticated(){
+        UUID profileId = profile1Id;
+        ProfileUpdateDTO profileUpdated = new ProfileUpdateDTO(
+                "Galego",
+                "Melhor programador Django"
+        );
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(profileUpdated)
+        .when()
+                .put("/profiles/" + profileId)
+        .then()
+                .statusCode(HttpStatus.FORBIDDEN.value());
+    }
+
+    @Test
+    public void shouldNotUpdateProfileWhenUserIsNotOwner(){
+        UUID profileId = profile1Id;
+        ProfileUpdateDTO profileUpdated = new ProfileUpdateDTO(
+                "Galego",
+                "Melhor programador Django"
+        );
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson2)
+                .contentType(ContentType.JSON)
+                .body(profileUpdated)
+        .when()
+                .put("/profiles/" + profileId)
+        .then()
+                .statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @Test
+    public void shouldNotDeleteProfileWhenUserIsNotAuthenticated(){
+        UUID profileId = profile1Id;
+
+        given()
+        .when()
+                .delete("/profiles/" + profileId)
+        .then()
+                .statusCode(HttpStatus.FORBIDDEN.value());
+    }
+
+    @Test
+    public void shouldNotDeleteProfileWhenDoesNotExist(){
+        UUID profileId = UUID.randomUUID();
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson1)
+        .when()
+                .delete("/profiles/" + profileId)
+        .then()
+                .statusCode(HttpStatus.NOT_FOUND.value());
+    }
+
+    @Test
+    public void shouldNotDeleteProfileWhenUserIsNotOwnerOrIsNotAdmin(){
+        UUID profileId = profile1Id;
+
+        given()
+                .header("Authorization", "Bearer " + tokenPerson2)
+        .when()
+                .delete("/profiles/" + profileId)
+        .then()
+                .statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+}

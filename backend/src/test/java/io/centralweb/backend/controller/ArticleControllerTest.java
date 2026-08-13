@@ -1,504 +1,376 @@
 package io.centralweb.backend.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.centralweb.backend.dto.article.ArticleCreateDTO;
+import io.centralweb.backend.dto.article.ArticleDTO;
 import io.centralweb.backend.dto.article.ArticleUpdateDTO;
-import io.centralweb.backend.model.enums.UserRole;
-import io.centralweb.backend.model.Article;
-import io.centralweb.backend.model.Profile;
-import io.centralweb.backend.model.Tag;
+import io.centralweb.backend.dto.profile.ProfileSimpleDTO;
+import io.centralweb.backend.dto.tag.TagDTO;
+import io.centralweb.backend.exception.ObjectNotFoundException;
+import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
 import io.centralweb.backend.model.User;
-import io.centralweb.backend.repository.ArticleRepository;
-import io.centralweb.backend.repository.ProfileRepository;
-import io.centralweb.backend.repository.TagRepository;
+import io.centralweb.backend.model.enums.UserRole;
 import io.centralweb.backend.repository.UserRepository;
+import io.centralweb.backend.security.OAuth2SuccessHandler;
+import io.centralweb.backend.security.SecurityFilter;
 import io.centralweb.backend.security.TokenService;
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
+import io.centralweb.backend.service.ArticleService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpStatus;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.jdbc.Sql;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static io.restassured.RestAssured.*;
-import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-@Sql(scripts = "/clean-db.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@WebMvcTest(ArticleController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class ArticleControllerTest {
-    @LocalServerPort
-    private int port;
+
     @Autowired
+    private MockMvc mockMvc;
+
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule());
+
+    @MockitoBean
+    private ArticleService articleService;
+
+    @MockitoBean
     private TokenService tokenService;
-    @Autowired
+
+    @MockitoBean
+    private SecurityFilter securityFilter;
+
+    @MockitoBean
+    private OAuth2SuccessHandler oAuth2SuccessHandler;
+
+    @MockitoBean
     private UserRepository userRepository;
-    @Autowired
-    private ProfileRepository profileRepository;
-    @Autowired
-    private TagRepository tagRepository;
-    @Autowired
-    private ArticleRepository articleRepository;
-    private String tokenAdmin;
-    private String tokenPerson1;
-    private String tokenPerson2;
-    private UUID article1Id;
-    private UUID profile3Id;
+
+    @MockitoBean
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
+    @MockitoBean
+    private org.springframework.cache.CacheManager cacheManager;
+
+    private UUID userId;
+    private UUID articleId;
+    private UUID profileId;
+    private ArticleDTO articleDTO;
+    private ArticleCreateDTO articleCreateDTO;
+    private ArticleUpdateDTO articleUpdateDTO;
 
     @BeforeEach
-    public void setUp() {
-        RestAssured.port = port;
-        RestAssured.baseURI = "http://localhost";
+    void setUp() {
+        userId = UUID.randomUUID();
+        articleId = UUID.randomUUID();
+        profileId = UUID.randomUUID();
 
-        articleRepository.deleteAll();
-        tagRepository.deleteAll();
-        profileRepository.deleteAll();
-        userRepository.deleteAll();
+        User user = new User(userId, "password", "user@test.com");
+        user.setRole(UserRole.PERSON);
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
 
-        User user1 = new User();
-        user1.setEmail("testcentraldev@gmail.com");
-        user1.setPassword("password");
-        user1.setRole(UserRole.ADMIN);
-        userRepository.save(user1);
+        ProfileSimpleDTO profileSimpleDTO = new ProfileSimpleDTO(
+                profileId,
+                userId,
+                "Jane Doe",
+                "Senior",
+                true,
+                "http://example.com/photo.jpg"
+        );
 
-        User user2 = new User();
-        user2.setEmail("testcentralweb@gmail.com");
-        user2.setPassword("password");
-        user2.setRole(UserRole.PERSON);
+        TagDTO tagDTO = new TagDTO("Java", "#FF0000");
 
-        User user3 = new User();
-        user3.setEmail("testcentraljunior@gmail.com");
-        user3.setPassword("password");
-        user3.setRole(UserRole.PERSON);
+        articleDTO = new ArticleDTO(
+                articleId,
+                "Título do Artigo",
+                "Conteúdo completo do artigo de teste.",
+                LocalDate.of(2026, 8, 13),
+                Set.of(tagDTO),
+                profileSimpleDTO,
+                25L,
+                true,
+                false
+        );
 
-        Profile profile1 = new Profile();
-        profile1.setName("Usuário Teste");
-        profile1.setBio("Sou um programador de testes");
-        profile1.setUser(user2);
-        profileRepository.save(profile1);
-
-        Profile profile2 = new Profile();
-        profile2.setName("Usuário Teste");
-        profile2.setBio("Sou um programador de QA");
-        profile2.setUser(user3);
-        Profile profileSaved3 = profileRepository.save(profile2);
-        profile3Id = profileSaved3.getProfileId();
-
-        Tag tagJava = new Tag();
-        tagJava.setTechnologyName("Java");
-        tagJava.setColor("#ED8B00");
-        tagRepository.save(tagJava);
-
-        Tag tagSpring = new Tag();
-        tagSpring.setTechnologyName("Spring");
-        tagSpring.setColor("#6DB33F");
-        tagRepository.save(tagSpring);
-
-        Tag tagPython = new Tag();
-        tagPython.setTechnologyName("Python");
-        tagPython.setColor("#6DB33A");
-        tagRepository.save(tagPython);
-
-        Article article1 = new Article();
-        article1.setTitle("Diferenças entre Python x Java");
-        article1.setContent("Content 1");
-        article1.setCreatedAt(LocalDate.now());
-        article1.setPublished(true);
-        article1.setTags(Set.of(tagJava, tagPython));
-        article1.setProfile(profile1);
-        Article articleSaved1 = articleRepository.save(article1);
-        article1Id = articleSaved1.getArticleId();
-
-        Article article2 = new Article();
-        article2.setTitle("Como implementar index no Spring");
-        article2.setContent("Content 2");
-        article2.setCreatedAt(LocalDate.now());
-        article2.setPublished(true);
-        article2.setTags(Set.of(tagSpring));
-        article2.setProfile(profile2);
-        articleRepository.save(article2);
-
-        Article article3 = new Article();
-        article3.setTitle("Como implementar redis no Python");
-        article3.setContent("Content 2");
-        article3.setCreatedAt(LocalDate.now());
-        article3.setPublished(true);
-        article3.setTags(Set.of(tagPython));
-        article3.setProfile(profile2);
-        articleRepository.save(article3);
-
-        tokenAdmin = tokenService.generateToken(user1);
-        tokenPerson1 = tokenService.generateToken(user2);
-        tokenPerson2 = tokenService.generateToken(user3);
+        articleCreateDTO = new ArticleCreateDTO("Título do Artigo", "Conteúdo completo do artigo de teste.", Set.of("Java"));
+        articleUpdateDTO = new ArticleUpdateDTO("Título Atualizado", "Conteúdo Atualizado", Set.of("Java", "Spring"));
     }
 
     // -----------------------HAPPY PATH------------------------------
 
     @Test
-    public void shouldCreateArticleWhenUserIsPerson(){
-        ArticleCreateDTO payload = new ArticleCreateDTO(
-                "Teste de integração",
-                "Conteúdo extenso do artigo para passar na validação...",
-                Set.of("Java", "Spring")
-        );
+    void shouldCreateArticleAndReturn201Created() throws Exception {
+        when(articleService.createArticle(any(ArticleCreateDTO.class), eq(userId))).thenReturn(articleDTO);
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-                .body(payload)
-        .when()
-                .post("/articles")
-        .then()
-                .statusCode(HttpStatus.CREATED.value())
-                .body("title", equalTo("Teste de integração"))
-                .body("content", equalTo("Conteúdo extenso do artigo para passar na validação..."))
-                .body("tags", hasSize(2))
-                .body("tags.technologyName", hasItems("Java", "Spring"));
+        mockMvc.perform(post("/articles")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(articleCreateDTO)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.articleId").value(articleDTO.articleId().toString()))
+                .andExpect(jsonPath("$.title").value(articleDTO.title()))
+                .andExpect(jsonPath("$.content").value(articleDTO.content()))
+                .andExpect(jsonPath("$.createdAt").value(articleDTO.createdAt().toString()))
+                .andExpect(jsonPath("$.tags[0].technologyName").value("Java"))
+                .andExpect(jsonPath("$.tags[0].color").value("#FF0000"))
+                .andExpect(jsonPath("$.profile.profileId").value(articleDTO.profile().profileId().toString()))
+                .andExpect(jsonPath("$.profile.userId").value(articleDTO.profile().userId().toString()))
+                .andExpect(jsonPath("$.profile.name").value(articleDTO.profile().name()))
+                .andExpect(jsonPath("$.profile.level").value(articleDTO.profile().level()))
+                .andExpect(jsonPath("$.profile.professional").value(articleDTO.profile().professional()))
+                .andExpect(jsonPath("$.profile.photoUrl").value(articleDTO.profile().photoUrl()))
+                .andExpect(jsonPath("$.articleTotalLikes").value(articleDTO.articleTotalLikes()))
+                .andExpect(jsonPath("$.liked").value(articleDTO.liked()))
+                .andExpect(jsonPath("$.saved").value(articleDTO.saved()));
     }
 
     @Test
-    public void shouldReturnArticle(){
-        UUID articleId = article1Id;
+    void shouldGetArticleAndReturn200Ok() throws Exception {
+        when(articleService.getArticleById(articleId)).thenReturn(articleDTO);
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-        .when()
-                .get("/articles/" + articleId)
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("title", equalTo("Diferenças entre Python x Java"))
-                .body("content", equalTo("Content 1"))
-                .body("tags", hasSize(2))
-                .body("tags.technologyName", hasItems("Java", "Python"));
+        mockMvc.perform(get("/articles/{articleId}", articleId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.articleId").value(articleDTO.articleId().toString()))
+                .andExpect(jsonPath("$.title").value(articleDTO.title()))
+                .andExpect(jsonPath("$.content").value(articleDTO.content()))
+                .andExpect(jsonPath("$.createdAt").value(articleDTO.createdAt().toString()))
+                .andExpect(jsonPath("$.tags[0].technologyName").value("Java"))
+                .andExpect(jsonPath("$.tags[0].color").value("#FF0000"))
+                .andExpect(jsonPath("$.profile.profileId").value(articleDTO.profile().profileId().toString()))
+                .andExpect(jsonPath("$.profile.userId").value(articleDTO.profile().userId().toString()))
+                .andExpect(jsonPath("$.profile.name").value(articleDTO.profile().name()))
+                .andExpect(jsonPath("$.profile.level").value(articleDTO.profile().level()))
+                .andExpect(jsonPath("$.profile.professional").value(articleDTO.profile().professional()))
+                .andExpect(jsonPath("$.profile.photoUrl").value(articleDTO.profile().photoUrl()))
+                .andExpect(jsonPath("$.articleTotalLikes").value(articleDTO.articleTotalLikes()))
+                .andExpect(jsonPath("$.liked").value(articleDTO.liked()))
+                .andExpect(jsonPath("$.saved").value(articleDTO.saved()));
     }
 
     @Test
-    public void shouldReturnArticlesPublished(){
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-        .when()
-                .get("/articles")
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("numberOfElements", is(3));
+    void shouldGetAllPublishedArticlesAndReturn200Ok() throws Exception {
+        Page<ArticleDTO> page = new PageImpl<>(List.of(articleDTO));
+        when(articleService.getAllPublishedArticles(any(Pageable.class))).thenReturn(page);
+
+        mockMvc.perform(get("/articles")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].articleId").value(articleDTO.articleId().toString()))
+                .andExpect(jsonPath("$.content[0].title").value(articleDTO.title()))
+                .andExpect(jsonPath("$.content[0].content").value(articleDTO.content()))
+                .andExpect(jsonPath("$.content[0].createdAt").value(articleDTO.createdAt().toString()))
+                .andExpect(jsonPath("$.content[0].tags[0].technologyName").value("Java"))
+                .andExpect(jsonPath("$.content[0].tags[0].color").value("#FF0000"))
+                .andExpect(jsonPath("$.content[0].profile.profileId").value(articleDTO.profile().profileId().toString()))
+                .andExpect(jsonPath("$.content[0].profile.userId").value(articleDTO.profile().userId().toString()))
+                .andExpect(jsonPath("$.content[0].profile.name").value(articleDTO.profile().name()))
+                .andExpect(jsonPath("$.content[0].profile.level").value(articleDTO.profile().level()))
+                .andExpect(jsonPath("$.content[0].profile.professional").value(articleDTO.profile().professional()))
+                .andExpect(jsonPath("$.content[0].profile.photoUrl").value(articleDTO.profile().photoUrl()))
+                .andExpect(jsonPath("$.content[0].articleTotalLikes").value(articleDTO.articleTotalLikes()))
+                .andExpect(jsonPath("$.content[0].liked").value(articleDTO.liked()))
+                .andExpect(jsonPath("$.content[0].saved").value(articleDTO.saved()));
     }
 
     @Test
-    public void shouldReturnArticlesPublishedWithGivenTitle(){
-        String title = "implementar index";
+    void shouldSearchPublishedArticlesAndReturn200Ok() throws Exception {
+        Page<ArticleDTO> page = new PageImpl<>(List.of(articleDTO));
+        when(articleService.searchPublishedArticles(eq("Java"), any(Pageable.class))).thenReturn(page);
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-        .when()
-                .get("/articles/search?query=" + title)
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("numberOfElements", is(1));
+        mockMvc.perform(get("/articles/search")
+                        .param("query", "Java")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].articleId").value(articleDTO.articleId().toString()))
+                .andExpect(jsonPath("$.content[0].title").value(articleDTO.title()));
     }
 
     @Test
-    public void shouldReturnArticlesPublishedWithGivenTechnologyName(){
-        String technologyName = "Python";
+    void shouldGetArticlesByTagAndReturn200Ok() throws Exception {
+        Page<ArticleDTO> page = new PageImpl<>(List.of(articleDTO));
+        when(articleService.getAllPublishedArticlesByTechnologyName(eq("Java"), any(Pageable.class))).thenReturn(page);
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-                .when()
-                .get("/articles/" + technologyName + "/tag")
-                .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("numberOfElements", is(2));
+        mockMvc.perform(get("/articles/{technologyName}/tag", "Java")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].articleId").value(articleDTO.articleId().toString()));
     }
 
     @Test
-    public void shouldReturnArticlesPublishedByCertainProfile(){
-        UUID profileId = profile3Id;
+    void shouldGetArticlesByTagsAndReturn200Ok() throws Exception {
+        Page<ArticleDTO> page = new PageImpl<>(List.of(articleDTO));
+        when(articleService.getAllPublishedArticlesByTags(eq(List.of("Java", "Spring")), any(Pageable.class))).thenReturn(page);
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-                .when()
-                .get("/articles/" + profileId + "/profile")
-                .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("numberOfElements", is(2));
+        mockMvc.perform(get("/articles/filter")
+                        .param("tags", "Java", "Spring")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].articleId").value(articleDTO.articleId().toString()));
     }
 
     @Test
-    public void shouldUpdateArticleWhenUserIsOwner(){
-        UUID articleId = article1Id;
-        ArticleUpdateDTO payload = new ArticleUpdateDTO(
-                "Teste de integração 123",
-                "Este conteúdo foi atualizado para ver se funciona",
-                Set.of("Python")
-        );
+    void shouldGetProfileArticlesAndReturn200Ok() throws Exception {
+        Page<ArticleDTO> page = new PageImpl<>(List.of(articleDTO));
+        when(articleService.getAllPublishedArticlesByProfile(eq(profileId), any(Pageable.class))).thenReturn(page);
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-                .body(payload)
-        .when()
-                .put("/articles/" + articleId)
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("title", equalTo("Teste de integração 123"))
-                .body("content", equalTo("Este conteúdo foi atualizado para ver se funciona"))
-                .body("tags", hasSize(1))
-                .body("tags.technologyName", hasItem("Python"));
+        mockMvc.perform(get("/articles/{profileId}/profile", profileId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].articleId").value(articleDTO.articleId().toString()));
     }
 
     @Test
-    public void shouldToggleLikeWhenUserIsPerson(){
-        UUID articleId = article1Id;
+    void shouldUpdateArticleAndReturn200Ok() throws Exception {
+        when(articleService.updateArticle(eq(articleId), any(ArticleUpdateDTO.class), eq(userId))).thenReturn(articleDTO);
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson2)
-        .when()
-                .patch("/articles/" + articleId + "/like")
-        .then()
-                .statusCode(HttpStatus.OK.value());
+        mockMvc.perform(put("/articles/{articleId}", articleId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(articleUpdateDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.articleId").value(articleDTO.articleId().toString()))
+                .andExpect(jsonPath("$.title").value(articleDTO.title()))
+                .andExpect(jsonPath("$.content").value(articleDTO.content()));
     }
 
     @Test
-    public void shouldDeleteArticleWhenUserIsOwner(){
-        UUID articleId = article1Id;
+    void shouldToggleArticleLikeAndReturn200Ok() throws Exception {
+        doNothing().when(articleService).toggleArticleLike(eq(articleId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-        .when()
-                .delete("/articles/" + articleId)
-        .then()
-                .statusCode(HttpStatus.NO_CONTENT.value());
+        mockMvc.perform(patch("/articles/{articleId}/like", articleId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
     }
 
     @Test
-    public void shouldDeleteArticleWhenUserIsAdmin(){
-        UUID articleId = article1Id;
+    void shouldDeleteArticleAndReturn204NoContent() throws Exception {
+        doNothing().when(articleService).deleteArticleById(eq(articleId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenAdmin)
-        .when()
-                .delete("/articles/" + articleId)
-        .then()
-                .statusCode(HttpStatus.NO_CONTENT.value());
+        mockMvc.perform(delete("/articles/{articleId}", articleId))
+                .andExpect(status().isNoContent());
     }
 
     // -----------------------UNHAPPY PATH------------------------------
 
     @Test
-    public void shouldNotCreateArticleWhenUserIsNotAuthenticated(){
-        ArticleCreateDTO article = new ArticleCreateDTO(
-                "Como fazer partição de lista",
-                "Para isso você consegue fazer na linguagem Python dessa forma...",
-                Set.of("Python")
-        );
+    void shouldNotCreateArticleAndReturn400BadRequestWhenDataIsInvalid() throws Exception {
+        ArticleCreateDTO invalidDTO = new ArticleCreateDTO("", "", Set.of());
 
-        given()
-                .contentType(ContentType.JSON)
-                .body(article)
-        .when()
-                .post("/articles")
-        .then()
-                .statusCode(HttpStatus.FORBIDDEN.value());
+        mockMvc.perform(post("/articles")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidDTO)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    public void shouldNotCreateArticleWhenUserIsAdmin(){
-        ArticleCreateDTO article = new ArticleCreateDTO(
-                "Como fazer partição de lista",
-                "Para isso você consegue fazer na linguagem Python dessa forma...",
-                Set.of("Python")
-        );
+    void shouldNotCreateArticleAndReturn404NotFoundWhenProfileDoesNotExist() throws Exception {
+        when(articleService.createArticle(any(ArticleCreateDTO.class), eq(userId)))
+                .thenThrow(new ObjectNotFoundException("Perfil não encontrado"));
 
-        given()
-                .header("Authorization", "Bearer " + tokenAdmin)
-                .contentType(ContentType.JSON)
-                .body(article)
-        .when()
-                .post("/articles")
-        .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        mockMvc.perform(post("/articles")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(articleCreateDTO)))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotCreateArticleWithMissingData(){
-        ArticleCreateDTO article = new ArticleCreateDTO(
-                "Como integrar o backend com o front",
-                "Para você implementar isso tem de fazer assim...",
-                Set.of()
-        );
+    void shouldNotGetArticleAndReturn404NotFoundWhenArticleDoesNotExist() throws Exception {
+        when(articleService.getArticleById(articleId))
+                .thenThrow(new ObjectNotFoundException("Artigo não encontrado"));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-                .body(article)
-        .when()
-                .post("/articles")
-        .then()
-                .statusCode(HttpStatus.BAD_REQUEST.value());
+        mockMvc.perform(get("/articles/{articleId}", articleId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotCreateArticleWhenTechnologyNameDoesNotExist(){
-        ArticleCreateDTO article = new ArticleCreateDTO(
-                "Como fazer partição de lista",
-                "Para isso você consegue fazer na linguagem Rust desse jeito...",
-                Set.of("Rust")
-        );
+    void shouldNotGetProfileArticlesAndReturn404NotFoundWhenProfileDoesNotExist() throws Exception {
+        when(articleService.getAllPublishedArticlesByProfile(eq(profileId), any(Pageable.class)))
+                .thenThrow(new ObjectNotFoundException("Perfil não encontrado"));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-                .body(article)
-        .when()
-                .post("/articles")
-        .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
+        mockMvc.perform(get("/articles/{profileId}/profile", profileId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotUpdateArticleWhenUserIsNotAuthenticated(){
-        UUID articleId = article1Id;
-        ArticleUpdateDTO article = new ArticleUpdateDTO(
-                "Frameworks Python para web",
-                "Existem vários frameworks web para Python que são muito utilizados...",
-                Set.of("Python")
-        );
+    void shouldNotUpdateArticleAndReturn400BadRequestWhenDataIsInvalid() throws Exception {
+        ArticleUpdateDTO invalidDTO = new ArticleUpdateDTO("Title", "Content", Set.of("t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8"));
 
-        given()
-                .contentType(ContentType.JSON)
-                .body(article)
-        .when()
-                .put("/articles/" + articleId)
-        .then()
-                .statusCode(HttpStatus.FORBIDDEN.value());
+        mockMvc.perform(put("/articles/{articleId}", articleId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidDTO)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    public void shouldNotUpdateArticleWhenDoesNotExist(){
-        UUID articleId = UUID.randomUUID();
-        ArticleUpdateDTO article = new ArticleUpdateDTO(
-                "Como criar um dicionário no Python",
-                "Para você criar um dicionário no python, é preciso fazer isso...",
-                Set.of("Python")
-        );
+    void shouldNotUpdateArticleAndReturn404NotFoundWhenArticleDoesNotExist() throws Exception {
+        when(articleService.updateArticle(eq(articleId), any(ArticleUpdateDTO.class), eq(userId)))
+                .thenThrow(new ObjectNotFoundException("Artigo não encontrado"));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-                .body(article)
-        .when()
-                .put("/articles/" + articleId)
-        .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
+        mockMvc.perform(put("/articles/{articleId}", articleId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(articleUpdateDTO)))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotUpdateArticleWheUserIsNotOwner(){
-        UUID articleId = article1Id;
-        ArticleUpdateDTO article = new ArticleUpdateDTO(
-                "Como criar um dicionário no Python",
-                "Para você criar um dicionário no python, é preciso fazer isso...",
-                Set.of("Python")
-        );
+    void shouldNotUpdateArticleAndReturn401UnauthorizedWhenUserIsNotOwner() throws Exception {
+        when(articleService.updateArticle(eq(articleId), any(ArticleUpdateDTO.class), eq(userId)))
+                .thenThrow(new ProfileIsNotTheOwnerException("Usuário não é o autor"));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson2)
-                .contentType(ContentType.JSON)
-                .body(article)
-        .when()
-                .put("/articles/" + articleId)
-        .then()
-                .statusCode(HttpStatus.UNAUTHORIZED.value());
+        mockMvc.perform(put("/articles/{articleId}", articleId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(articleUpdateDTO)))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    public void shouldNotUpdateArticleWhenTechnologyNameDoesNotExist(){
-        UUID articleId = article1Id;
-        ArticleUpdateDTO article = new ArticleUpdateDTO(
-                "CPython usando Rust",
-                "Uma notícia que bombou recentemente é o Python trocando o C pelo Rust...",
-                Set.of("Python", "Rust")
-        );
+    void shouldNotToggleArticleLikeAndReturn404NotFoundWhenArticleDoesNotExist() throws Exception {
+        doThrow(new ObjectNotFoundException("Artigo não encontrado"))
+                .when(articleService).toggleArticleLike(eq(articleId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-                .body(article)
-        .when()
-                .put("/articles/" + articleId)
-        .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
+        mockMvc.perform(patch("/articles/{articleId}/like", articleId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotToggleLikeWhenArticleDoesNotExist(){
-        UUID articleId = UUID.randomUUID();
+    void shouldNotDeleteArticleAndReturn404NotFoundWhenArticleDoesNotExist() throws Exception {
+        doThrow(new ObjectNotFoundException("Artigo não encontrado"))
+                .when(articleService).deleteArticleById(eq(articleId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-        .when()
-                .patch("/articles/" + articleId + "/like")
-        .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
+        mockMvc.perform(delete("/articles/{articleId}", articleId))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotToggleLikeWhenUserIsAdmin(){
-        UUID articleId = article1Id;
+    void shouldNotDeleteArticleAndReturn401UnauthorizedWhenUserIsNotOwner() throws Exception {
+        doThrow(new ProfileIsNotTheOwnerException("Usuário não é o autor"))
+                .when(articleService).deleteArticleById(eq(articleId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenAdmin)
-        .when()
-                .patch("/articles/" + articleId + "/like")
-        .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
-    }
-
-    @Test
-    public void shouldNotDeleteArticleWhenUserIsNotAuthenticated(){
-        UUID articleId = article1Id;
-
-        given()
-                .contentType(ContentType.JSON)
-        .when()
-                .delete("/articles/" + articleId)
-        .then()
-                .statusCode(HttpStatus.FORBIDDEN.value());
-    }
-
-    @Test
-    public void shouldNotDeleteArticleWhenDoesNotExist(){
-        UUID articleId = UUID.randomUUID();
-
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-        .when()
-                .delete("/articles/" + articleId)
-        .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
-    }
-
-    @Test
-    public void shouldNotDeleteArticleWhenUserIsNotOwnerOrIsNotAdmin(){
-        UUID articleId = article1Id;
-
-        given()
-                .header("Authorization", "Bearer " + tokenPerson2)
-        .when()
-                .delete("/articles/" + articleId)
-        .then()
-                .statusCode(HttpStatus.UNAUTHORIZED.value());
+        mockMvc.perform(delete("/articles/{articleId}", articleId))
+                .andExpect(status().isUnauthorized());
     }
 }

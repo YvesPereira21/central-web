@@ -1,228 +1,252 @@
 package io.centralweb.backend.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.centralweb.backend.dto.comment.CommentCreateDTO;
+import io.centralweb.backend.dto.comment.CommentDTO;
 import io.centralweb.backend.dto.comment.CommentUpdateDTO;
-import io.centralweb.backend.model.enums.UserRole;
-import io.centralweb.backend.model.Answer;
-import io.centralweb.backend.model.Comment;
-import io.centralweb.backend.model.Profile;
+import io.centralweb.backend.dto.profile.ProfileSimpleDTO;
+import io.centralweb.backend.exception.ObjectNotFoundException;
+import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
 import io.centralweb.backend.model.User;
-import io.centralweb.backend.repository.AnswerRepository;
-import io.centralweb.backend.repository.CommentRepository;
-import io.centralweb.backend.repository.ProfileRepository;
+import io.centralweb.backend.model.enums.UserRole;
 import io.centralweb.backend.repository.UserRepository;
+import io.centralweb.backend.security.OAuth2SuccessHandler;
+import io.centralweb.backend.security.SecurityFilter;
 import io.centralweb.backend.security.TokenService;
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
+import io.centralweb.backend.service.CommentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpStatus;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.jdbc.Sql;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-@Sql(scripts = "/clean-db.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@WebMvcTest(CommentController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class CommentControllerTest {
-    @LocalServerPort
-    private int port;
-    @Autowired
-    private TokenService tokenService;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private ProfileRepository profileRepository;
-    @Autowired
-    private AnswerRepository answerRepository;
-    @Autowired
-    private CommentRepository commentRepository;
 
-    private String tokenAdmin;
-    private String tokenPerson1;
-    private String tokenPerson2;
+    @Autowired
+    private MockMvc mockMvc;
+
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule());
+
+    @MockitoBean
+    private CommentService commentService;
+
+    @MockitoBean
+    private TokenService tokenService;
+
+    @MockitoBean
+    private SecurityFilter securityFilter;
+
+    @MockitoBean
+    private OAuth2SuccessHandler oAuth2SuccessHandler;
+
+    @MockitoBean
+    private UserRepository userRepository;
+
+    @MockitoBean
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
+    @MockitoBean
+    private org.springframework.cache.CacheManager cacheManager;
+
+    private UUID userId;
     private UUID answerId;
-    private UUID comment1Id;
+    private UUID commentId;
+    private UUID profileId;
+
+    private CommentDTO commentDTO;
+    private CommentCreateDTO commentCreateDTO;
+    private CommentUpdateDTO commentUpdateDTO;
 
     @BeforeEach
-    public void setUp() {
-        RestAssured.port = port;
-        RestAssured.baseURI = "http://localhost";
+    void setUp() {
+        userId = UUID.randomUUID();
+        answerId = UUID.randomUUID();
+        commentId = UUID.randomUUID();
+        profileId = UUID.randomUUID();
 
-        commentRepository.deleteAll();
-        answerRepository.deleteAll();
-        profileRepository.deleteAll();
-        userRepository.deleteAll();
+        User user = new User(userId, "password", "user@test.com");
+        user.setRole(UserRole.PERSON);
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
 
-        User user1 = new User();
-        user1.setEmail("admin@gmail.com");
-        user1.setPassword("password");
-        user1.setRole(UserRole.ADMIN);
-        userRepository.save(user1);
+        ProfileSimpleDTO profileSimpleDTO = new ProfileSimpleDTO(
+                profileId,
+                userId,
+                "Commenter Name",
+                "Intermediate",
+                false,
+                "http://example.com/avatar.jpg"
+        );
 
-        User user2 = new User();
-        user2.setEmail("person1@gmail.com");
-        user2.setPassword("password");
-        user2.setRole(UserRole.PERSON);
+        commentDTO = new CommentDTO(
+                commentId,
+                "Este é um comentário de teste.",
+                LocalDate.of(2026, 8, 13),
+                profileSimpleDTO
+        );
 
-        User user3 = new User();
-        user3.setEmail("person2@gmail.com");
-        user3.setPassword("password");
-        user3.setRole(UserRole.PERSON);
-
-        Profile profile1 = new Profile();
-        profile1.setName("User 1");
-        profile1.setUser(user2);
-        profileRepository.save(profile1);
-
-        Profile profile2 = new Profile();
-        profile2.setName("User 2");
-        profile2.setUser(user3);
-        profileRepository.save(profile2);
-
-        Answer answer1 = new Answer();
-        answer1.setContent("This is an answer");
-        answer1.setCreatedAt(LocalDate.now());
-        answer1.setProfile(profile1);
-        Answer savedAnswer = answerRepository.save(answer1);
-        answerId = savedAnswer.getAnswerId();
-
-        Comment comment1 = new Comment();
-        comment1.setContent("This is a comment");
-        comment1.setCreatedAt(LocalDate.now());
-        comment1.setAnswer(savedAnswer);
-        comment1.setProfile(profile1);
-        Comment savedComment = commentRepository.save(comment1);
-        comment1Id = savedComment.getCommentId();
-
-        tokenAdmin = tokenService.generateToken(user1);
-        tokenPerson1 = tokenService.generateToken(user2);
-        tokenPerson2 = tokenService.generateToken(user3);
+        commentCreateDTO = new CommentCreateDTO("Este é um comentário de teste.");
+        commentUpdateDTO = new CommentUpdateDTO("Comentário atualizado.");
     }
 
-    // ----------------------- HAPPY PATH ------------------------------
+    // -----------------------HAPPY PATH------------------------------
 
     @Test
-    public void shouldCreateCommentWhenUserIsPerson() {
-        CommentCreateDTO payload = new CommentCreateDTO("Novo comentário de teste");
+    void shouldCreateCommentAndReturn201Created() throws Exception {
+        when(commentService.createComment(eq(answerId), any(CommentCreateDTO.class), eq(userId))).thenReturn(commentDTO);
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-                .body(payload)
-        .when()
-                .post("/comments/answer/" + answerId)
-        .then()
-                .statusCode(HttpStatus.CREATED.value())
-                .body("content", equalTo("Novo comentário de teste"));
+        mockMvc.perform(post("/comments/answer/{answerId}", answerId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(commentCreateDTO)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.commentId").value(commentDTO.commentId().toString()))
+                .andExpect(jsonPath("$.content").value(commentDTO.content()))
+                .andExpect(jsonPath("$.createdAt").value(commentDTO.createdAt().toString()))
+                .andExpect(jsonPath("$.profile.profileId").value(commentDTO.profile().profileId().toString()))
+                .andExpect(jsonPath("$.profile.userId").value(commentDTO.profile().userId().toString()))
+                .andExpect(jsonPath("$.profile.name").value(commentDTO.profile().name()))
+                .andExpect(jsonPath("$.profile.level").value(commentDTO.profile().level()))
+                .andExpect(jsonPath("$.profile.professional").value(commentDTO.profile().professional()))
+                .andExpect(jsonPath("$.profile.photoUrl").value(commentDTO.profile().photoUrl()));
     }
 
     @Test
-    public void shouldReturnCommentsByAnswer() {
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-        .when()
-                .get("/comments/answer/" + answerId)
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("numberOfElements", is(1))
-                .body("content[0].content", equalTo("This is a comment"));
+    void shouldGetCommentsByAnswerAndReturn200Ok() throws Exception {
+        Page<CommentDTO> page = new PageImpl<>(List.of(commentDTO));
+        when(commentService.getAllCommentsFromAnswer(eq(answerId), any(Pageable.class))).thenReturn(page);
+
+        mockMvc.perform(get("/comments/answer/{answerId}", answerId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].commentId").value(commentDTO.commentId().toString()))
+                .andExpect(jsonPath("$.content[0].content").value(commentDTO.content()))
+                .andExpect(jsonPath("$.content[0].createdAt").value(commentDTO.createdAt().toString()))
+                .andExpect(jsonPath("$.content[0].profile.profileId").value(commentDTO.profile().profileId().toString()));
     }
 
     @Test
-    public void shouldUpdateCommentWhenUserIsOwner() {
-        CommentUpdateDTO payload = new CommentUpdateDTO("Comentário atualizado");
+    void shouldUpdateCommentAndReturn200Ok() throws Exception {
+        when(commentService.updateComment(eq(commentId), any(CommentUpdateDTO.class), eq(userId))).thenReturn(commentDTO);
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-                .body(payload)
-        .when()
-                .put("/comments/" + comment1Id)
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("content", equalTo("Comentário atualizado"));
+        mockMvc.perform(put("/comments/{commentId}", commentId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(commentUpdateDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.commentId").value(commentDTO.commentId().toString()))
+                .andExpect(jsonPath("$.content").value(commentDTO.content()));
     }
 
     @Test
-    public void shouldDeleteCommentWhenUserIsOwner() {
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-        .when()
-                .delete("/comments/" + comment1Id)
-        .then()
-                .statusCode(HttpStatus.NO_CONTENT.value());
+    void shouldDeleteCommentAndReturn204NoContent() throws Exception {
+        doNothing().when(commentService).deleteCommentById(eq(commentId), eq(userId));
+
+        mockMvc.perform(delete("/comments/{commentId}", commentId))
+                .andExpect(status().isNoContent());
+    }
+
+    // -----------------------UNHAPPY PATH------------------------------
+
+    @Test
+    void shouldNotCreateCommentAndReturn400BadRequestWhenDataIsInvalid() throws Exception {
+        CommentCreateDTO invalidDTO = new CommentCreateDTO("");
+
+        mockMvc.perform(post("/comments/answer/{answerId}", answerId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidDTO)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    public void shouldDeleteCommentWhenUserIsAdmin() {
-        given()
-                .header("Authorization", "Bearer " + tokenAdmin)
-        .when()
-                .delete("/comments/" + comment1Id)
-        .then()
-                .statusCode(HttpStatus.NO_CONTENT.value());
-    }
+    void shouldNotCreateCommentAndReturn404NotFoundWhenAnswerDoesNotExist() throws Exception {
+        when(commentService.createComment(eq(answerId), any(CommentCreateDTO.class), eq(userId)))
+                .thenThrow(new ObjectNotFoundException("Resposta não encontrada"));
 
-    // ----------------------- UNHAPPY PATH ------------------------------
-
-    @Test
-    public void shouldNotCreateCommentWhenUserIsNotAuthenticated() {
-        CommentCreateDTO payload = new CommentCreateDTO("Teste");
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(payload)
-        .when()
-                .post("/comments/answer/" + answerId)
-        .then()
-                .statusCode(HttpStatus.FORBIDDEN.value());
+        mockMvc.perform(post("/comments/answer/{answerId}", answerId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(commentCreateDTO)))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotCreateCommentWhenAnswerDoesNotExist() {
-        CommentCreateDTO payload = new CommentCreateDTO("Teste");
+    void shouldNotGetCommentsByAnswerAndReturn404NotFoundWhenAnswerDoesNotExist() throws Exception {
+        when(commentService.getAllCommentsFromAnswer(eq(answerId), any(Pageable.class)))
+                .thenThrow(new ObjectNotFoundException("Resposta não encontrada"));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-                .body(payload)
-        .when()
-                .post("/comments/answer/" + UUID.randomUUID())
-        .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
+        mockMvc.perform(get("/comments/answer/{answerId}", answerId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotUpdateCommentWhenUserIsNotOwner() {
-        CommentUpdateDTO payload = new CommentUpdateDTO("Comentário atualizado por intruso");
+    void shouldNotUpdateCommentAndReturn400BadRequestWhenDataIsInvalid() throws Exception {
+        CommentUpdateDTO invalidDTO = new CommentUpdateDTO("");
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson2)
-                .contentType(ContentType.JSON)
-                .body(payload)
-        .when()
-                .put("/comments/" + comment1Id)
-        .then()
-                .statusCode(HttpStatus.UNAUTHORIZED.value());
+        mockMvc.perform(put("/comments/{commentId}", commentId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidDTO)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    public void shouldNotDeleteCommentWhenUserIsNotOwnerOrAdmin() {
-        given()
-                .header("Authorization", "Bearer " + tokenPerson2)
-        .when()
-                .delete("/comments/" + comment1Id)
-        .then()
-                .statusCode(HttpStatus.UNAUTHORIZED.value());
+    void shouldNotUpdateCommentAndReturn404NotFoundWhenCommentDoesNotExist() throws Exception {
+        when(commentService.updateComment(eq(commentId), any(CommentUpdateDTO.class), eq(userId)))
+                .thenThrow(new ObjectNotFoundException("Comentário não encontrado"));
+
+        mockMvc.perform(put("/comments/{commentId}", commentId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(commentUpdateDTO)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldNotUpdateCommentAndReturn401UnauthorizedWhenUserIsNotOwner() throws Exception {
+        when(commentService.updateComment(eq(commentId), any(CommentUpdateDTO.class), eq(userId)))
+                .thenThrow(new ProfileIsNotTheOwnerException("Usuário não é o dono do comentário"));
+
+        mockMvc.perform(put("/comments/{commentId}", commentId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(commentUpdateDTO)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldNotDeleteCommentAndReturn404NotFoundWhenCommentDoesNotExist() throws Exception {
+        doThrow(new ObjectNotFoundException("Comentário não encontrado"))
+                .when(commentService).deleteCommentById(eq(commentId), eq(userId));
+
+        mockMvc.perform(delete("/comments/{commentId}", commentId))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldNotDeleteCommentAndReturn401UnauthorizedWhenUserIsNotOwner() throws Exception {
+        doThrow(new ProfileIsNotTheOwnerException("Usuário não é o dono do comentário"))
+                .when(commentService).deleteCommentById(eq(commentId), eq(userId));
+
+        mockMvc.perform(delete("/comments/{commentId}", commentId))
+                .andExpect(status().isUnauthorized());
     }
 }

@@ -18,6 +18,18 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalHandlerException {
 
+    @ExceptionHandler({org.springframework.security.access.AccessDeniedException.class, org.springframework.security.authorization.AuthorizationDeniedException.class})
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseEntity<ApiError> accessDeniedException(Exception e) {
+        ApiError error = ApiError.builder()
+                .timestamp(LocalDateTime.now())
+                .code(HttpStatus.UNAUTHORIZED.value())
+                .status(HttpStatus.UNAUTHORIZED.name())
+                .errors(List.of("Acesso não autorizado: " + e.getMessage()))
+                .build();
+        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> genericException(Exception e) {
         log.error("Ocorreu um erro interno do servidor: ", e);

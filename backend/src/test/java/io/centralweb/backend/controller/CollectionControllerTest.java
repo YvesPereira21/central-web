@@ -1,286 +1,289 @@
 package io.centralweb.backend.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.centralweb.backend.dto.article.ArticleListSimpleCollectionDTO;
 import io.centralweb.backend.dto.collection.CollectionCreateDTO;
+import io.centralweb.backend.dto.collection.CollectionDTO;
+import io.centralweb.backend.dto.question.QuestionListSimpleCollectionDTO;
+import io.centralweb.backend.exception.ObjectNotFoundException;
+import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
+import io.centralweb.backend.model.User;
 import io.centralweb.backend.model.enums.UserRole;
-import io.centralweb.backend.model.*;
-import io.centralweb.backend.repository.*;
+import io.centralweb.backend.repository.UserRepository;
+import io.centralweb.backend.security.OAuth2SuccessHandler;
+import io.centralweb.backend.security.SecurityFilter;
 import io.centralweb.backend.security.TokenService;
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
+import io.centralweb.backend.service.CollectionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpStatus;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.jdbc.Sql;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-@Sql(scripts = "/clean-db.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@WebMvcTest(CollectionController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class CollectionControllerTest {
-    @LocalServerPort
-    private int port;
-    @Autowired
-    private TokenService tokenService;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private ProfileRepository profileRepository;
-    @Autowired
-    private ArticleRepository articleRepository;
-    @Autowired
-    private QuestionRepository questionRepository;
-    @Autowired
-    private CollectionRepository collectionRepository;
 
-    private String tokenAdmin;
-    private String tokenPerson1;
-    private String tokenPerson2;
-    private UUID collection1Id;
-    private UUID article1Id;
-    private UUID question1Id;
+    @Autowired
+    private MockMvc mockMvc;
+
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule());
+
+    @MockitoBean
+    private CollectionService collectionService;
+
+    @MockitoBean
+    private TokenService tokenService;
+
+    @MockitoBean
+    private SecurityFilter securityFilter;
+
+    @MockitoBean
+    private OAuth2SuccessHandler oAuth2SuccessHandler;
+
+    @MockitoBean
+    private UserRepository userRepository;
+
+    @MockitoBean
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
+    @MockitoBean
+    private org.springframework.cache.CacheManager cacheManager;
+
+    private UUID userId;
+    private UUID collectionId;
+    private UUID articleId;
+    private UUID questionId;
+
+    private CollectionDTO collectionDTO;
+    private CollectionCreateDTO collectionCreateDTO;
 
     @BeforeEach
-    public void setUp() {
-        RestAssured.port = port;
-        RestAssured.baseURI = "http://localhost";
+    void setUp() {
+        userId = UUID.randomUUID();
+        collectionId = UUID.randomUUID();
+        articleId = UUID.randomUUID();
+        questionId = UUID.randomUUID();
 
-        collectionRepository.deleteAll();
-        articleRepository.deleteAll();
-        questionRepository.deleteAll();
-        profileRepository.deleteAll();
-        userRepository.deleteAll();
+        User user = new User(userId, "password", "user@test.com");
+        user.setRole(UserRole.PERSON);
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
 
-        User user1 = new User();
-        user1.setEmail("admin@gmail.com");
-        user1.setPassword("password");
-        user1.setRole(UserRole.ADMIN);
-        userRepository.save(user1);
+        ArticleListSimpleCollectionDTO articleDTO = new ArticleListSimpleCollectionDTO(
+                articleId,
+                "Artigo Favorito",
+                LocalDate.of(2026, 8, 13)
+        );
 
-        User user2 = new User();
-        user2.setEmail("person1@gmail.com");
-        user2.setPassword("password");
-        user2.setRole(UserRole.PERSON);
+        QuestionListSimpleCollectionDTO questionDTO = new QuestionListSimpleCollectionDTO(
+                questionId,
+                "Pergunta Favorita",
+                LocalDate.of(2026, 8, 13),
+                true
+        );
 
-        User user3 = new User();
-        user3.setEmail("person2@gmail.com");
-        user3.setPassword("password");
-        user3.setRole(UserRole.PERSON);
+        collectionDTO = new CollectionDTO(
+                collectionId,
+                "Minha Coleção",
+                Set.of(articleDTO),
+                Set.of(questionDTO)
+        );
 
-        Profile profile1 = new Profile();
-        profile1.setName("User 1");
-        profile1.setUser(user2);
-        profileRepository.save(profile1);
-
-        Profile profile2 = new Profile();
-        profile2.setName("User 2");
-        profile2.setUser(user3);
-        profileRepository.save(profile2);
-
-        Article article1 = new Article();
-        article1.setTitle("Title");
-        article1.setContent("Content");
-        article1.setCreatedAt(LocalDate.now());
-        article1.setProfile(profile1);
-        Article savedArticle = articleRepository.save(article1);
-        article1Id = savedArticle.getArticleId();
-
-        Question question1 = new Question();
-        question1.setTitle("Question");
-        question1.setContent("Content");
-        question1.setCreatedAt(LocalDate.now());
-        question1.setProfile(profile1);
-        Question savedQuestion = questionRepository.save(question1);
-        question1Id = savedQuestion.getQuestionId();
-
-        Collection collection1 = new Collection();
-        collection1.setName("Favoritos");
-        collection1.setProfile(profile1);
-        collection1.addArticle(savedArticle);
-        collection1.addQuestion(savedQuestion);
-        Collection savedCollection = collectionRepository.save(collection1);
-        collection1Id = savedCollection.getCollectionId();
-
-        tokenAdmin = tokenService.generateToken(user1);
-        tokenPerson1 = tokenService.generateToken(user2);
-        tokenPerson2 = tokenService.generateToken(user3);
+        collectionCreateDTO = new CollectionCreateDTO("Minha Coleção");
     }
 
-    // ----------------------- HAPPY PATH ------------------------------
+    // -----------------------HAPPY PATH------------------------------
 
     @Test
-    public void shouldCreateCollectionWhenUserIsPerson() {
-        CollectionCreateDTO payload = new CollectionCreateDTO("Nova Coleção");
+    void shouldCreateCollectionAndReturn201Created() throws Exception {
+        when(collectionService.createCollection(any(CollectionCreateDTO.class), eq(userId))).thenReturn(collectionDTO);
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-                .body(payload)
-        .when()
-                .post("/collections")
-        .then()
-                .statusCode(HttpStatus.CREATED.value())
-                .body("name", equalTo("Nova Coleção"));
+        mockMvc.perform(post("/collections")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(collectionCreateDTO)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.collectionId").value(collectionDTO.collectionId().toString()))
+                .andExpect(jsonPath("$.name").value(collectionDTO.name()))
+                .andExpect(jsonPath("$.articles[0].articleId").value(articleId.toString()))
+                .andExpect(jsonPath("$.articles[0].title").value("Artigo Favorito"))
+                .andExpect(jsonPath("$.articles[0].createdAt").value("2026-08-13"))
+                .andExpect(jsonPath("$.questions[0].questionId").value(questionId.toString()))
+                .andExpect(jsonPath("$.questions[0].title").value("Pergunta Favorita"))
+                .andExpect(jsonPath("$.questions[0].createdAt").value("2026-08-13"))
+                .andExpect(jsonPath("$.questions[0].solutioned").value(true));
     }
 
     @Test
-    public void shouldReturnMyCollections() {
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-        .when()
-                .get("/collections/my-collections")
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("numberOfElements", is(1))
-                .body("content[0].name", equalTo("Favoritos"));
+    void shouldGetMyCollectionsAndReturn200Ok() throws Exception {
+        Page<CollectionDTO> page = new PageImpl<>(List.of(collectionDTO));
+        when(collectionService.getMyCollections(eq(userId), any(Pageable.class))).thenReturn(page);
+
+        mockMvc.perform(get("/collections/my-collections")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].collectionId").value(collectionDTO.collectionId().toString()))
+                .andExpect(jsonPath("$.content[0].name").value(collectionDTO.name()))
+                .andExpect(jsonPath("$.content[0].articles[0].articleId").value(articleId.toString()))
+                .andExpect(jsonPath("$.content[0].questions[0].questionId").value(questionId.toString()));
     }
 
     @Test
-    public void shouldReturnCollectionById() {
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-        .when()
-                .get("/collections/" + collection1Id)
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("name", equalTo("Favoritos"));
+    void shouldGetCollectionByIdAndReturn200Ok() throws Exception {
+        when(collectionService.getCollectionById(eq(collectionId), eq(userId))).thenReturn(collectionDTO);
+
+        mockMvc.perform(get("/collections/{collectionId}", collectionId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.collectionId").value(collectionDTO.collectionId().toString()))
+                .andExpect(jsonPath("$.name").value(collectionDTO.name()));
     }
 
     @Test
-    public void shouldAddArticleToCollection() {
-        // We create a new article to add to the existing collection
-        Article article2 = new Article();
-        article2.setTitle("Title 2");
-        article2.setContent("Content 2");
-        article2.setCreatedAt(LocalDate.now());
-        // Just setting directly to pass not null
-        article2.setProfile(profileRepository.findAll().get(0));
-        Article savedArticle2 = articleRepository.save(article2);
+    void shouldAddArticleToCollectionAndReturn204NoContent() throws Exception {
+        doNothing().when(collectionService).addArticleToCollection(eq(collectionId), eq(articleId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-        .when()
-                .post("/collections/" + collection1Id + "/articles/" + savedArticle2.getArticleId())
-        .then()
-                .statusCode(HttpStatus.NO_CONTENT.value());
+        mockMvc.perform(post("/collections/{collectionId}/articles/{articleId}", collectionId, articleId))
+                .andExpect(status().isNoContent());
     }
 
     @Test
-    public void shouldAddQuestionToCollection() {
-        // We create a new question to add to the existing collection
-        Question question2 = new Question();
-        question2.setTitle("Question 2");
-        question2.setContent("Content 2");
-        question2.setCreatedAt(LocalDate.now());
-        question2.setProfile(profileRepository.findAll().get(0));
-        Question savedQuestion2 = questionRepository.save(question2);
+    void shouldAddQuestionToCollectionAndReturn204NoContent() throws Exception {
+        doNothing().when(collectionService).addQuestionToCollection(eq(collectionId), eq(questionId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-        .when()
-                .post("/collections/" + collection1Id + "/questions/" + savedQuestion2.getQuestionId())
-        .then()
-                .statusCode(HttpStatus.NO_CONTENT.value());
+        mockMvc.perform(post("/collections/{collectionId}/questions/{questionId}", collectionId, questionId))
+                .andExpect(status().isNoContent());
     }
 
     @Test
-    public void shouldRemoveArticleFromAllMyCollections() {
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-        .when()
-                .delete("/collections/articles/" + article1Id)
-        .then()
-                .statusCode(HttpStatus.NO_CONTENT.value());
+    void shouldRemoveArticleFromAllMyCollectionsAndReturn204NoContent() throws Exception {
+        doNothing().when(collectionService).removeArticleFromAllMyCollections(eq(articleId), eq(userId));
+
+        mockMvc.perform(delete("/collections/articles/{articleId}", articleId))
+                .andExpect(status().isNoContent());
     }
 
     @Test
-    public void shouldRemoveQuestionFromAllMyCollections() {
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-        .when()
-                .delete("/collections/questions/" + question1Id)
-        .then()
-                .statusCode(HttpStatus.NO_CONTENT.value());
+    void shouldRemoveQuestionFromAllMyCollectionsAndReturn204NoContent() throws Exception {
+        doNothing().when(collectionService).removeQuestionFromAllMyCollections(eq(questionId), eq(userId));
+
+        mockMvc.perform(delete("/collections/questions/{questionId}", questionId))
+                .andExpect(status().isNoContent());
     }
 
     @Test
-    public void shouldDeleteCollectionWhenUserIsOwner() {
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-        .when()
-                .delete("/collections/" + collection1Id)
-        .then()
-                .statusCode(HttpStatus.NO_CONTENT.value());
+    void shouldDeleteCollectionAndReturn204NoContent() throws Exception {
+        doNothing().when(collectionService).deleteCollectionById(eq(collectionId), eq(userId));
+
+        mockMvc.perform(delete("/collections/{collectionId}", collectionId))
+                .andExpect(status().isNoContent());
+    }
+
+    // -----------------------UNHAPPY PATH------------------------------
+
+    @Test
+    void shouldNotCreateCollectionAndReturn400BadRequestWhenDataIsInvalid() throws Exception {
+        CollectionCreateDTO invalidDTO = new CollectionCreateDTO("");
+
+        mockMvc.perform(post("/collections")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidDTO)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    public void shouldDeleteCollectionWhenUserIsAdmin() {
-        given()
-                .header("Authorization", "Bearer " + tokenAdmin)
-        .when()
-                .delete("/collections/" + collection1Id)
-        .then()
-                .statusCode(HttpStatus.NO_CONTENT.value());
-    }
+    void shouldNotGetCollectionByIdAndReturn404NotFoundWhenCollectionDoesNotExist() throws Exception {
+        when(collectionService.getCollectionById(eq(collectionId), eq(userId)))
+                .thenThrow(new ObjectNotFoundException("Coleção não encontrada"));
 
-    // ----------------------- UNHAPPY PATH ------------------------------
-
-    @Test
-    public void shouldNotCreateCollectionWhenUserIsNotAuthenticated() {
-        CollectionCreateDTO payload = new CollectionCreateDTO("Nova Coleção");
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(payload)
-        .when()
-                .post("/collections")
-        .then()
-                .statusCode(HttpStatus.FORBIDDEN.value());
+        mockMvc.perform(get("/collections/{collectionId}", collectionId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotGetCollectionByIdWhenNotOwner() {
-        given()
-                .header("Authorization", "Bearer " + tokenPerson2)
-                .contentType(ContentType.JSON)
-        .when()
-                .get("/collections/" + collection1Id)
-        .then()
-                .statusCode(HttpStatus.UNAUTHORIZED.value());
+    void shouldNotGetCollectionByIdAndReturn401UnauthorizedWhenUserIsNotOwner() throws Exception {
+        when(collectionService.getCollectionById(eq(collectionId), eq(userId)))
+                .thenThrow(new ProfileIsNotTheOwnerException("Usuário não é o dono da coleção"));
+
+        mockMvc.perform(get("/collections/{collectionId}", collectionId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    public void shouldNotAddArticleToCollectionWhenNotOwner() {
-        given()
-                .header("Authorization", "Bearer " + tokenPerson2)
-                .contentType(ContentType.JSON)
-        .when()
-                .post("/collections/" + collection1Id + "/articles/" + article1Id)
-        .then()
-                .statusCode(HttpStatus.UNAUTHORIZED.value());
+    void shouldNotAddArticleToCollectionAndReturn404NotFoundWhenCollectionOrArticleDoesNotExist() throws Exception {
+        doThrow(new ObjectNotFoundException("Coleção ou artigo não encontrado"))
+                .when(collectionService).addArticleToCollection(eq(collectionId), eq(articleId), eq(userId));
+
+        mockMvc.perform(post("/collections/{collectionId}/articles/{articleId}", collectionId, articleId))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotDeleteCollectionWhenUserIsNotOwnerOrAdmin() {
-        given()
-                .header("Authorization", "Bearer " + tokenPerson2)
-        .when()
-                .delete("/collections/" + collection1Id)
-        .then()
-                .statusCode(HttpStatus.UNAUTHORIZED.value());
+    void shouldNotAddArticleToCollectionAndReturn401UnauthorizedWhenUserIsNotOwner() throws Exception {
+        doThrow(new ProfileIsNotTheOwnerException("Usuário não é o dono"))
+                .when(collectionService).addArticleToCollection(eq(collectionId), eq(articleId), eq(userId));
+
+        mockMvc.perform(post("/collections/{collectionId}/articles/{articleId}", collectionId, articleId))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldNotAddQuestionToCollectionAndReturn404NotFoundWhenCollectionOrQuestionDoesNotExist() throws Exception {
+        doThrow(new ObjectNotFoundException("Coleção ou pergunta não encontrada"))
+                .when(collectionService).addQuestionToCollection(eq(collectionId), eq(questionId), eq(userId));
+
+        mockMvc.perform(post("/collections/{collectionId}/questions/{questionId}", collectionId, questionId))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldNotAddQuestionToCollectionAndReturn401UnauthorizedWhenUserIsNotOwner() throws Exception {
+        doThrow(new ProfileIsNotTheOwnerException("Usuário não é o dono"))
+                .when(collectionService).addQuestionToCollection(eq(collectionId), eq(questionId), eq(userId));
+
+        mockMvc.perform(post("/collections/{collectionId}/questions/{questionId}", collectionId, questionId))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldNotDeleteCollectionAndReturn404NotFoundWhenCollectionDoesNotExist() throws Exception {
+        doThrow(new ObjectNotFoundException("Coleção não encontrada"))
+                .when(collectionService).deleteCollectionById(eq(collectionId), eq(userId));
+
+        mockMvc.perform(delete("/collections/{collectionId}", collectionId))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldNotDeleteCollectionAndReturn401UnauthorizedWhenUserIsNotOwner() throws Exception {
+        doThrow(new ProfileIsNotTheOwnerException("Usuário não é o dono"))
+                .when(collectionService).deleteCollectionById(eq(collectionId), eq(userId));
+
+        mockMvc.perform(delete("/collections/{collectionId}", collectionId))
+                .andExpect(status().isUnauthorized());
     }
 }

@@ -1,380 +1,288 @@
 package io.centralweb.backend.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.centralweb.backend.dto.answer.AnswerCreateDTO;
+import io.centralweb.backend.dto.answer.AnswerDTO;
+import io.centralweb.backend.dto.profile.ProfileSimpleDTO;
+import io.centralweb.backend.exception.ObjectNotFoundException;
+import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
+import io.centralweb.backend.exception.QuestionHaveAnswerAlreadyAcceptedException;
+import io.centralweb.backend.model.User;
 import io.centralweb.backend.model.enums.UserRole;
-import io.centralweb.backend.model.*;
-import io.centralweb.backend.repository.*;
+import io.centralweb.backend.repository.UserRepository;
+import io.centralweb.backend.security.OAuth2SuccessHandler;
+import io.centralweb.backend.security.SecurityFilter;
 import io.centralweb.backend.security.TokenService;
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
+import io.centralweb.backend.service.AnswerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpStatus;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.jdbc.Sql;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
-import java.util.Set;
+import java.util.List;
 import java.util.UUID;
 
-import static io.restassured.RestAssured.*;
-import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-@Sql(scripts = "/clean-db.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@WebMvcTest(AnswerController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class AnswerControllerTest {
-    @LocalServerPort
-    private int port;
+
     @Autowired
+    private MockMvc mockMvc;
+
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule());
+
+    @MockitoBean
+    private AnswerService answerService;
+
+    @MockitoBean
     private TokenService tokenService;
-    @Autowired
+
+    @MockitoBean
+    private SecurityFilter securityFilter;
+
+    @MockitoBean
+    private OAuth2SuccessHandler oAuth2SuccessHandler;
+
+    @MockitoBean
     private UserRepository userRepository;
-    @Autowired
-    private ProfileRepository profileRepository;
-    @Autowired
-    private TagRepository tagRepository;
-    @Autowired
-    private QuestionRepository questionRepository;
-    @Autowired
-    private AnswerRepository answerRepository;
-    private String tokenAdmin;
-    private String tokenPerson1;
-    private String tokenPerson2;
-    private UUID question1Id;
-    private UUID answerId1;
+
+    @MockitoBean
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
+    @MockitoBean
+    private org.springframework.cache.CacheManager cacheManager;
+
+    private UUID userId;
+    private UUID questionId;
+    private UUID answerId;
+    private UUID profileId;
+    private AnswerDTO answerDTO;
+    private AnswerCreateDTO answerCreateDTO;
 
     @BeforeEach
-    public void setUp(){
-        RestAssured.port = port;
-        RestAssured.baseURI = "http://localhost";
+    void setUp() {
+        userId = UUID.randomUUID();
+        questionId = UUID.randomUUID();
+        answerId = UUID.randomUUID();
+        profileId = UUID.randomUUID();
 
-        answerRepository.deleteAll();
-        questionRepository.deleteAll();
-        tagRepository.deleteAll();
-        profileRepository.deleteAll();
-        userRepository.deleteAll();
+        User user = new User(userId, "password", "user@test.com");
+        user.setRole(UserRole.PERSON);
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
 
-        User user1 = new User();
-        user1.setEmail("testcentraldev@gmail.com");
-        user1.setPassword("password");
-        user1.setRole(UserRole.ADMIN);
-        userRepository.save(user1);
+        ProfileSimpleDTO profileSimpleDTO = new ProfileSimpleDTO(
+                profileId,
+                userId,
+                "John Doe",
+                "Senior",
+                true,
+                "http://example.com/photo.jpg"
+        );
 
-        User user2 = new User();
-        user2.setEmail("testcentralweb@gmail.com");
-        user2.setPassword("password");
-        user2.setRole(UserRole.PERSON);
+        answerDTO = new AnswerDTO(
+                answerId,
+                "Esta é uma resposta de teste",
+                false,
+                LocalDate.of(2026, 8, 13),
+                profileSimpleDTO,
+                10L,
+                true
+        );
 
-        User user3 = new User();
-        user3.setEmail("testcentraljunior@gmail.com");
-        user3.setPassword("password");
-        user3.setRole(UserRole.PERSON);
-
-        Profile profile1 = new Profile();
-        profile1.setName("Usuário Teste1");
-        profile1.setBio("Sou um programador de testes");
-        profile1.setUser(user2);
-        profileRepository.save(profile1);
-
-        Profile profile2 = new Profile();
-        profile2.setName("Usuário Teste2");
-        profile2.setBio("Sou um QA em desenvolvimento");
-        profile2.setUser(user3);
-        profileRepository.save(profile2);
-
-        Tag tagGo = new Tag();
-        tagGo.setTechnologyName("Go");
-        tagGo.setColor("#ED8B00");
-        tagRepository.save(tagGo);
-
-        Tag tagRust = new Tag();
-        tagRust.setTechnologyName("Rust");
-        tagRust.setColor("#6DB33A");
-        tagRepository.save(tagRust);
-
-        Question question1 = new Question();
-        question1.setTitle("Por que Rust é mais rápido que Go?");
-        question1.setContent("Content 1");
-        question1.setCreatedAt(LocalDate.now());
-        question1.setPublished(true);
-        question1.setTags(Set.of(tagRust, tagGo));
-        question1.setProfile(profile1);
-        Question questionSaved1 = questionRepository.save(question1);
-        question1Id = questionSaved1.getQuestionId();
-
-        Answer answer1 = new Answer();
-        answer1.setContent("Simplesmente por que Rust opera muito mais em baixo nível");
-        answer1.setCreatedAt(LocalDate.now());
-        answer1.setQuestion(question1);
-        answer1.setProfile(profile2);
-        Answer answerSaved1 = answerRepository.save(answer1);
-        answerId1 = answerSaved1.getAnswerId();
-
-        tokenAdmin = tokenService.generateToken(user1);
-        tokenPerson1 = tokenService.generateToken(user2);
-        tokenPerson2 = tokenService.generateToken(user3);
+        answerCreateDTO = new AnswerCreateDTO("Esta é uma resposta de teste");
     }
 
     // -----------------------HAPPY PATH------------------------------
 
     @Test
-    public void shouldCreateAnswerWhenUserIsPerson(){
-        UUID questionId = question1Id;
-        AnswerCreateDTO answer = new AnswerCreateDTO(
-                "Content response"
-        );
+    void shouldCreateAnswerAndReturn201Created() throws Exception {
+        when(answerService.createAnswer(eq(questionId), any(AnswerCreateDTO.class), eq(userId))).thenReturn(answerDTO);
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-                .body(answer)
-        .when()
-                .post("/answers/" + questionId)
-        .then()
-                .statusCode(HttpStatus.CREATED.value())
-                .body("content", equalTo("Content response"))
-        ;
+        mockMvc.perform(post("/answers/{questionId}", questionId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(answerCreateDTO)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.answerId").value(answerDTO.answerId().toString()))
+                .andExpect(jsonPath("$.content").value(answerDTO.content()))
+                .andExpect(jsonPath("$.accepted").value(answerDTO.accepted()))
+                .andExpect(jsonPath("$.createdAt").value(answerDTO.createdAt().toString()))
+                .andExpect(jsonPath("$.profile.profileId").value(answerDTO.profile().profileId().toString()))
+                .andExpect(jsonPath("$.profile.userId").value(answerDTO.profile().userId().toString()))
+                .andExpect(jsonPath("$.profile.name").value(answerDTO.profile().name()))
+                .andExpect(jsonPath("$.profile.level").value(answerDTO.profile().level()))
+                .andExpect(jsonPath("$.profile.professional").value(answerDTO.profile().professional()))
+                .andExpect(jsonPath("$.profile.photoUrl").value(answerDTO.profile().photoUrl()))
+                .andExpect(jsonPath("$.answerTotalLikes").value(answerDTO.answerTotalLikes()))
+                .andExpect(jsonPath("$.liked").value(answerDTO.liked()));
     }
 
     @Test
-    public void shouldReturnAnswersFromQuestion(){
-        UUID questionId = question1Id;
+    void shouldGetAllAnswersFromQuestionAndReturn200Ok() throws Exception {
+        Page<AnswerDTO> page = new PageImpl<>(List.of(answerDTO));
+        when(answerService.getAllAnswersFromQuestion(eq(questionId), any(Pageable.class))).thenReturn(page);
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-        .when()
-                .get("/answers/" + questionId)
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("numberOfElements", is(1));
+        mockMvc.perform(get("/answers/{questionId}", questionId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].answerId").value(answerDTO.answerId().toString()))
+                .andExpect(jsonPath("$.content[0].content").value(answerDTO.content()))
+                .andExpect(jsonPath("$.content[0].accepted").value(answerDTO.accepted()))
+                .andExpect(jsonPath("$.content[0].createdAt").value(answerDTO.createdAt().toString()))
+                .andExpect(jsonPath("$.content[0].profile.profileId").value(answerDTO.profile().profileId().toString()))
+                .andExpect(jsonPath("$.content[0].profile.userId").value(answerDTO.profile().userId().toString()))
+                .andExpect(jsonPath("$.content[0].profile.name").value(answerDTO.profile().name()))
+                .andExpect(jsonPath("$.content[0].profile.level").value(answerDTO.profile().level()))
+                .andExpect(jsonPath("$.content[0].profile.professional").value(answerDTO.profile().professional()))
+                .andExpect(jsonPath("$.content[0].profile.photoUrl").value(answerDTO.profile().photoUrl()))
+                .andExpect(jsonPath("$.content[0].answerTotalLikes").value(answerDTO.answerTotalLikes()))
+                .andExpect(jsonPath("$.content[0].liked").value(answerDTO.liked()));
     }
 
     @Test
-    public void shouldAcceptAnswerWhenUserIsOwner(){
-        UUID answerId = answerId1;
+    void shouldAcceptAnswerAndReturn200Ok() throws Exception {
+        doNothing().when(answerService).acceptAnswer(eq(answerId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-                .body(answerId)
-        .when()
-                .patch("/answers/" + answerId)
-        .then()
-                .statusCode(HttpStatus.OK.value());
+        mockMvc.perform(patch("/answers/{answerId}", answerId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
     }
 
     @Test
-    public void shouldToggleLikeWhenUserIsPerson(){
-        UUID answerId = answerId1;
+    void shouldToggleAnswerLikeAndReturn200Ok() throws Exception {
+        doNothing().when(answerService).toggleAnswerLike(eq(answerId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-        .when()
-                .patch("/answers/" + answerId + "/like")
-        .then()
-                .statusCode(HttpStatus.OK.value());
+        mockMvc.perform(patch("/answers/{answerId}/like", answerId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
     }
 
     @Test
-    public void shouldDeleteAnswerWhenUserIsOwner(){
-        UUID answerId = answerId1;
+    void shouldDeleteAnswerAndReturn204NoContent() throws Exception {
+        doNothing().when(answerService).deleteAnswerById(eq(answerId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson2)
-                .contentType(ContentType.JSON)
-        .when()
-                .delete("/answers/" + answerId)
-        .then()
-                .statusCode(HttpStatus.NO_CONTENT.value());
-    }
-
-    @Test
-    public void shouldDeleteAnswerWhenUserIsAdmin(){
-        UUID answerId = answerId1;
-
-        given()
-                .header("Authorization", "Bearer " + tokenAdmin)
-                .contentType(ContentType.JSON)
-        .when()
-                .delete("/answers/" + answerId)
-        .then()
-                .statusCode(HttpStatus.NO_CONTENT.value());
+        mockMvc.perform(delete("/answers/{answerId}", answerId))
+                .andExpect(status().isNoContent());
     }
 
     // -----------------------UNHAPPY PATH------------------------------
 
     @Test
-    public void shouldNotCreateAnswerWhenUserIsNotAuthenticated(){
-        UUID questionId = question1Id;
-        AnswerCreateDTO answer = new AnswerCreateDTO(
-                "Content response"
-        );
+    void shouldNotCreateAnswerAndReturn400BadRequestWhenDataIsInvalid() throws Exception {
+        AnswerCreateDTO invalidDTO = new AnswerCreateDTO("");
 
-        given()
-                .contentType(ContentType.JSON)
-                .body(answer)
-        .when()
-                .post("/answers/" + questionId)
-        .then()
-                .statusCode(HttpStatus.FORBIDDEN.value());
+        mockMvc.perform(post("/answers/{questionId}", questionId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidDTO)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    public void shouldNotCreateAnswerWhenUserIsAdmin(){
-        UUID questionId = question1Id;
-        AnswerCreateDTO answer = new AnswerCreateDTO(
-                "Content response"
-        );
+    void shouldNotCreateAnswerAndReturn404NotFoundWhenQuestionDoesNotExist() throws Exception {
+        when(answerService.createAnswer(eq(questionId), any(AnswerCreateDTO.class), eq(userId)))
+                .thenThrow(new ObjectNotFoundException("Pergunta não encontrada"));
 
-        given()
-                .header("Authorization", "Bearer " + tokenAdmin)
-                .contentType(ContentType.JSON)
-                .body(answer)
-        .when()
-                .post("/answers/" + questionId)
-        .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        mockMvc.perform(post("/answers/{questionId}", questionId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(answerCreateDTO)))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotCreateAnswerWithMissingData(){
-        UUID questionId = question1Id;
-        AnswerCreateDTO answer = new AnswerCreateDTO(
-                ""
-        );
+    void shouldNotCreateAnswerAndReturn401UnauthorizedWhenUserIsNotOwner() throws Exception {
+        when(answerService.createAnswer(eq(questionId), any(AnswerCreateDTO.class), eq(userId)))
+                .thenThrow(new ProfileIsNotTheOwnerException("Usuário não autorizado"));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson2)
-                .contentType(ContentType.JSON)
-                .body(answer)
-        .when()
-                .post("/answers/" + questionId)
-        .then()
-                .statusCode(HttpStatus.BAD_REQUEST.value());
+        mockMvc.perform(post("/answers/{questionId}", questionId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(answerCreateDTO)))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    public void shouldNotCreateAnswerWhenQuestionDoesNotExist(){
-        UUID questionId = UUID.randomUUID();
-        AnswerCreateDTO answer = new AnswerCreateDTO(
-                "Content response"
-        );
+    void shouldNotGetAllAnswersFromQuestionAndReturn404NotFoundWhenQuestionDoesNotExist() throws Exception {
+        when(answerService.getAllAnswersFromQuestion(eq(questionId), any(Pageable.class)))
+                .thenThrow(new ObjectNotFoundException("Pergunta não encontrada"));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson2)
-                .contentType(ContentType.JSON)
-                .body(answer)
-        .when()
-                .post("/answers/" + questionId)
-        .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
+        mockMvc.perform(get("/answers/{questionId}", questionId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotAcceptAnswerWhenDoesNotExist(){
-        UUID answerId = UUID.randomUUID();
+    void shouldNotAcceptAnswerAndReturn404NotFoundWhenAnswerDoesNotExist() throws Exception {
+        doThrow(new ObjectNotFoundException("Resposta não encontrada"))
+                .when(answerService).acceptAnswer(eq(answerId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-        .when()
-                .patch("/answers/" + answerId)
-        .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
+        mockMvc.perform(patch("/answers/{answerId}", answerId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotAcceptAnswerWhenUserIsAdmin(){
-        UUID answerId = answerId1;
+    void shouldNotAcceptAnswerAndReturn401UnauthorizedWhenUserIsNotOwner() throws Exception {
+        doThrow(new ProfileIsNotTheOwnerException("Usuário não é o dono"))
+                .when(answerService).acceptAnswer(eq(answerId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenAdmin)
-                .contentType(ContentType.JSON)
-                .body(answerId)
-        .when()
-                .patch("/answers/" + answerId)
-        .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        mockMvc.perform(patch("/answers/{answerId}", answerId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    public void shouldNotAcceptAnswerWhenUserIsNotOwner(){
-        UUID answerId = answerId1;
+    void shouldNotAcceptAnswerAndReturn409ConflictWhenQuestionHaveAnswerAlreadyAccepted() throws Exception {
+        doThrow(new QuestionHaveAnswerAlreadyAcceptedException("Pergunta já possui resposta aceita"))
+                .when(answerService).acceptAnswer(eq(answerId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson2)
-                .contentType(ContentType.JSON)
-                .body(answerId)
-        .when()
-                .patch("/answers/" + answerId)
-        .then()
-                .statusCode(HttpStatus.UNAUTHORIZED.value());
+        mockMvc.perform(patch("/answers/{answerId}", answerId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isConflict());
     }
 
     @Test
-    public void shouldNotToggleLikeWhenAnswerDoesNotExist(){
-        UUID answerId = UUID.randomUUID();
+    void shouldNotToggleAnswerLikeAndReturn404NotFoundWhenAnswerDoesNotExist() throws Exception {
+        doThrow(new ObjectNotFoundException("Resposta não encontrada"))
+                .when(answerService).toggleAnswerLike(eq(answerId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-        .when()
-                .patch("/answers/" + answerId + "/like")
-        .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
+        mockMvc.perform(patch("/answers/{answerId}/like", answerId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotToggleLikeWhenUserIsAdmin(){
-        UUID answerId = answerId1;
+    void shouldNotDeleteAnswerAndReturn404NotFoundWhenAnswerDoesNotExist() throws Exception {
+        doThrow(new ObjectNotFoundException("Resposta não encontrada"))
+                .when(answerService).deleteAnswerById(eq(answerId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenAdmin)
-        .when()
-                .patch("/answers/" + answerId + "/like")
-        .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        mockMvc.perform(delete("/answers/{answerId}", answerId))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotDeleteAnswerWhenUserIsNotAuthenticated(){
-        UUID answerId = answerId1;
+    void shouldNotDeleteAnswerAndReturn401UnauthorizedWhenUserIsNotOwner() throws Exception {
+        doThrow(new ProfileIsNotTheOwnerException("Usuário não é o dono"))
+                .when(answerService).deleteAnswerById(eq(answerId), eq(userId));
 
-        given()
-                .contentType(ContentType.JSON)
-        .when()
-                .delete("/answers/" + answerId)
-        .then()
-                .statusCode(HttpStatus.FORBIDDEN.value());
-    }
-
-    @Test
-    public void shouldNotDeleteAnswerWhenDoesNotExist(){
-        UUID answerId = UUID.randomUUID();
-
-        given()
-                .header("Authorization", "Bearer " + tokenPerson2)
-                .contentType(ContentType.JSON)
-        .when()
-                .delete("/answers/" + answerId)
-        .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
-    }
-
-    @Test
-    public void shouldNotDeleteAnswerWhenUserIsNotOwnerOrIsNotAdmin(){
-        UUID answerId = answerId1;
-
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-        .when()
-                .delete("/answers/" + answerId)
-        .then()
-                .statusCode(HttpStatus.UNAUTHORIZED.value());
+        mockMvc.perform(delete("/answers/{answerId}", answerId))
+                .andExpect(status().isUnauthorized());
     }
 }

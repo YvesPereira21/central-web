@@ -1,330 +1,260 @@
 package io.centralweb.backend.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.centralweb.backend.dto.profile.ProfileCreateDTO;
+import io.centralweb.backend.dto.profile.ProfileDTO;
 import io.centralweb.backend.dto.profile.ProfileUpdateDTO;
 import io.centralweb.backend.dto.user.UserDTO;
+import io.centralweb.backend.exception.ObjectAlreadyExistsException;
+import io.centralweb.backend.exception.ObjectNotFoundException;
+import io.centralweb.backend.exception.ProfileIsNotTheOwnerException;
+import io.centralweb.backend.model.User;
 import io.centralweb.backend.model.enums.ProfileType;
 import io.centralweb.backend.model.enums.UserRole;
-import io.centralweb.backend.model.Profile;
-import io.centralweb.backend.model.User;
-import io.centralweb.backend.repository.ProfileRepository;
 import io.centralweb.backend.repository.UserRepository;
+import io.centralweb.backend.security.OAuth2SuccessHandler;
+import io.centralweb.backend.security.SecurityFilter;
 import io.centralweb.backend.security.TokenService;
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
+import io.centralweb.backend.service.ProfileService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpStatus;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.jdbc.Sql;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.UUID;
 
-import static io.restassured.RestAssured.*;
-import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-@Sql(scripts = "/clean-db.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@WebMvcTest(ProfileController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class ProfileControllerTest {
-    @LocalServerPort
-    private int port;
+
     @Autowired
+    private MockMvc mockMvc;
+
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule());
+
+    @MockitoBean
+    private ProfileService profileService;
+
+    @MockitoBean
     private TokenService tokenService;
-    @Autowired
+
+    @MockitoBean
+    private SecurityFilter securityFilter;
+
+    @MockitoBean
+    private OAuth2SuccessHandler oAuth2SuccessHandler;
+
+    @MockitoBean
     private UserRepository userRepository;
-    @Autowired
-    private ProfileRepository profileRepository;
-    private String tokenAdmin;
-    private String tokenPerson1;
-    private String tokenPerson2;
-    private UUID profile1Id;
+
+    @MockitoBean
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
+    @MockitoBean
+    private org.springframework.cache.CacheManager cacheManager;
+
+    private UUID userId;
+    private UUID profileId;
+
+    private ProfileDTO profileDTO;
+    private ProfileCreateDTO profileCreateDTO;
+    private ProfileUpdateDTO profileUpdateDTO;
 
     @BeforeEach
-    public void setUp() {
-        RestAssured.port = port;
-        RestAssured.baseURI = "http://localhost";
+    void setUp() {
+        userId = UUID.randomUUID();
+        profileId = UUID.randomUUID();
 
-        profileRepository.deleteAll();
-        userRepository.deleteAll();
+        User user = new User(userId, "password", "user@test.com");
+        user.setRole(UserRole.PERSON);
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
 
-        User user1 = new User();
-        user1.setEmail("testcentraldevadmin@gmail.com");
-        user1.setPassword("password");
-        user1.setRole(UserRole.ADMIN);
-        userRepository.save(user1);
+        profileDTO = new ProfileDTO(
+                profileId,
+                userId,
+                "Alice Smith",
+                "Desenvolvedora Java Backend",
+                "Senior",
+                150L,
+                true,
+                5L,
+                10L,
+                "http://example.com/alice.jpg"
+        );
 
-        User user2 = new User();
-        user2.setEmail("testcentraldev@gmail.com");
-        user2.setPassword("password");
-        user2.setRole(UserRole.PERSON);
-
-        User user3 = new User();
-        user3.setEmail("testcentralweb@gmail.com");
-        user3.setPassword("password");
-        user3.setRole(UserRole.PERSON);
-
-        Profile profile1 = new Profile();
-        profile1.setName("Usuário Teste1");
-        profile1.setBio("Sou um programador de testes");
-        profile1.setProfileType(ProfileType.UNDERGRADUATE);
-        profile1.setLevel("Especialista");
-        profile1.setReputationScore(1200);
-        profile1.setUser(user2);
-        Profile profileSaved1 = profileRepository.save(profile1);
-        profile1Id = profileSaved1.getProfileId();
-
-        Profile profile2 = new Profile();
-        profile2.setName("Usuário Bom");
-        profile2.setBio("Sou um desenvolvedor em Segurança da Informação");
-        profile2.setProfileType(ProfileType.PROFESSIONAL);
-        profile2.setLevel("Especialista");
-        profile2.setReputationScore(2760);
-        profile2.setProfessional(true);
-        profile2.setUser(user3);
-        profileRepository.save(profile2);
-
-        tokenAdmin = tokenService.generateToken(user1);
-        tokenPerson1 = tokenService.generateToken(user2);
-        tokenPerson2 = tokenService.generateToken(user3);
+        UserDTO userDTO = new UserDTO("alice@test.com", "Password123!");
+        profileCreateDTO = new ProfileCreateDTO("Alice Smith", "Desenvolvedora Java Backend", ProfileType.PROFESSIONAL, userDTO);
+        profileUpdateDTO = new ProfileUpdateDTO("Alice Smith Updated", "Nova Bio");
     }
 
     // -----------------------HAPPY PATH------------------------------
 
     @Test
-    public void shouldCreateProfile(){
-        UserDTO user = new UserDTO(
-                "testcentraljunior@gmail.com",
-                "password"
-        );
+    void shouldCreateProfileAndReturn201Created() throws Exception {
+        when(profileService.createProfile(any(ProfileCreateDTO.class))).thenReturn(profileDTO);
 
-        ProfileCreateDTO profile = new ProfileCreateDTO(
-                "Usuário Teste",
-                "Sou um programador de QA",
-                ProfileType.SELFTAUGHT,
-                user
-        );
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(profile)
-        .when()
-                .post("/profiles")
-        .then()
-                .statusCode(HttpStatus.CREATED.value())
-                .body("name", equalTo("Usuário Teste"))
-                .body("bio", equalTo("Sou um programador de QA"))
-                .body("level", equalTo("Novato"))
-                .body("reputationScore", equalTo(0))
-                .body("professional", equalTo(false));
+        mockMvc.perform(post("/profiles")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(profileCreateDTO)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.profileId").value(profileDTO.profileId().toString()))
+                .andExpect(jsonPath("$.userId").value(profileDTO.userId().toString()))
+                .andExpect(jsonPath("$.name").value(profileDTO.name()))
+                .andExpect(jsonPath("$.bio").value(profileDTO.bio()))
+                .andExpect(jsonPath("$.level").value(profileDTO.level()))
+                .andExpect(jsonPath("$.reputationScore").value(profileDTO.reputationScore()))
+                .andExpect(jsonPath("$.professional").value(profileDTO.professional()))
+                .andExpect(jsonPath("$.articlesCreatedByProfile").value(profileDTO.articlesCreatedByProfile()))
+                .andExpect(jsonPath("$.answersAccepted").value(profileDTO.answersAccepted()))
+                .andExpect(jsonPath("$.photoUrl").value(profileDTO.photoUrl()));
     }
 
     @Test
-    public void shouldReturnProfile(){
-        UUID profileId = profile1Id;
+    void shouldGetMyProfileAndReturn200Ok() throws Exception {
+        when(profileService.getProfileByUserId(eq(userId))).thenReturn(profileDTO);
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-        .when()
-                .get("/profiles/" + profileId)
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("profileId", equalTo(profileId.toString()))
-                .body("name", equalTo("Usuário Teste1"))
-                .body("bio", equalTo("Sou um programador de testes"))
-                .body("level", equalTo("Especialista"))
-                .body("reputationScore", equalTo(1200))
-                .body("professional", equalTo(false));
+        mockMvc.perform(get("/profiles/me")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.profileId").value(profileDTO.profileId().toString()))
+                .andExpect(jsonPath("$.userId").value(profileDTO.userId().toString()))
+                .andExpect(jsonPath("$.name").value(profileDTO.name()))
+                .andExpect(jsonPath("$.bio").value(profileDTO.bio()))
+                .andExpect(jsonPath("$.level").value(profileDTO.level()))
+                .andExpect(jsonPath("$.reputationScore").value(profileDTO.reputationScore()))
+                .andExpect(jsonPath("$.professional").value(profileDTO.professional()))
+                .andExpect(jsonPath("$.articlesCreatedByProfile").value(profileDTO.articlesCreatedByProfile()))
+                .andExpect(jsonPath("$.answersAccepted").value(profileDTO.answersAccepted()))
+                .andExpect(jsonPath("$.photoUrl").value(profileDTO.photoUrl()));
     }
 
     @Test
-    public void shouldUpdateProfileWhenUserIsPersonAndIsOwner(){
-        UUID profileId = profile1Id;
-        ProfileUpdateDTO profileUpdated = new ProfileUpdateDTO(
-                "Galego",
-                "Melhor programador Django"
-        );
+    void shouldGetProfileAndReturn200Ok() throws Exception {
+        when(profileService.getProfileById(eq(profileId))).thenReturn(profileDTO);
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-                .body(profileUpdated)
-        .when()
-                .put("/profiles/" + profileId)
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("name", equalTo("Galego"))
-                .body("bio", equalTo("Melhor programador Django"));
+        mockMvc.perform(get("/profiles/{profileId}", profileId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.profileId").value(profileDTO.profileId().toString()))
+                .andExpect(jsonPath("$.name").value(profileDTO.name()));
     }
 
     @Test
-    public void shouldDeleteProfileWhenUserIsOwner(){
-        UUID profileId = profile1Id;
+    void shouldUpdateProfileAndReturn200Ok() throws Exception {
+        when(profileService.updateProfile(eq(profileId), any(ProfileUpdateDTO.class), eq(userId))).thenReturn(profileDTO);
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-                .contentType(ContentType.JSON)
-        .when()
-                .delete("/profiles/" + profileId)
-        .then()
-                .statusCode(HttpStatus.NO_CONTENT.value());
+        mockMvc.perform(put("/profiles/{profileId}", profileId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(profileUpdateDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.profileId").value(profileDTO.profileId().toString()))
+                .andExpect(jsonPath("$.name").value(profileDTO.name()));
     }
 
     @Test
-    public void shouldDeleteProfileWhenUserIsAdmin(){
-        UUID profileId = profile1Id;
+    void shouldDeleteProfileAndReturn204NoContent() throws Exception {
+        doNothing().when(profileService).deleteProfileById(eq(profileId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenAdmin)
-                .contentType(ContentType.JSON)
-        .when()
-                .delete("/profiles/" + profileId)
-        .then()
-                .statusCode(HttpStatus.NO_CONTENT.value());
+        mockMvc.perform(delete("/profiles/{profileId}", profileId))
+                .andExpect(status().isNoContent());
     }
 
     // -----------------------UNHAPPY PATH------------------------------
 
     @Test
-    public void shouldNotCreateProfileWithMissingData(){
-        UserDTO user = new UserDTO(
-                "testcentraljunior@gmail.com",
-                ""
-        );
+    void shouldNotCreateProfileAndReturn400BadRequestWhenDataIsInvalid() throws Exception {
+        ProfileCreateDTO invalidDTO = new ProfileCreateDTO("", "", null, new UserDTO("invalid", ""));
 
-        ProfileCreateDTO profile = new ProfileCreateDTO(
-                "Galego",
-                "Sou um programador de QA",
-                ProfileType.SELFTAUGHT,
-                user
-        );
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(profile)
-        .when()
-                .post("/profiles")
-        .then()
-                .statusCode(HttpStatus.BAD_REQUEST.value());
+        mockMvc.perform(post("/profiles")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidDTO)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    public void shouldNotCreateProfileWhenEmailAlreadyExists(){
-        UserDTO user = new UserDTO(
-                "testcentraldev@gmail.com",
-                "password"
-        );
+    void shouldNotCreateProfileAndReturn409ConflictWhenUserAlreadyExists() throws Exception {
+        when(profileService.createProfile(any(ProfileCreateDTO.class)))
+                .thenThrow(new ObjectAlreadyExistsException("Usuário já cadastrado"));
 
-        ProfileCreateDTO profile = new ProfileCreateDTO(
-                "Renato",
-                "Sou um programador de QA",
-                ProfileType.SELFTAUGHT,
-                user
-        );
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(profile)
-        .when()
-                .post("/profiles")
-        .then()
-                .statusCode(HttpStatus.CONFLICT.value());
+        mockMvc.perform(post("/profiles")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(profileCreateDTO)))
+                .andExpect(status().isConflict());
     }
 
     @Test
-    public void shouldNotCreateProfileWhenEmailIsInvalid(){
-        UserDTO user = new UserDTO(
-                "test.htmail@com",
-                "password"
-        );
+    void shouldNotGetMyProfileAndReturn404NotFoundWhenProfileDoesNotExist() throws Exception {
+        when(profileService.getProfileByUserId(eq(userId)))
+                .thenThrow(new ObjectNotFoundException("Perfil não encontrado"));
 
-        ProfileCreateDTO profile = new ProfileCreateDTO(
-                "Renato",
-                "Sou um programador de QA",
-                ProfileType.SELFTAUGHT,
-                user
-        );
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(profile)
-        .when()
-                .post("/profiles")
-        .then()
-                .statusCode(HttpStatus.BAD_REQUEST.value());
+        mockMvc.perform(get("/profiles/me")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotUpdateProfileWhenUserIsNotAuthenticated(){
-        UUID profileId = profile1Id;
-        ProfileUpdateDTO profileUpdated = new ProfileUpdateDTO(
-                "Galego",
-                "Melhor programador Django"
-        );
+    void shouldNotGetProfileAndReturn404NotFoundWhenProfileDoesNotExist() throws Exception {
+        when(profileService.getProfileById(eq(profileId)))
+                .thenThrow(new ObjectNotFoundException("Perfil não encontrado"));
 
-        given()
-                .contentType(ContentType.JSON)
-                .body(profileUpdated)
-        .when()
-                .put("/profiles/" + profileId)
-        .then()
-                .statusCode(HttpStatus.FORBIDDEN.value());
+        mockMvc.perform(get("/profiles/{profileId}", profileId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotUpdateProfileWhenUserIsNotOwner(){
-        UUID profileId = profile1Id;
-        ProfileUpdateDTO profileUpdated = new ProfileUpdateDTO(
-                "Galego",
-                "Melhor programador Django"
-        );
+    void shouldNotUpdateProfileAndReturn404NotFoundWhenProfileDoesNotExist() throws Exception {
+        when(profileService.updateProfile(eq(profileId), any(ProfileUpdateDTO.class), eq(userId)))
+                .thenThrow(new ObjectNotFoundException("Perfil não encontrado"));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson2)
-                .contentType(ContentType.JSON)
-                .body(profileUpdated)
-        .when()
-                .put("/profiles/" + profileId)
-        .then()
-                .statusCode(HttpStatus.UNAUTHORIZED.value());
+        mockMvc.perform(put("/profiles/{profileId}", profileId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(profileUpdateDTO)))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotDeleteProfileWhenUserIsNotAuthenticated(){
-        UUID profileId = profile1Id;
+    void shouldNotUpdateProfileAndReturn401UnauthorizedWhenUserIsNotOwner() throws Exception {
+        when(profileService.updateProfile(eq(profileId), any(ProfileUpdateDTO.class), eq(userId)))
+                .thenThrow(new ProfileIsNotTheOwnerException("Usuário não é o dono do perfil"));
 
-        given()
-        .when()
-                .delete("/profiles/" + profileId)
-        .then()
-                .statusCode(HttpStatus.FORBIDDEN.value());
+        mockMvc.perform(put("/profiles/{profileId}", profileId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(profileUpdateDTO)))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    public void shouldNotDeleteProfileWhenDoesNotExist(){
-        UUID profileId = UUID.randomUUID();
+    void shouldNotDeleteProfileAndReturn404NotFoundWhenProfileDoesNotExist() throws Exception {
+        doThrow(new ObjectNotFoundException("Perfil não encontrado"))
+                .when(profileService).deleteProfileById(eq(profileId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson1)
-        .when()
-                .delete("/profiles/" + profileId)
-        .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
+        mockMvc.perform(delete("/profiles/{profileId}", profileId))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void shouldNotDeleteProfileWhenUserIsNotOwnerOrIsNotAdmin(){
-        UUID profileId = profile1Id;
+    void shouldNotDeleteProfileAndReturn401UnauthorizedWhenUserIsNotOwner() throws Exception {
+        doThrow(new ProfileIsNotTheOwnerException("Usuário não é o dono do perfil"))
+                .when(profileService).deleteProfileById(eq(profileId), eq(userId));
 
-        given()
-                .header("Authorization", "Bearer " + tokenPerson2)
-        .when()
-                .delete("/profiles/" + profileId)
-        .then()
-                .statusCode(HttpStatus.UNAUTHORIZED.value());
+        mockMvc.perform(delete("/profiles/{profileId}", profileId))
+                .andExpect(status().isUnauthorized());
     }
 }
