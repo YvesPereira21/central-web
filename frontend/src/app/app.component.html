@@ -1,23 +1,32 @@
 @if (authenticationService.isAuthenticated()) {
-<app-header />
-
-<main class="flex h-[calc(100vh-64px)] overflow-hidden bg-[#0d1117]">
-    @if (showSidebars) {
-        <app-left-bar />
-    }
-
-    <div class="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700">
-
-        <div class="mx-auto w-full max-w-[940px] p-6">
-            <router-outlet />
+    @if (authenticationService.isAdmin()) {
+        <!-- Layout Exclusivo do Admin -->
+        <div class="min-h-screen bg-[#0d1117] flex flex-col text-gray-100 font-inter">
+            <app-admin-header />
+            <main class="flex-1 max-w-[1200px] w-full mx-auto p-6">
+                <router-outlet />
+            </main>
         </div>
+    } @else {
+        <!-- Layout do Usuário Comum (PERSON) -->
+        <app-header />
 
-    </div>
+        <main class="flex h-[calc(100vh-64px)] overflow-hidden bg-[#0d1117]">
+            @if (showSidebars) {
+                <app-left-bar />
+            }
 
-    @if (showSidebars) {
-        <app-right-bar />
+            <div class="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700">
+                <div class="mx-auto w-full max-w-[940px] p-6">
+                    <router-outlet />
+                </div>
+            </div>
+
+            @if (showSidebars) {
+                <app-right-bar />
+            }
+        </main>
     }
-</main>
 } @else {
-<router-outlet />
+    <router-outlet />
 }

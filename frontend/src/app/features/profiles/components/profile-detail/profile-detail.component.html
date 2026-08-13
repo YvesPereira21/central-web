@@ -132,16 +132,43 @@
             </a>
             }
         </div>
-        @for (qualification of profile?.qualifications; track qualification.qualificationId) {
-        <div class="mt-3 flex flex-col gap-1">
-            <span class="font-medium">{{ qualification.jobTitle }}</span>
-            <span class="text-gray-300">{{ qualification.experienceLevel }}</span>
-            <span class="text-gray-300">{{ qualification.institution }}</span>
-            <span class="text-sm text-gray-400">{{ qualification.startDate }} – {{ qualification.endDate }}</span>
+        <div class="relative border-l border-[#30363d] ml-3 mt-6 space-y-8 pb-4">
+            @for (qualification of profile?.qualifications; track qualification.qualificationId) {
+                @if (qualification.verified) {
+                <div class="relative pl-6">
+                    <!-- Ponto na timeline -->
+                    <span class="absolute -left-1.5 top-1.5 size-3 rounded-full bg-[#161B22] border-2 border-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                    
+                    <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-3">
+                                <h3 class="text-lg font-bold text-white">{{ qualification.jobTitle }}</h3>
+                                <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">Verificada</span>
+                            </div>
+                            
+                            <div class="flex flex-col gap-1.5 text-sm">
+                                <div class="flex items-center gap-2 text-gray-300">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="size-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                                    <span>Empresa: <strong class="text-gray-200">{{ qualification.institution }}</strong></span>
+                                </div>
+                                
+                                <div class="flex items-center gap-2 text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="size-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                                    <span>Nível de experiência: <strong class="text-gray-300 font-medium">{{ qualification.experienceLevel }}</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-1.5 text-xs font-medium text-emerald-400/80 bg-emerald-500/5 px-3 py-1.5 rounded-lg border border-emerald-500/10 whitespace-nowrap mt-2 md:mt-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            <span>{{ qualification.startDate | date:'dd/MM/yyyy' }} — {{ qualification.endDate ? (qualification.endDate | date:'dd/MM/yyyy') : 'o momento' }}</span>
+                        </div>
+                    </div>
+                </div>
+                }
+            } @empty {
+                <span class="text-gray-400 text-sm ml-6 block">Nenhuma experiência cadastrada ou verificada.</span>
+            }
         </div>
-        <hr class="my-3 border-[#8B949E]" />
-        } @empty {
-        <span class="text-gray-400 text-sm">Nenhuma experiência cadastrada.</span>
-        }
     </section>
 </article>

@@ -1,9 +1,15 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../../environments/environment';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, switchMap } from 'rxjs';
 import { LoginRequest } from '../../../core/models/authentication';
 import { Router } from '@angular/router';
+
+export interface AuthUser {
+  userId: string;
+  email: string;
+  role: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -14,14 +20,25 @@ export class AuthenticationService {
   private apiUrl = `${environment.apiUrl}/auth`;
 
   isAuthenticated = signal<boolean>(false);
-  userRole = signal<string | null>('PERSON');
+  userRole = signal<string | null>(null);
   currentUserId = signal<string | null>(null);
 
-  login(loginData: LoginRequest): Observable<void> {
+  getAuthUser(): Observable<AuthUser> {
+    return this.http.get<AuthUser>(`${this.apiUrl}/me`, { withCredentials: true });
+  }
+
+  login(loginData: LoginRequest): Observable<AuthUser> {
     return this.http.post<void>(`${this.apiUrl}/login`, loginData, { withCredentials: true }).pipe(
-      tap(() => {
+      switchMap(() => this.getAuthUser()),
+      tap((user) => {
         this.isAuthenticated.set(true);
-        this.userRole.set('PERSON');
+        this.userRole.set(user.role);
+        this.currentUserId.set(user.userId);
+        if (user.role === 'ADMIN') {
+          this.router.navigate(['/admin/qualifications']);
+        } else {
+          this.router.navigate(['/']);
+        }
       })
     );
   }
@@ -30,7 +47,6 @@ export class AuthenticationService {
     return this.http.post<void>(`${this.apiUrl}/refresh`, {}, { withCredentials: true }).pipe(
       tap(() => {
         this.isAuthenticated.set(true);
-        this.userRole.set('PERSON');
       })
     );
   }
@@ -60,7 +76,7 @@ export class AuthenticationService {
   }
 
   isPerson(): boolean {
-    return true; // Por padrão usuários logados são PERSON
+    return this.userRole() === 'PERSON';
   }
 
   isOwner(userId: string): boolean {

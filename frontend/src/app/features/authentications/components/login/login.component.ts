@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthenticationService } from '../../services/authentication.service';
 import { LoginRequest } from '../../../../core/models/authentication';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -13,7 +13,6 @@ import { Router, RouterLink } from '@angular/router';
 export class LoginComponent {
   private authenticationService = inject(AuthenticationService);
   private formBuilder = inject(FormBuilder);
-  private router = inject(Router)
 
   isSubmiting: boolean = false;
   loginForm = this.formBuilder.group({
@@ -32,12 +31,11 @@ export class LoginComponent {
     }
 
     this.authenticationService.login(login).subscribe({
-      next: (response) => {
-        alert('Login realizado com sucesso!')
+      next: () => {
+        alert('Login realizado com sucesso!');
         this.clearForm();
-        this.router.navigate([''])
       },
-      error: (erro) => {
+      error: () => {
         alert('Erro ao realizar login.');
         this.clearForm();
       }

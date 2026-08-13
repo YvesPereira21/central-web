@@ -124,19 +124,27 @@ class QualificationServiceTest {
         );
 
         qualificationDTO = new QualificationDTO(
+                qualification.getQualificationId(),
                 qualification.getJobTitle(),
                 qualification.getExperienceLevel(),
                 qualification.getInstitution(),
                 qualification.getStartDate(),
-                qualification.getEndDate()
+                qualification.getEndDate(),
+                qualification.isVerified(),
+                profilePerson1.getProfileId(),
+                profilePerson1.getName()
         );
 
         qualificationDTO2 = new QualificationDTO(
+                qualification2.getQualificationId(),
                 qualification2.getJobTitle(),
                 qualification2.getExperienceLevel(),
                 qualification2.getInstitution(),
                 qualification2.getStartDate(),
-                qualification2.getEndDate()
+                qualification2.getEndDate(),
+                qualification2.isVerified(),
+                profilePerson1.getProfileId(),
+                profilePerson1.getName()
         );
     }
 

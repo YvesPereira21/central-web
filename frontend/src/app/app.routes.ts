@@ -15,6 +15,7 @@ import { Oauth2RedirectComponent } from './features/authentications/components/o
 import { roleGuard } from './core/guards/role.guard';
 import { CollectionListComponent } from './features/collections/components/collection-list/collection-list.component';
 import { CollectionDetailComponent } from './features/collections/components/collection-detail/collection-detail.component';
+import { QualificationManagementComponent } from './features/admin/components/qualification-management/qualification-management.component';
 
 export const routes: Routes = [
     { path: '', component: HomePageComponent, canActivate: [roleGuard] },
@@ -27,6 +28,7 @@ export const routes: Routes = [
     { path: 'create-question', component: QuestionCreateComponent, canActivate: [roleGuard], data: { roles: ['PERSON'] } },
     { path: 'edit-question/:id', component: QuestionCreateComponent, canActivate: [roleGuard], data: { roles: ['PERSON'] } },
     { path: 'create-qualification', component: QualificationCreateComponent, canActivate: [roleGuard], data: { roles: ['PERSON'] } },
+    { path: 'admin/qualifications', component: QualificationManagementComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
     { path: 'articles', component: ArticleListComponent, canActivate: [roleGuard] },
     { path: 'articles/:id/profile', component: ArticleListComponent, canActivate: [roleGuard] },
     { path: 'questions', component: QuestionListComponent, canActivate: [roleGuard] },

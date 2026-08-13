@@ -25,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -114,7 +115,8 @@ class ProfileServiceTest {
                 profilePerson1.isProfessional(),
                 null,
                 null,
-                null
+                null,
+                Collections.emptyList()
         );
     }
 
@@ -177,7 +179,8 @@ class ProfileServiceTest {
                 profilePerson1.isProfessional(),
                 null,
                 null,
-                null
+                null,
+                Collections.emptyList()
         );
 
         when(profileRepository.findById(profileId)).thenReturn(Optional.of(profilePerson1));

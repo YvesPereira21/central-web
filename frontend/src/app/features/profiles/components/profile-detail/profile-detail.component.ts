@@ -7,10 +7,11 @@ import { QuestionListComponent } from '../../../../features/questions/components
 import { AuthenticationService } from '../../../../features/authentications/services/authentication.service';
 import { LevelStageComponent } from '../../../../shared/components/level-stage/level-stage.component';
 import { environment } from '../../../../environments/environment';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-profile-detail',
-  imports: [RouterLink, ArticleListComponent, QuestionListComponent, LevelStageComponent],
+  imports: [RouterLink, ArticleListComponent, QuestionListComponent, LevelStageComponent, DatePipe],
   templateUrl: './profile-detail.component.html',
   styleUrl: './profile-detail.component.css'
 })

@@ -109,4 +109,13 @@ public class AuthenticationController {
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .build();
     }
+
+    @GetMapping("/me")
+    @Operation(summary = "Obtém usuário autenticado", description = "Retorna os dados básicos do usuário logado (userId, email, role)")
+    public ResponseEntity<io.centralweb.backend.dto.auth.AuthUserDTO> me(@org.springframework.security.core.annotation.AuthenticationPrincipal User user) {
+        if (user == null) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(new io.centralweb.backend.dto.auth.AuthUserDTO(user.getUserId(), user.getEmail(), user.getRole()));
+    }
 }

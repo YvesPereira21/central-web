@@ -4,10 +4,12 @@ import { HeaderComponent } from './shared/components/header/header.component';
 import { LeftBarComponent } from './shared/components/left-bar/left-bar.component';
 import { RightBarComponent } from './shared/components/right-bar/right-bar.component';
 import { AuthenticationService } from './features/authentications/services/authentication.service';
+import { AdminHeaderComponent } from './features/admin/components/admin-header/admin-header.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, HeaderComponent, LeftBarComponent, RightBarComponent],
+  standalone: true,
+  imports: [RouterOutlet, HeaderComponent, LeftBarComponent, RightBarComponent, AdminHeaderComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })

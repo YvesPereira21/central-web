@@ -89,11 +89,15 @@ public class QualificationControllerTest {
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         qualificationDTO = new QualificationDTO(
+                qualificationId,
                 "Desenvolvedor Backend",
                 ExperienceLevel.SENIOR,
                 "Tech Corp",
                 LocalDate.of(2022, 1, 1),
-                LocalDate.of(2024, 12, 31)
+                LocalDate.of(2024, 12, 31),
+                false,
+                profileId,
+                "Usuário Teste"
         );
 
         qualificationCreateDTO = new QualificationCreateDTO(

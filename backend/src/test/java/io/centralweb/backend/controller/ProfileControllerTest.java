@@ -28,6 +28,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Collections;
+
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -95,7 +97,8 @@ public class ProfileControllerTest {
                 true,
                 5L,
                 10L,
-                "http://example.com/alice.jpg"
+                "http://example.com/alice.jpg",
+                Collections.emptyList()
         );
 
         UserDTO userDTO = new UserDTO("alice@test.com", "Password123!");

@@ -1,5 +1,8 @@
 package io.centralweb.backend.dto.profile;
 
+import io.centralweb.backend.dto.qualification.QualificationDTO;
+
+import java.util.List;
 import java.util.UUID;
 
 public record ProfileDTO(
@@ -12,5 +15,6 @@ public record ProfileDTO(
         boolean professional,
         Long articlesCreatedByProfile,
         Long answersAccepted,
-        String photoUrl
+        String photoUrl,
+        List<QualificationDTO> qualifications
 ) {}
