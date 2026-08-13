@@ -32,19 +32,23 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   loadProfile() {
-    if (this.authService.isAuthenticated() && this.authService.isPerson()) {
-      this.profileService.getMyProfile().subscribe({
-        next: (profile) => {
-          // Extrai o primeiro nome do nome completo
-          const firstName = profile.name.split(' ')[0];
-          this.userName.set(firstName);
-          if (profile.photoUrl) {
-            this.userPhotoUrl.set(profile.photoUrl);
-          }
-        },
-        error: () => console.error('Erro ao buscar o nome do usuário para o header')
-      });
-    }
+    this.profileService.getMyProfile().subscribe({
+      next: (profile) => {
+        this.authService.isAuthenticated.set(true);
+        if (profile.userId) {
+          this.authService.setCurrentUserId(profile.userId);
+        }
+        const firstName = profile.name.split(' ')[0];
+        this.userName.set(firstName);
+        if (profile.photoUrl) {
+          this.userPhotoUrl.set(profile.photoUrl);
+        }
+      },
+      error: () => {
+        // Se a busca do perfil falhar, o usuário não está autenticado por cookie
+        this.authService.isAuthenticated.set(false);
+      }
+    });
   }
 
   ngOnDestroy() {

@@ -5,41 +5,31 @@ import { catchError, switchMap, throwError } from 'rxjs';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authenticationService = inject(AuthenticationService);
-  let token = authenticationService.getToken();
 
-  let request = req;
-  if (token) {
-    request = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-  }
+  // Adiciona withCredentials: true em todas as requisições para enviar e receber cookies HttpOnly
+  const request = req.clone({
+    withCredentials: true
+  });
 
   return next(request).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Ignora rotas de login e refresh para evitar loop infinito
+      // Ignora rotas de autenticação para evitar loops infinitos
       if (req.url.includes('/auth/login') || req.url.includes('/auth/refresh')) {
         return throwError(() => error);
       }
 
-      // 401 ou 403 geralmente indicam token expirado
+      // 401 ou 403 indicam token invalido/expirado
       if (error.status === 401 || error.status === 403) {
         return authenticationService.refreshToken().pipe(
           switchMap(() => {
-            // Se o refresh funcionou, pega o novo token
-            token = authenticationService.getToken();
+            // Tenta fazer a requisição original novamente após a renovação dos cookies
             const newRequest = req.clone({
-              setHeaders: {
-                Authorization: `Bearer ${token}`
-              }
+              withCredentials: true
             });
-            // Tenta fazer a requisição original novamente
             return next(newRequest);
           }),
           catchError((refreshError) => {
-            // Se o refresh falhar, usuário desloga
-            authenticationService.logout();
+            authenticationService.clearStateAndNavigate();
             return throwError(() => refreshError);
           })
         );

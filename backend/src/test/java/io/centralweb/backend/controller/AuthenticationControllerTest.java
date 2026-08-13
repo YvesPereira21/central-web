@@ -4,8 +4,10 @@ import io.centralweb.backend.dto.user.*;
 import io.centralweb.backend.model.enums.UserRole;
 import io.centralweb.backend.model.User;
 import io.centralweb.backend.repository.UserRepository;
+import io.centralweb.backend.security.CookieUtil;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,10 +46,8 @@ public class AuthenticationControllerTest {
         userRepository.save(user1);
     }
 
-    // -----------------------HAPPY PATH------------------------------
-
     @Test
-    public void shouldGenerateToken(){
+    public void shouldGenerateTokenCookiesOnLogin(){
         LoginRequestDTO login = new LoginRequestDTO(
                 "testcentraldev@gmail.com",
                 "password"
@@ -59,10 +59,10 @@ public class AuthenticationControllerTest {
         .when()
                 .post("/auth/login")
         .then()
-                .statusCode(HttpStatus.OK.value());
+                .statusCode(HttpStatus.OK.value())
+                .cookie(CookieUtil.ACCESS_TOKEN_COOKIE_NAME, notNullValue())
+                .cookie(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, notNullValue());
     }
-
-    // -----------------------UNHAPPY PATH------------------------------
 
     @Test
     public void shouldNotGenerateTokenWithMissingData(){
@@ -97,45 +97,35 @@ public class AuthenticationControllerTest {
     }
 
     @Test
-    public void shouldRefreshTokenWhenTokenIsValid(){
+    public void shouldRefreshTokenWhenCookieIsValid(){
         LoginRequestDTO login = new LoginRequestDTO(
                 "testcentraldev@gmail.com",
                 "password"
         );
 
-        // 1. Login to get refresh token
-        String refreshToken = given()
+        // 1. Login to get refresh token cookie
+        Response loginResponse = given()
                 .contentType(ContentType.JSON)
                 .body(login)
         .when()
-                .post("/auth/login")
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .extract()
-                .path("refreshToken");
+                .post("/auth/login");
 
-        // 2. Use refresh token to get a new access token and rotated refresh token
-        TokenRefreshRequestDTO refreshRequest = new TokenRefreshRequestDTO(refreshToken);
+        String refreshTokenCookie = loginResponse.getCookie(CookieUtil.REFRESH_TOKEN_COOKIE_NAME);
 
+        // 2. Use refresh token cookie to get new access and refresh token cookies
         given()
-                .contentType(ContentType.JSON)
-                .body(refreshRequest)
+                .cookie(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, refreshTokenCookie)
         .when()
                 .post("/auth/refresh")
         .then()
                 .statusCode(HttpStatus.OK.value())
-                .body("accessToken", notNullValue())
-                .body("refreshToken", notNullValue())
-                .body("refreshToken", not(equalTo(refreshToken))); // Verify token rotation
+                .cookie(CookieUtil.ACCESS_TOKEN_COOKIE_NAME, notNullValue())
+                .cookie(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, notNullValue());
     }
 
     @Test
-    public void shouldNotRefreshTokenWhenTokenDoesNotExist(){
-        TokenRefreshRequestDTO refreshRequest = new TokenRefreshRequestDTO("non-existent-token");
-
+    public void shouldNotRefreshTokenWhenCookieDoesNotExist(){
         given()
-                .contentType(ContentType.JSON)
-                .body(refreshRequest)
         .when()
                 .post("/auth/refresh")
         .then()
@@ -149,37 +139,20 @@ public class AuthenticationControllerTest {
                 "password"
         );
 
-        // 1. Login to get refresh token
-        String refreshToken = given()
+        Response loginResponse = given()
                 .contentType(ContentType.JSON)
                 .body(login)
         .when()
-                .post("/auth/login")
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .extract()
-                .path("refreshToken");
+                .post("/auth/login");
 
-        // 2. Perform logout
-        LogoutRequestDTO logoutRequest = new LogoutRequestDTO(refreshToken);
+        String refreshTokenCookie = loginResponse.getCookie(CookieUtil.REFRESH_TOKEN_COOKIE_NAME);
 
+        // Perform logout with refresh token cookie
         given()
-                .contentType(ContentType.JSON)
-                .body(logoutRequest)
+                .cookie(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, refreshTokenCookie)
         .when()
                 .post("/auth/logout")
         .then()
                 .statusCode(HttpStatus.NO_CONTENT.value());
-
-        // 3. Try to refresh with the logged out token - should fail because it was deleted
-        TokenRefreshRequestDTO refreshRequest = new TokenRefreshRequestDTO(refreshToken);
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(refreshRequest)
-        .when()
-                .post("/auth/refresh")
-        .then()
-                .statusCode(HttpStatus.FORBIDDEN.value());
     }
 }

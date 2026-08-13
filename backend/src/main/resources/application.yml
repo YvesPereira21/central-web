@@ -15,6 +15,16 @@ spring:
       ddl-auto: validate
   profiles:
     active: development
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:seu-google-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:seu-google-client-secret}
+            scope:
+              - email
+              - profile
   flyway:
     enabled: true
     clean-disabled: true
@@ -22,8 +32,12 @@ spring:
     baseline-version: 1
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6380}
+
+app:
+  oauth2:
+    redirect-uri: ${FRONTEND_OAUTH2_REDIRECT_URI:http://localhost:4200/oauth2-redirect}
 
 file:
   upload-dir: uploads/profiles/

@@ -54,7 +54,6 @@ public class QuestionService {
     }
 
     @Transactional(rollbackOn = Exception.class)
-    @CacheEvict(value = "questions", allEntries = true)
     public QuestionDTO createQuestion(QuestionCreateDTO questionDataDTO, UUID userProfileId) {
         log.info("Criando nova pergunta com o título: '{}' para o perfil de usuário com ID: '{}'", questionDataDTO.title(), userProfileId);
         Profile profile = profileRepository.findByUser_UserId(userProfileId)
@@ -84,21 +83,18 @@ public class QuestionService {
         return questionMapper.toQuestionDTO(question);
     }
 
-    @Cacheable(value = "questions", key = "#root.methodName + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
     public Page<QuestionListDTO> getAllPublishedQuestions(Pageable pageable){
         log.debug("Buscando página {} de perguntas publicadas", pageable.getPageNumber());
         return questionRepository.findAllByPublishedIsTrue(pageable)
                 .map(questionMapper::toQuestionListDTO);
     }
 
-    @Cacheable(value = "questions", key = "#root.methodName + '_' + #keyword + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
     public Page<QuestionListDTO> searchPublishedQuestions(String keyword, Pageable pageable) {
         Specification<Question> spec = GenericSearchSpecification.searchByTitleOrContent(keyword);
                 
         return questionRepository.findAll(spec, pageable).map(questionMapper::toQuestionListDTO);
     }
 
-    @Cacheable(value = "questions", key = "#root.methodName + '_' + #technologyName + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
     public Page<QuestionListDTO> getAllPublishedQuestionsByTechnologyName(
             String technologyName,
             Pageable pageable
@@ -108,7 +104,6 @@ public class QuestionService {
                 .map(questionMapper::toQuestionListDTO);
     }
 
-    @Cacheable(value = "questions", key = "#root.methodName + '_' + (#tags != null ? #tags.toString() : 'null') + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
     public Page<QuestionListDTO> getAllPublishedQuestionsByTags(
             List<String> tags,
             Pageable pageable
@@ -121,7 +116,6 @@ public class QuestionService {
                 .map(questionMapper::toQuestionListDTO);
     }
 
-    @Cacheable(value = "questions", key = "#root.methodName + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
     public Page<QuestionListDTO> getAllPublishedQuestionWithAcceptedAnswer(
             Pageable pageable
     ){
@@ -130,7 +124,6 @@ public class QuestionService {
                 .map(questionMapper::toQuestionListDTO);
     }
 
-    @Cacheable(value = "questions")
     public Page<QuestionListDTO> getAllQuestionsByProfile(UUID profileId, UUID userId, Pageable pageable) {
         Profile profile = profileRepository.findById(profileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Perfil não encontrado"));
@@ -144,7 +137,7 @@ public class QuestionService {
                 .map(questionMapper::toQuestionListDTO);
     }
 
-    @CacheEvict(value = "questions", allEntries = true)
+    @CacheEvict(value = "questions", key = "#questionId")
     public QuestionDTO updateQuestion(UUID questionId, QuestionUpdateDTO questionUpdated, UUID userProfileId) {
         log.info("Atualizando pergunta com ID: '{}' solicitada pelo perfil de usuário com ID: '{}'", questionId, userProfileId);
         Question question = questionRepository.findById(questionId)
@@ -179,7 +172,7 @@ public class QuestionService {
         questionRepository.save(question);
     }
 
-    @CacheEvict(value = "questions", allEntries = true)
+    @CacheEvict(value = "questions", key = "#questionId")
     public void deleteQuestionById(UUID questionId, UUID userProfileId) {
         log.info("Excluindo pergunta com ID: '{}' solicitada pelo perfil de usuário com ID: '{}'", questionId, userProfileId);
         User user = userRepository.findById(userProfileId)

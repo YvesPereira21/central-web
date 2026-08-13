@@ -28,7 +28,6 @@ public class TagService {
     }
 
     @Transactional(rollbackOn = Exception.class)
-    @CacheEvict(value = "tags", allEntries = true)
     public TagDTO createTag(TagDTO tagDTO) {
         boolean tagExists = tagRepository.
                 existsByTechnologyName(tagDTO.technologyName());
@@ -52,11 +51,11 @@ public class TagService {
         return tagMapper.toDTO(tag);
     }
 
-    @Cacheable(value = "tags", key = "#pageable.pageNumber")
     public Page<TagDTO> getAllTags(Pageable pageable) {
-        return tagRepository.findAll(pageable).map(tagMapper::toDTO);}
+        return tagRepository.findAll(pageable).map(tagMapper::toDTO);
+    }
 
-    @CacheEvict(value = "tags", allEntries = true)
+    @CacheEvict(value = "tags", key = "#tagUpdated.technologyName")
     public TagDTO updateTag(UUID tagId, TagUpdateDTO tagUpdated) {
         Tag tag = tagRepository.findById(tagId)
                 .orElseThrow(() -> new ObjectNotFoundException("Tag não encontrada"));
@@ -71,7 +70,7 @@ public class TagService {
         return tagMapper.toDTO(tagRepository.save(tag));
     }
 
-    @CacheEvict(value = "tags", allEntries = true)
+    @CacheEvict(value = "tags", key = "#technologyName")
     public void deleteTagByTechnologyName(String technologyName) {
         Tag tag = tagRepository
                 .findByTechnologyName(technologyName)
@@ -92,4 +91,3 @@ public class TagService {
         return tags;
     }
 }
-

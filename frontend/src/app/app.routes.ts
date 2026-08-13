@@ -11,6 +11,7 @@ import { ProfileDetailComponent } from './features/profiles/components/profile-d
 import { QualificationCreateComponent } from './features/qualifications/components/qualification-create/qualification-create.component';
 import { HomePageComponent } from './features/home-page/components/home-page/home-page.component';
 import { LoginComponent } from './features/authentications/components/login/login.component';
+import { Oauth2RedirectComponent } from './features/authentications/components/oauth2-redirect/oauth2-redirect.component';
 import { roleGuard } from './core/guards/role.guard';
 import { CollectionListComponent } from './features/collections/components/collection-list/collection-list.component';
 import { CollectionDetailComponent } from './features/collections/components/collection-detail/collection-detail.component';
@@ -18,6 +19,7 @@ import { CollectionDetailComponent } from './features/collections/components/col
 export const routes: Routes = [
     { path: '', component: HomePageComponent, canActivate: [roleGuard] },
     { path: 'login', component: LoginComponent },
+    { path: 'oauth2-redirect', component: Oauth2RedirectComponent },
     { path: 'create-profile', component: ProfileCreateComponent },
     { path: 'edit-profile/:id', component: ProfileEditComponent, canActivate: [roleGuard] },
     { path: 'create-article', component: ArticleCreateComponent, canActivate: [roleGuard], data: { roles: ['PERSON'] } },

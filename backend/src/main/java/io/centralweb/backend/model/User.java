@@ -1,5 +1,6 @@
 package io.centralweb.backend.model;
 
+import io.centralweb.backend.model.enums.AuthProvider;
 import io.centralweb.backend.model.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
@@ -27,6 +28,11 @@ public class User implements UserDetails {
     private String email;
     @Enumerated(EnumType.STRING)
     private UserRole role;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "provider")
+    private AuthProvider provider = AuthProvider.LOCAL;
+    @Column(name = "provider_id")
+    private String providerId;
     @OneToOne(mappedBy = "user")
     private Profile profile;
 
@@ -71,6 +77,22 @@ public class User implements UserDetails {
 
     public void setRole(UserRole role) {
         this.role = role;
+    }
+
+    public AuthProvider getProvider() {
+        return provider;
+    }
+
+    public void setProvider(AuthProvider provider) {
+        this.provider = provider;
+    }
+
+    public String getProviderId() {
+        return providerId;
+    }
+
+    public void setProviderId(String providerId) {
+        this.providerId = providerId;
     }
 
     @Override

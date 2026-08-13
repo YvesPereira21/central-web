@@ -80,10 +80,6 @@ public class ProfileService {
             put = {
                     @CachePut(value = "profiles", key = "#result.profileId()"),
                     @CachePut(value = "profiles", key = "#result.userId()")
-            },
-            evict = {
-                    @CacheEvict(value = "articles", allEntries = true),
-                    @CacheEvict(value = "questions", allEntries = true)
             }
     )
     public ProfileDTO updateProfile(UUID profileId, ProfileUpdateDTO profileUpdated, UUID userProfileId) {
@@ -102,7 +98,7 @@ public class ProfileService {
         return profileMapper.toProfileUniqueDTO(savedProfile);
     }
 
-    @CacheEvict(value = "profiles", allEntries = true)
+    @CacheEvict(value = "profiles", key = "#profileId")
     public void deleteProfileById(UUID profileId, UUID userProfileId) {
         User user = userRepository.findById(userProfileId)
                 .orElseThrow(() -> new ObjectNotFoundException("Usuário não existe"));
@@ -118,11 +114,7 @@ public class ProfileService {
     }
 
     @Transactional(rollbackOn = Exception.class)
-    @Caching(evict = {
-            @CacheEvict(value = "profiles", allEntries = true),
-            @CacheEvict(value = "articles", allEntries = true),
-            @CacheEvict(value = "questions", allEntries = true)
-    })
+    @CacheEvict(value = "profiles", key = "#profileId")
     public void addPoints(UUID profileId, Long amountPoints) {
         log.info("Adicionando {} pontos ao perfil com ID: '{}'", amountPoints, profileId);
         Profile profile = profileRepository.findById(profileId)

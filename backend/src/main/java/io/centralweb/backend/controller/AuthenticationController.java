@@ -4,6 +4,7 @@ import io.centralweb.backend.dto.user.*;
 import io.centralweb.backend.exception.TokenRefreshException;
 import io.centralweb.backend.model.RefreshToken;
 import io.centralweb.backend.model.User;
+import io.centralweb.backend.security.CookieUtil;
 import io.centralweb.backend.security.TokenService;
 import io.centralweb.backend.service.RefreshTokenService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,13 +12,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
@@ -27,60 +27,86 @@ public class AuthenticationController {
     private final AuthenticationManager authenticationManager;
     private final TokenService tokenService;
     private final RefreshTokenService refreshTokenService;
+    private final CookieUtil cookieUtil;
 
-    public AuthenticationController(AuthenticationManager authenticationManager, TokenService tokenService, RefreshTokenService refreshTokenService) {
+    public AuthenticationController(AuthenticationManager authenticationManager,
+                                  TokenService tokenService,
+                                  RefreshTokenService refreshTokenService,
+                                  CookieUtil cookieUtil) {
         this.authenticationManager = authenticationManager;
         this.tokenService = tokenService;
         this.refreshTokenService = refreshTokenService;
+        this.cookieUtil = cookieUtil;
     }
 
     @PostMapping("/login")
-    @Operation(summary = "Realiza login", description = "Autentica um usuário e retorna tokens de acesso e refresh")
+    @Operation(summary = "Realiza login", description = "Autentica um usuário e define cookies HttpOnly de acesso e refresh")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Login bem-sucedido, tokens gerados"),
+            @ApiResponse(responseCode = "200", description = "Login bem-sucedido, cookies definidos"),
             @ApiResponse(responseCode = "400", description = "Requisição inválida (dados de login mal formatados)"),
             @ApiResponse(responseCode = "401", description = "Credenciais inválidas")
     })
-    public ResponseEntity<LoginResponseDTO> login(@RequestBody @Valid LoginRequestDTO login){
+    public ResponseEntity<Void> login(@RequestBody @Valid LoginRequestDTO login) {
         var emailPassword = new UsernamePasswordAuthenticationToken(login.email(), login.password());
         var auth = this.authenticationManager.authenticate(emailPassword);
-        
+
         User user = (User) auth.getPrincipal();
 
         var token = tokenService.generateToken(user);
-        
-        // Deleta tokens antigos do usuário e cria um novo refresh token
+
         refreshTokenService.deleteByUserId(user.getUserId());
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUserId());
 
-        return ResponseEntity.ok(new LoginResponseDTO(token, refreshToken.getToken()));
+        ResponseCookie accessCookie = cookieUtil.createAccessTokenCookie(token);
+        ResponseCookie refreshCookie = cookieUtil.createRefreshTokenCookie(refreshToken.getToken());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .build();
     }
 
     @PostMapping("/refresh")
-    @Operation(summary = "Atualiza o Access Token", description = "Gera um novo access token a partir de um refresh token válido")
-    public ResponseEntity<TokenRefreshResponseDTO> refresh(@RequestBody @Valid TokenRefreshRequestDTO request) {
-        String requestRefreshToken = request.refreshToken();
+    @Operation(summary = "Atualiza o Access Token", description = "Gera um novo access token a partir do cookie HttpOnly de refresh token")
+    public ResponseEntity<Void> refresh(@CookieValue(name = CookieUtil.REFRESH_TOKEN_COOKIE_NAME, required = false) String requestRefreshToken) {
+        if (requestRefreshToken == null || requestRefreshToken.isBlank()) {
+            throw new TokenRefreshException("", "Refresh token não fornecido nos cookies!");
+        }
 
         return refreshTokenService.findByToken(requestRefreshToken)
                 .map(refreshTokenService::verifyExpiration)
                 .map(RefreshToken::getUser)
                 .map(user -> {
                     String token = tokenService.generateToken(user);
-                    
-                    // Rotaciona o refresh token
+
                     refreshTokenService.deleteByUserId(user.getUserId());
                     RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user.getUserId());
-                    
-                    return ResponseEntity.ok(new TokenRefreshResponseDTO(token, newRefreshToken.getToken()));
+
+                    ResponseCookie accessCookie = cookieUtil.createAccessTokenCookie(token);
+                    ResponseCookie refreshCookie = cookieUtil.createRefreshTokenCookie(newRefreshToken.getToken());
+
+                    return ResponseEntity.ok()
+                            .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                            .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                            .<Void>build();
                 })
                 .orElseThrow(() -> new TokenRefreshException(requestRefreshToken,
                         "Refresh token não encontrado na base de dados!"));
     }
 
     @PostMapping("/logout")
-    @Operation(summary = "Realiza logout", description = "Invalida o refresh token no banco de dados")
-    public ResponseEntity<Void> logout(@RequestBody @Valid LogoutRequestDTO request) {
-        refreshTokenService.deleteByToken(request.refreshToken());
-        return ResponseEntity.noContent().build();
+    @Operation(summary = "Realiza logout", description = "Invalida o refresh token no banco e limpa os cookies HttpOnly")
+    public ResponseEntity<Void> logout(@CookieValue(name = CookieUtil.REFRESH_TOKEN_COOKIE_NAME, required = false) String requestRefreshToken) {
+        if (requestRefreshToken != null && !requestRefreshToken.isBlank()) {
+            refreshTokenService.deleteByToken(requestRefreshToken);
+        }
+
+        ResponseCookie accessCookie = cookieUtil.deleteAccessTokenCookie();
+        ResponseCookie refreshCookie = cookieUtil.deleteRefreshTokenCookie();
+
+        return ResponseEntity.noContent()
+                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .build();
     }
 }

@@ -49,7 +49,6 @@ public class ArticleService {
     }
 
     @Transactional(rollbackOn = Exception.class)
-    @CacheEvict(value = "articles", allEntries = true)
     public ArticleDTO createArticle(ArticleCreateDTO articleData, UUID userProfileId) {
         log.info("Criando novo artigo com o título: '{}' para o perfil de usuário com ID: '{}'", articleData.title(), userProfileId);
         Profile profile = profileRepository.findByUser_UserId(userProfileId)
@@ -79,28 +78,24 @@ public class ArticleService {
         return articleMapper.toDTO(article);
     }
 
-    @Cacheable(value = "articles")
     public Page<ArticleDTO> getAllPublishedArticles(Pageable pageable){
         log.debug("Buscando página {} de artigos publicados", pageable.getPageNumber());
         return articleRepository.findAllByPublishedIsTrue(pageable)
                 .map(articleMapper::toDTO);
     }
 
-    @Cacheable(value = "articles")
     public Page<ArticleDTO> searchPublishedArticles(String keyword, Pageable pageable) {
         Specification<Article> spec = GenericSearchSpecification.searchByTitleOrContent(keyword);
         
         return articleRepository.findAll(spec, pageable).map(articleMapper::toDTO);
     }
 
-    @Cacheable(value = "articles")
     public Page<ArticleDTO> getAllPublishedArticlesByTechnologyName(String technologyName, Pageable pageable) {
         return articleRepository
                 .findAllByTags_TechnologyNameAndPublishedIsTrue(technologyName, pageable)
                 .map(articleMapper::toDTO);
     }
 
-    @Cacheable(value = "articles")
     public Page<ArticleDTO> getAllPublishedArticlesByTags(List<String> tags, Pageable pageable) {
         if (tags == null || tags.isEmpty()) {
             return getAllPublishedArticles(pageable);
@@ -110,14 +105,13 @@ public class ArticleService {
                 .map(articleMapper::toDTO);
     }
 
-    @Cacheable(value = "articles")
     public Page<ArticleDTO> getAllPublishedArticlesByProfile(UUID profileId, Pageable pageable) {
         return articleRepository
                 .findAllByProfile_ProfileIdAndPublishedIsTrue(profileId, pageable)
                 .map(articleMapper::toDTO);
     }
 
-    @CacheEvict(value = "articles", allEntries = true)
+    @CacheEvict(value = "articles", key = "#articleId")
     public ArticleDTO updateArticle(UUID articleId, ArticleUpdateDTO articleUpdated, UUID userProfileId) {
         log.info("Atualizando artigo com ID: '{}' solicitado pelo perfil de usuário com ID: '{}'", articleId, userProfileId);
         Article article = articleRepository.findById(articleId)
@@ -152,7 +146,7 @@ public class ArticleService {
         articleRepository.save(article);
     }
 
-    @CacheEvict(value = "articles", allEntries = true)
+    @CacheEvict(value = "articles", key = "#articleId")
     public void deleteArticleById(UUID articleId, UUID userProfileId) {
         log.info("Excluindo artigo com ID: '{}' solicitado pelo perfil de usuário com ID: '{}'", articleId, userProfileId);
         User user = userRepository.findById(userProfileId)
