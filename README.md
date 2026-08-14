@@ -3,6 +3,49 @@
 **Central Web** é um fórum colaborativo de compartilhamento de conhecimento e Q&A (semelhante ao StackOverflow e Medium). A plataforma permite que desenvolvedores criem perfis, façam perguntas, publiquem artigos técnicos, respondam a dúvidas de outros membros, façam comentários, curtam publicações e organizem seus conteúdos favoritos em listas personalizadas.
 
 
+## Tecnologias Utilizadas
+
+### Backend
+* **Java 21**: Linguagem de programação principal utilizada com recursos modernos da plataforma Java.
+* **Spring Boot 3**: Framework base para construção da API RESTful, injeção de dependências e segurança com **Spring Security**.
+* **PostgreSQL**: Banco de dados relacional para persistência de dados.
+* **Flyway**: Ferramenta de migração e versionamento automatizado do schema do banco de dados PostgreSQL.
+* **Redis**: Banco de dados em memória para suporte a **Spring Cache** (`@Cacheable`, `@CacheEvict`), otimizando a performance de consultas.
+* **SLF4J (via `@Slf4j` do Lombok)**: Logging estruturado aplicada em services, controllers e filtros de segurança para auditoria, rastreamento de fluxos e diagnósticos de erros.
+
+### Frontend
+* **Angular 19**: Framework SPA para construção de uma interface visual.
+* **Biblioteca Markdown (`ngx-markdown` com `marked` e `prismjs`)**: Processamento e renderização de conteúdos em Markdown com destaque de sintaxe (*syntax highlighting*) para blocos de código técnicos.
+* **TailwindCSS & DaisyUI**: Estilização do sistema.
+
+
+## Arquitetura de Segurança, Erros e Boas Práticas
+
+### 1. Tratamento Global de Erros (`GlobalHandlerException`)
+A aplicação utiliza um manipulador centralizado de exceções implementado na classe **`GlobalHandlerException`** anotada com `@RestControllerAdvice`. 
+* **Padronização de Respostas**: Transforma exceções de runtime e validações em um DTO padronizado (`ApiError`), contendo timestamp, código HTTP, status e a lista detalhada de erros.
+* **Exceções de Domínio Tratadas**: Intercepta exceções personalizadas como `ProfileIsNotTheOwnerException` (401), `ObjectNotFoundException` (404), `ObjectAlreadyExistsException` (409), `QuestionHaveAnswerAlreadyAcceptedException` (409), `TokenRefreshException` (403), além de falhas de validação DTO (`MethodArgumentNotValidException` e `ConstraintViolationException`).
+
+### 2. Autenticação com Cookies HTTP-Only (`CookieUtil`)
+A aplicação utiliza tokens de acesso JWT e tokens de atualização (*Refresh Tokens*) armazenados em **Cookies seguros**:
+* Os cookies `access_token` e `refresh_token` são gerados via `CookieUtil` com as propriedades **`httpOnly(true)`** e **`sameSite("Lax")`**.
+* Isso previne a exposição de tokens a scripts client-side JavaScript, mitigando drasticamente vetores de ataque **XSS (Cross-Site Scripting)**.
+
+### 3. Redução de Margens para Ataques IDOR (Insecure Direct Object Reference)
+Para conter vulnerabilidades de **IDOR** (onde um atacante tenta alterar IDs na requisição HTTP para manipular recursos de terceiros), a aplicação valida a propriedade (*ownership*) dos recursos na camada de serviço antes de efetuar qualquer alteração ou deleção:
+
+* **Exemplo Prático - Aceitar Resposta em Pergunta**:
+  No método `AnswerService.acceptAnswer(answerId, userProfileId)`, o backend recupera a resposta e a pergunta associada. Somente o usuário proprietário da pergunta tem permissão para aceitar a resposta. Caso um usuário tente aceitar uma resposta em uma pergunta que não lhe pertence, o backend lança a exceção `ProfileIsNotTheOwnerException`:
+  ```java
+  // Apenas o autor/proprietário pode gerenciar a solução
+  if (!question.getProfile().getUser().getUserId().equals(userProfileId)) {
+      throw new ProfileIsNotTheOwnerException("Você não tem permissão para isso");
+  }
+  ```
+* **Exemplo Prático - Exclusão de Pergunta ou Resposta**:
+  Em `QuestionService.deleteQuestionById` e `AnswerService.deleteAnswerById`, o sistema verifica se o `userId` autenticado corresponde exatamente ao criador do recurso ou se possui perfil `ADMIN`. Caso contrário, a requisição é negada e capturada pelo `GlobalHandlerException`, retornando HTTP 401.
+
+
 ## Suporte a Markdown
 A aplicação conta com suporte nativo a **Markdown** no frontend (utilizando a biblioteca `ngx-markdown`). Isso permite que os desenvolvedores formatem seus artigos, perguntas e respostas com blocos de código (com destaque de sintaxe), títulos, listas, tabelas, formatações de texto (negrito, itálico) e links, facilitando a escrita e a leitura de conteúdos técnicos.
 
@@ -125,96 +168,6 @@ No Angular, por questões de segurança e boas práticas de controle de versão,
    };
    ```
 
-
-## Rotas do Aplicativo
-
-### 1. Frontend (Interface Angular)
-
-*   `/` : Página inicial (feed de artigos e fluxo principal).
-*   `/login` : Tela de autenticação de usuários.
-*   `/create-profile` : Tela de cadastro de nova conta de desenvolvedor.
-*   `/edit-profile/:id` : Edição de dados do perfil público.
-*   `/profiles/:id` : Visualização pública do perfil de um desenvolvedor, reputação e qualificações.
-*   `/create-article` e `/edit-article/:id` : Formulário para escrever/editar artigos.
-*   `/articles` : Lista principal de artigos técnicos.
-*   `/articles/:id` : Visualização completa e leitura de um artigo.
-*   `/create-question` e `/edit-question/:id` : Formulário para fazer/editar perguntas técnicas.
-*   `/questions` : Lista principal de perguntas e dúvidas.
-*   `/questions/:id` : Detalhes de uma pergunta, contendo a listagem de respostas e campo de comentários.
-*   `/create-qualification` : Adicionar experiências e qualificações profissionais ao perfil.
-*   `/collections` : Gerenciamento de pastas de coleções salvas pelo usuário logado.
-*   `/collections/:id` : Detalhes e listagem de conteúdos arquivados dentro de uma coleção.
-
-### 2. Backend REST API (Endpoints)
-
-#### Autenticação (`/auth`)
-*   `POST /auth/login` : Autentica usuário e retorna JWT + Refresh Token.
-*   `POST /auth/refresh` : Gera novos tokens de acesso.
-*   `POST /auth/logout` : Invalida a sessão ativa.
-
-#### Perfis (`/profiles` & `/photos`)
-*   `POST /profiles` : Cria um novo usuário e perfil de desenvolvedor.
-*   `GET /profiles/me` : Recupera os dados do perfil logado.
-*   `GET /profiles/{profileId}` : Retorna dados públicos de um perfil.
-*   `PUT /profiles/{profileId}` : Atualiza dados do perfil.
-*   `DELETE /profiles/{profileId}` : Exclui um perfil e sua conta.
-*   `POST /photos/{profileId}/avatar` : Upload de foto de avatar (`MultipartFile`).
-
-#### Artigos (`/articles`)
-*   `POST /articles` : Publica um novo artigo técnico.
-*   `GET /articles` : Retorna a lista paginada de artigos publicados.
-*   `GET /articles/{articleId}` : Retorna os detalhes de um artigo.
-*   `GET /articles/search?query=...` : Pesquisa por texto completo nos artigos.
-*   `GET /articles/{technologyName}/tag` : Filtra artigos por tag tecnológica.
-*   `GET /articles/filter?tags=...` : Filtra por múltiplas tags (separadas por vírgula).
-*   `GET /articles/{profileId}/profile` : Retorna os artigos publicados por um perfil específico.
-*   `PUT /articles/{articleId}` : Atualiza o título/conteúdo/tags de um artigo.
-*   `PATCH /articles/{articleId}/like` : Adiciona ou remove curtida no artigo.
-*   `DELETE /articles/{articleId}` : Exclui um artigo.
-
-#### Perguntas (`/questions`)
-*   `POST /questions` : Registra uma nova dúvida na comunidade.
-*   `GET /questions` : Retorna a lista paginada de dúvidas enviadas.
-*   `GET /questions/{questionId}` : Retorna os detalhes de uma pergunta.
-*   `GET /questions/search?query=...` : Busca perguntas por palavra-chave.
-*   `GET /questions/{technologyName}/tag` : Filtra perguntas por tag.
-*   `GET /questions/filter?tags=...` : Filtra perguntas por múltiplas tags.
-*   `GET /questions/accepteds-answers` : Lista apenas as perguntas que possuem uma resposta marcada como correta/aceita.
-*   `GET /questions/{profileId}/profile` : Lista as perguntas feitas por um perfil específico.
-*   `PUT /questions/{questionId}` : Edita uma pergunta existente.
-*   `PATCH /questions/{questionId}/like` : Adiciona ou remove curtida em uma pergunta.
-*   `DELETE /questions/{questionId}` : Exclui uma pergunta.
-
-#### Respostas (`/answers`)
-*   `POST /answers/{questionId}` : Responde a uma pergunta específica.
-*   `GET /answers/{questionId}` : Lista as respostas de uma pergunta (paginado).
-*   `PATCH /answers/{answerId}` : Aceita uma resposta como correta (somente dono da pergunta).
-*   `PATCH /answers/{answerId}/like` : Adiciona/remove curtida na resposta.
-*   `DELETE /answers/{answerId}` : Exclui uma resposta.
-
-#### Comentários (`/comments`)
-*   `POST /comments/answer/{answerId}` : Comenta em uma resposta.
-*   `GET /comments/answer/{answerId}` : Lista os comentários de uma resposta.
-*   `PUT /comments/{commentId}` : Edita um comentário.
-*   `DELETE /comments/{commentId}` : Exclui um comentário.
-
-#### Coleções (`/collections`)
-*   `POST /collections` : Cria uma nova pasta de coleção.
-*   `GET /collections/my-collections` : Lista as coleções do usuário logado.
-*   `GET /collections/{collectionId}` : Detalhes e conteúdos salvos na coleção.
-*   `POST /collections/{collectionId}/articles/{articleId}` : Adiciona um artigo à coleção.
-*   `POST /collections/{collectionId}/questions/{questionId}` : Adiciona uma pergunta à coleção.
-*   `DELETE /collections/articles/{articleId}` : Remove um artigo de todas as coleções do usuário.
-*   `DELETE /collections/questions/{questionId}` : Remove uma pergunta de todas as coleções do usuário.
-*   `DELETE /collections/{collectionId}` : Exclui uma pasta de coleção.
-
-#### Qualificações (`/qualifications`)
-*   `POST /qualifications` : Cadastra experiência de trabalho no currículo.
-*   `GET /qualifications/verified` / `/not-verified` : Lista qualificações verificadas ou pendentes.
-*   `GET /qualifications/{profileId}/verified` : Qualificações verificadas de um perfil.
-*   `DELETE /qualifications/{qualificationId}` : Remove uma qualificação.
-
-
 ## Documentação da API (Swagger / OpenAPI)
 
 A aplicação possui integração com o **Swagger UI** (utilizando `springdoc-openapi`) para documentar e permitir a execução interativa de todas as rotas REST do backend. Com a aplicação backend rodando, você pode acessar:
@@ -269,3 +222,4 @@ Para rodar os testes do backend, navegue até a pasta `backend/` e execute:
 ```bash
 ./mvnw test
 ```
+
