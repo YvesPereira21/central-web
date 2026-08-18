@@ -33,7 +33,7 @@ CREATE TABLE photos (
 
 CREATE TABLE questions (
     question_id UUID PRIMARY KEY,
-    title VARCHAR(40) NOT NULL,
+    title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
     published BOOLEAN DEFAULT FALSE,
     solutioned BOOLEAN DEFAULT FALSE,
@@ -57,7 +57,7 @@ CREATE TABLE question_likes (
 
 CREATE TABLE articles (
     article_id UUID PRIMARY KEY,
-    title VARCHAR(40) NOT NULL,
+    title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
     published BOOLEAN DEFAULT FALSE,
     created_at DATE NOT NULL,
