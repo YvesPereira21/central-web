@@ -56,7 +56,7 @@ export class AnswersQuestionComponent {
         this.totalPages.set(response.totalPages);
       },
       error: (error) => {
-        alert("Não foi possível encontrar todos os pontos");
+        alert("Erro ao carregar as respostas");
       }
     })
   }

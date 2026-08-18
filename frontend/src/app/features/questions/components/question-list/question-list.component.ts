@@ -95,7 +95,7 @@ export class QuestionListComponent implements OnInit {
         this.totalPages.set(response.totalPages);
       },
       error: (error) => {
-        alert("Não foi possível encontrar todas as perguntas");
+        alert("Erro ao carregar as perguntas");
       }
     });
   }
@@ -114,7 +114,7 @@ export class QuestionListComponent implements OnInit {
         this.totalPages.set(response.totalPages);
       },
       error: (error) => {
-        alert("Não foi possível encontrar as perguntas com respostas aceitas");
+        alert("Erro ao carregar as perguntas resolvidas");
       }
     });
   }
@@ -133,7 +133,7 @@ export class QuestionListComponent implements OnInit {
         this.totalPages.set(response.totalPages);
       },
       error: (error) => {
-        alert("Não foi possível encontrar perguntas para sua pesquisa");
+        alert("Erro ao carregar as perguntas pesquisadas");
       }
     });
   }
@@ -152,7 +152,7 @@ export class QuestionListComponent implements OnInit {
         this.totalPages.set(response.totalPages);
       },
       error: (error) => {
-        alert("Não foi possível encontrar as perguntas filtradas pelas tags");
+        alert("Erro ao carregar as perguntas por tags");
       }
     });
   }
@@ -173,7 +173,7 @@ export class QuestionListComponent implements OnInit {
         this.totalPages.set(response.totalPages);
       },
       error: (error) => {
-        alert("Não foi possível encontrar todas as perguntas do perfil");
+        alert("Erro ao carregar as perguntas do perfil");
       }
     });
   }

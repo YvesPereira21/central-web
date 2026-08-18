@@ -90,7 +90,7 @@ export class ArticleListComponent implements OnInit {
         this.totalPages.set(response.totalPages);
       },
       error: (error) => {
-        alert("Não foi possível encontrar todos os pontos");
+        alert("Erro ao carregar os artigos");
       }
     })
   }
@@ -109,7 +109,7 @@ export class ArticleListComponent implements OnInit {
         this.totalPages.set(response.totalPages);
       },
       error: (error) => {
-        alert("Não foi possível encontrar artigos para sua pesquisa");
+        alert("Erro ao carregar os artigos pesquisados");
       }
     })
   }
@@ -128,7 +128,7 @@ export class ArticleListComponent implements OnInit {
         this.totalPages.set(response.totalPages);
       },
       error: (error) => {
-        alert("Não foi possível encontrar os artigos filtrados pelas tags");
+        alert("Erro ao carregar os artigos por tags");
       }
     })
   }
@@ -149,7 +149,7 @@ export class ArticleListComponent implements OnInit {
         this.totalPages.set(response.totalPages);
       },
       error: (error) => {
-        alert("Não foi possível encontrar todos os pontos");
+        alert("Erro ao carregar os artigos do perfil");
       }
     })
   }
