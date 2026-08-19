@@ -191,12 +191,21 @@ A aplicação possui integração com o **Swagger UI** (utilizando `springdoc-op
     ```bash
     ./mvnw spring-boot:run
     ```
-    *(O Flyway criará e migrará as tabelas do banco de dados automaticamente).*
-5.  **Nota**: Um usuário administrador padrão é criado automaticamente no primeiro boot:
-    *   **E-mail**: `admin@centralweb.io`
-    *   **Senha**: `admin123`
+    *(O Flyway criará e migrará as tabelas do banco de dados automaticamente com dados de teste).*
 
-### 2. Executar o Frontend (Angular)
+### 2. Credenciais de Acesso (Dados de Teste)
+
+Ao iniciar o banco de dados, o Flyway cria automaticamente dados e contas pré-configuradas para testes:
+
+* **Administrador (`ADMIN`)**:
+  * **E-mail / Login**: `admin@centralweb.io`
+  * **Senha**: `admin123`
+
+* **Usuário Comum / Pessoa (`PERSON`)**:
+  * **E-mail / Login**: `lucas.silva@centralweb.io` *(outras opções: `mariana.costa@centralweb.io`, `carlos.eduardo@centralweb.io`, `ana.beatris@centralweb.io`, etc.)*
+  * **Senha**: `12345678` *(exceto o admin, todos os outros usuários possuem a senha `12345678`)*
+
+### 3. Executar o Frontend (Angular)
 1.  Acesse o diretório `frontend`.
 2.  Instale as dependências:
     ```bash
