@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ProfileService } from '../../services/profile.service';
 import { ProfileCreate } from '../../../../core/models/profile';
 import { Router } from '@angular/router';
+import { Location } from '@angular/common';
 
 @Component({
   selector: 'app-profile-create',
@@ -14,6 +15,11 @@ export class ProfileCreateComponent {
   private formBuilder = inject(FormBuilder);
   private profileService = inject(ProfileService);
   private router = inject(Router);
+  private location = inject(Location);
+
+  goBack() {
+    this.location.back();
+  }
 
   isSubmiting: boolean = false;
   selectedFile: File | null = null;

@@ -18,8 +18,8 @@ INSERT INTO users (user_id, email, password, role, provider, provider_id) VALUES
 -- -----------------------------------------------------
 INSERT INTO profiles (profile_id, name, bio, profile_type, level, reputation_score, professional, user_id) VALUES
 ('b0000000-0000-0000-0000-000000000001', 'Administrador', 'Perfil Administrativo do Sistema Central Web', 'autodidata', 'Compilador Humano', 5000, TRUE, 'a0000000-0000-0000-0000-000000000001'),
-('b0000000-0000-0000-0000-000000000002', 'Lucas Silva', 'Desenvolvedor Backend apaixonado por Java, Spring Boot e arquitetura de microsserviços.', 'profissional', 'Mestre do Código', 1250, TRUE, 'a0000000-0000-0000-0000-000000000002'),
-('b0000000-0000-0000-0000-000000000003', 'Mariana Costa', 'Frontend Developer focada em Angular, UX/UI e acessibilidade na web.', 'universitario', 'Arquiteta da Interface', 890, TRUE, 'a0000000-0000-0000-0000-000000000003'),
+('b0000000-0000-0000-0000-000000000002', 'Lucas Silva', 'Desenvolvedor Backend apaixonado por Java, Spring Boot e arquitetura de microsserviços.', 'profissional', 'Visionário', 1250, TRUE, 'a0000000-0000-0000-0000-000000000002'),
+('b0000000-0000-0000-0000-000000000003', 'Mariana Costa', 'Frontend Developer focada em Angular, UX/UI e acessibilidade na web.', 'universitario', 'Veterano', 890, TRUE, 'a0000000-0000-0000-0000-000000000003'),
 ('b0000000-0000-0000-0000-000000000004', 'Carlos Eduardo', 'Entusiasta de DevOps, Docker, Kubernetes e CI/CD.', 'autodidata', 'Veterano', 640, FALSE, 'a0000000-0000-0000-0000-000000000004'),
 ('b0000000-0000-0000-0000-000000000005', 'Ana Beatris', 'Desenvolvedora Fullstack aprendendo novas tecnologias a cada dia.', 'universitario', 'Praticante', 250, FALSE, 'a0000000-0000-0000-0000-000000000005'),
 ('b0000000-0000-0000-0000-000000000006', 'Bruno Oliveira', 'Arquiteto de Software especialista em Java, Kotlin e alta disponibilidade.', 'profissional', 'Domador de Legado', 2850, TRUE, 'a0000000-0000-0000-0000-000000000006'),

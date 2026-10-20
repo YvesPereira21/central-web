@@ -15,6 +15,7 @@ export class LoginComponent {
   private formBuilder = inject(FormBuilder);
 
   isSubmiting: boolean = false;
+  showPassword = false;
   loginForm = this.formBuilder.group({
     email: ['', Validators.email],
     password: ['']

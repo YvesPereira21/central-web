@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Location } from '@angular/common';
 import { ArticleService } from '../../services/article.service';
 import { ArticleCreate, ArticleUpdate } from '../../../../core/models/article';
 import { TagSelectorComponent } from '../../../../shared/components/tag-selector/tag-selector.component';
@@ -16,6 +17,11 @@ export class ArticleCreateComponent implements OnInit {
   private articleService = inject(ArticleService);
   private activatedRoute = inject(ActivatedRoute);
   private router = inject(Router);
+  private location = inject(Location);
+
+  goBack() {
+    this.location.back();
+  }
 
   isSubmiting: boolean = false;
   isEditMode: boolean = false;

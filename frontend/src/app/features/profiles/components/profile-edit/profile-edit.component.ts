@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ProfileService } from '../../services/profile.service';
 import { ProfileUpdate } from '../../../../core/models/profile';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Location } from '@angular/common';
 
 @Component({
   selector: 'app-profile-edit',
@@ -15,6 +16,11 @@ export class ProfileEditComponent implements OnInit {
   private profileService = inject(ProfileService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private location = inject(Location);
+
+  goBack() {
+    this.location.back();
+  }
 
   isSubmiting = false;
   selectedFile: File | null = null;

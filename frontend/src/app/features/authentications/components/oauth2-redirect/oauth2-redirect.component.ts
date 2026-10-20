@@ -21,6 +21,6 @@ export class Oauth2RedirectComponent implements OnInit {
   ngOnInit(): void {
     this.authService.isAuthenticated.set(true);
     this.authService.userRole.set('PERSON');
-    this.router.navigate(['/']);
+    this.router.navigate(['/articles']);
   }
 }

@@ -1,39 +1,64 @@
-<article class="w-full max-w-[600px] mx-auto min-h-[calc(100vh-10rem)] flex flex-col justify-center">
-    <section class="rounded-xl bg-[#161B22] p-6 text-white shadow-lg">
-        <div class="space-y-6">
+<article class="w-full max-w-[500px] mx-auto min-h-[calc(100vh-10rem)] flex flex-col justify-center px-4 py-6">
+    <section class="rounded-xl bg-[#161B22] p-8 text-white border border-[#30363d]">
+        <div class="space-y-8">
+            
+            <div class="text-center space-y-2">
+                <h1 class="text-2xl font-semibold text-gray-100 tracking-tight">Bem-vindo de volta</h1>
+                <p class="text-sm text-gray-400">Entre com sua conta para continuar</p>
+            </div>
+
             <!-- Form -->
-            <form [formGroup]="loginForm" class="space-y-5">
+            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
                 <!-- Email -->
-                <div class="space-y-1.5">
+                <div class="space-y-2">
                     <label for="email" class="text-sm font-medium text-gray-300">Email</label>
-                    <input id="email" formControlName="email" type="email" placeholder="ex: maicon@email.com" required
-                        class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-3 text-white placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none" />
+                    <input id="email" name="email" autocomplete="username" formControlName="email" type="email" placeholder="nome@exemplo.com" required
+                        class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-2.5 text-sm text-white placeholder:text-gray-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none transition-colors" />
                 </div>
 
                 <!-- Password -->
-                <div class="space-y-1.5">
+                <div class="space-y-2">
                     <label for="password" class="text-sm font-medium text-gray-300">Senha</label>
-                    <input id="password" formControlName="password" type="password" placeholder="••••••••" required
-                        class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-3 text-white placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none" />
-                    <p class="text-xs text-gray-500">Mínimo de 8 caracteres</p>
+                    <div class="relative">
+                        <input id="password" name="password" autocomplete="current-password" formControlName="password" [type]="showPassword ? 'text' : 'password'" placeholder="••••••••" required
+                            class="w-full rounded-lg border border-[#30363d] bg-[#0d1117] pl-4 pr-11 py-2.5 text-sm text-white placeholder:text-gray-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none transition-colors" />
+                        <button type="button" (click)="showPassword = !showPassword"
+                            class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-200 transition-colors"
+                            aria-label="Toggle password visibility">
+                            @if (showPassword) {
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+                                </svg>
+                            } @else {
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                </svg>
+                            }
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Action buttons -->
-                <div class="flex flex-wrap items-center justify-end gap-3 pt-4">
+                <div class="pt-2">
                     <button type="submit"
-                        class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-emerald-500 hover:shadow-md"
-                        (click)="onSubmit()" [disabled]="isSubmiting || loginForm.invalid">
+                        class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        [disabled]="isSubmiting || loginForm.invalid">
                         @if (isSubmiting) {
-                        Logando
-                        } @else{
-                        Login
+                            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Entrando...
+                        } @else {
+                            Entrar
                         }
                     </button>
                 </div>
             </form>
 
             <!-- Divider -->
-            <div class="relative flex items-center justify-center my-4">
+            <div class="relative flex items-center justify-center my-6">
                 <div class="border-t border-[#30363d] w-full"></div>
                 <span class="bg-[#161B22] px-3 text-xs text-gray-400 font-medium absolute">ou</span>
             </div>
@@ -41,8 +66,8 @@
             <!-- Social Login Button -->
             <div>
                 <a href="http://localhost:8080/oauth2/authorization/google"
-                    class="w-full flex items-center justify-center gap-3 rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#1f242c] hover:border-gray-500 transition-all duration-200 shadow-sm">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24">
+                    class="w-full flex items-center justify-center gap-3 rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-2.5 text-sm font-medium text-gray-200 hover:bg-[#1f242c] hover:text-white transition-colors">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
                         <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.25 21.3 7.31 24 12 24z"/>
                         <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.17 0 9.99 0 12s.46 3.83 1.26 5.42l4.02-3.15z"/>
@@ -53,10 +78,10 @@
             </div>
 
             <!-- Link to create account -->
-            <div class="text-center">
+            <div class="text-center pt-2">
                 <span class="text-sm text-gray-400">
                     Não possui conta?
-                    <a [routerLink]="['/create-profile']" class="text-emerald-400 hover:underline">
+                    <a [routerLink]="['/create-profile']" class="text-emerald-400 hover:text-emerald-300 hover:underline font-medium ml-1 transition-colors">
                         Crie por aqui
                     </a>
                 </span>

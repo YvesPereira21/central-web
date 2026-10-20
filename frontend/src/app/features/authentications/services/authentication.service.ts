@@ -37,7 +37,7 @@ export class AuthenticationService {
         if (user.role === 'ADMIN') {
           this.router.navigate(['/admin/qualifications']);
         } else {
-          this.router.navigate(['/']);
+          this.router.navigate(['/articles']);
         }
       })
     );

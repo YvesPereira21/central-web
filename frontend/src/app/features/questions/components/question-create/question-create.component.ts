@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { QuestionService } from '../../services/question.service';
 import { FormArray, FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Location } from '@angular/common';
 import { QuestionCreate, QuestionUpdate } from '../../../../core/models/question';
 import { TagSelectorComponent } from '../../../../shared/components/tag-selector/tag-selector.component';
 
@@ -16,6 +17,11 @@ export class QuestionCreateComponent implements OnInit {
   private questionService = inject(QuestionService);
   private activatedRoute = inject(ActivatedRoute);
   private router = inject(Router);
+  private location = inject(Location);
+
+  goBack() {
+    this.location.back();
+  }
 
   isSubmiting: boolean = false;
   isEditMode: boolean = false;

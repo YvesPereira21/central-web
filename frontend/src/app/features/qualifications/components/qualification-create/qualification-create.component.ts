@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { QualificationService } from '../../services/qualification.service';
 import { QualificationCreate } from '../../../../core/models/qualification';
+import { Location } from '@angular/common';
 
 @Component({
   selector: 'app-qualification-create',
@@ -12,6 +13,11 @@ import { QualificationCreate } from '../../../../core/models/qualification';
 export class QualificationCreateComponent {
   private formBuilder = inject(FormBuilder);
   private qualificationService = inject(QualificationService);
+  private location = inject(Location);
+
+  goBack() {
+    this.location.back();
+  }
 
   isSubmiting: boolean = false;
   qualificationForm = this.formBuilder.group({

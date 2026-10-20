@@ -1,6 +1,15 @@
 <article class="w-[600px] max-w-[600px] mx-auto">
     <section class="rounded-xl bg-[#161B22] p-6 text-white shadow-lg">
         <div class="space-y-6">
+            <div class="flex items-center justify-between border-b border-[#30363d] pb-4">
+                <button type="button" (click)="goBack()" class="inline-flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                    </svg>
+                    Voltar
+                </button>
+                <h1 class="text-xl font-semibold text-gray-200">Cadastrar Experiência</h1>
+            </div>
             <form [formGroup]="qualificationForm" class="space-y-5">
                 <!-- jobtitle -->
                 <div class="space-y-1.5">
@@ -49,10 +58,10 @@
 
                 <!-- Botões de ação -->
                 <div class="flex flex-wrap items-center justify-end gap-3 pt-4">
-                    <a href="#"
-                        class="rounded-lg border border-[#30363d] px-5 py-2.5 text-sm font-medium text-gray-300 hover:bg-[#21262d] hover:text-white">
+                    <button type="button" (click)="goBack()"
+                        class="rounded-lg border border-[#30363d] px-5 py-2.5 text-sm font-medium text-gray-300 hover:bg-[#21262d] hover:text-white transition-colors">
                         Cancelar
-                    </a>
+                    </button>
                     <button type="submit" class=" inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm
                         font-medium text-white shadow-sm transition-all hover:bg-emerald-500 hover:shadow-md"
                         (click)="onSubmit()" [disabled]="isSubmiting || qualificationForm.invalid">
