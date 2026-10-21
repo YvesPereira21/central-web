@@ -1,0 +1,60 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: centralweb_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: centralweb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d centralweb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: centralweb_redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: centralweb_app
+    restart: unless-stopped
+    ports:
+      - "8090:8080"
+    environment:
+      - POSTGRES_DB=centralweb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgrespassword
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/centralweb
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgrespassword
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - TOKEN_SECRET=minha-chave-secreta-padrao-desenvolvimento-12345678
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  uploads_data:

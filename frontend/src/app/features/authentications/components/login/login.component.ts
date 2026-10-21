@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthenticationService } from '../../services/authentication.service';
 import { LoginRequest } from '../../../../core/models/authentication';
 import { RouterLink } from '@angular/router';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -16,6 +17,7 @@ export class LoginComponent {
 
   isSubmiting: boolean = false;
   showPassword = false;
+  googleAuthUrl = `${environment.apiUrl}/oauth2/authorization/google`;
   loginForm = this.formBuilder.group({
     email: ['', Validators.email],
     password: ['']
