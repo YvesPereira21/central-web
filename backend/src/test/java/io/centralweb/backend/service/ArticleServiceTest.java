@@ -232,7 +232,7 @@ class ArticleServiceTest {
         String title = "Java";
         PageRequest pageRequest = PageRequest.of(0, 10);
         Page<Article> expectedPage = new PageImpl<>(List.of(article1));
-        when(articleRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), eq(pageRequest)))
+        when(articleRepository.searchByFullText(eq(title), eq(pageRequest)))
                 .thenReturn(expectedPage);
         when(articleMapper.toDTO(any(Article.class))).thenReturn(articleDTO);
 
@@ -243,6 +243,7 @@ class ArticleServiceTest {
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         assertEquals(article1.getTitle(), result.getContent().get(0).title());
+        verify(articleRepository, times(1)).searchByFullText(eq(title), eq(pageRequest));
     }
 
     @Test

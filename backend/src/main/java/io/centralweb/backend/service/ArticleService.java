@@ -19,6 +19,7 @@ import io.centralweb.backend.repository.specification.GenericSearchSpecification
 import jakarta.transaction.Transactional;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Value;
 
 @Slf4j
 @Service
@@ -38,6 +40,9 @@ public class ArticleService {
     private final ProfileRepository profileRepository;
     private final TagService tagService;
     private final ApplicationEventPublisher publisher;
+
+    @Value("${app.search.full-text-enabled:true}")
+    private boolean fullTextSearchEnabled = true;
 
     public ArticleService(ArticleRepository articleRepository, ArticleMapper articleMapper, UserRepository userRepository, ProfileRepository profileRepository, TagService tagService, ApplicationEventPublisher publisher) {
         this.articleRepository = articleRepository;
@@ -85,8 +90,16 @@ public class ArticleService {
     }
 
     public Page<ArticleDTO> searchPublishedArticles(String keyword, Pageable pageable) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return articleRepository.findAllByPublishedIsTrue(pageable)
+                    .map(articleMapper::toDTO);
+        }
+        if (fullTextSearchEnabled) {
+            Pageable searchPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+            return articleRepository.searchByFullText(keyword.trim(), searchPageable)
+                    .map(articleMapper::toDTO);
+        }
         Specification<Article> spec = GenericSearchSpecification.searchByTitleOrContent(keyword);
-        
         return articleRepository.findAll(spec, pageable).map(articleMapper::toDTO);
     }
 

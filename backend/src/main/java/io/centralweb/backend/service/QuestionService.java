@@ -22,6 +22,7 @@ import io.centralweb.backend.repository.specification.GenericSearchSpecification
 import jakarta.transaction.Transactional;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Value;
 
 @Slf4j
 @Service
@@ -42,6 +44,9 @@ public class QuestionService {
     private final TagService tagService;
     private final ApplicationEventPublisher publisher;
     private final AnswerRepository answerRepository;
+
+    @Value("${app.search.full-text-enabled:true}")
+    private boolean fullTextSearchEnabled = true;
 
     public QuestionService(QuestionRepository questionRepository, QuestionMapper questionMapper, UserRepository userRepository, ProfileRepository profileRepository, TagService tagService, ApplicationEventPublisher publisher, AnswerRepository answerRepository) {
         this.questionRepository = questionRepository;
@@ -90,8 +95,18 @@ public class QuestionService {
     }
 
     public Page<QuestionListDTO> searchPublishedQuestions(String keyword, Pageable pageable) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return questionRepository.findAllByPublishedIsTrue(pageable)
+                    .map(questionMapper::toQuestionListDTO);
+        }
+
+        if (fullTextSearchEnabled) {
+            Pageable searchPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+            return questionRepository.searchByFullText(keyword.trim(), searchPageable)
+                    .map(questionMapper::toQuestionListDTO);
+        }
+
         Specification<Question> spec = GenericSearchSpecification.searchByTitleOrContent(keyword);
-                
         return questionRepository.findAll(spec, pageable).map(questionMapper::toQuestionListDTO);
     }
 

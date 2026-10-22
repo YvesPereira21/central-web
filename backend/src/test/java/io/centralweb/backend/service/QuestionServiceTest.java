@@ -264,7 +264,7 @@ class QuestionServiceTest {
         List<Question> questions = List.of(question1);
         Page<Question> questionPage = new PageImpl<>(questions);
 
-        when(questionRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class)))
+        when(questionRepository.searchByFullText(eq(title), any(Pageable.class)))
                 .thenReturn(questionPage);
         when(questionMapper.toQuestionListDTO(any(Question.class))).thenReturn(questionListDTO);
 
@@ -275,7 +275,7 @@ class QuestionServiceTest {
         assertEquals(1, result.getNumberOfElements());
 
         verify(questionRepository, times(1))
-                .findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class));
+                .searchByFullText(eq(title), any(Pageable.class));
         verify(questionMapper, times(1)).toQuestionListDTO(any(Question.class));
     }
 
