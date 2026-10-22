@@ -3,11 +3,12 @@ import { QualificationService } from '../../../qualifications/services/qualifica
 import { Qualification } from '../../../../core/models/qualification';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { RouterLink } from '@angular/router';
+import { ExperienceLevelPipe } from '../../../../shared/pipes/experience-level.pipe';
 
 @Component({
   selector: 'app-qualification-management',
   standalone: true,
-  imports: [PaginationComponent, RouterLink],
+  imports: [PaginationComponent, RouterLink, ExperienceLevelPipe],
   templateUrl: './qualification-management.component.html',
   styleUrl: './qualification-management.component.css'
 })
@@ -86,10 +87,14 @@ export class QualificationManagementComponent implements OnInit {
 
   getBadgeColor(level: string): string {
     switch (level?.toUpperCase()) {
+      case 'JR':
       case 'JUNIOR':
         return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+      case 'PL':
       case 'MID':
+      case 'MID_LEVEL':
         return 'bg-blue-500/10 text-blue-400 border-blue-500/30';
+      case 'SR':
       case 'SENIOR':
         return 'bg-purple-500/10 text-purple-400 border-purple-500/30';
       default:

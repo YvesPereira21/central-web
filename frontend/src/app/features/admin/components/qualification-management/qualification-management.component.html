@@ -72,7 +72,7 @@
               <div class="flex flex-wrap items-center gap-2">
                 <span class="text-lg font-semibold text-white">{{ item.jobTitle }}</span>
                 <span [class]="getBadgeColor(item.experienceLevel)" class="text-xs px-2.5 py-0.5 rounded-full border font-medium">
-                  {{ item.experienceLevel }}
+                  {{ item.experienceLevel | experienceLevel }}
                 </span>
                 @if (item.verified) {
                   <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs px-2.5 py-0.5 rounded-full flex items-center gap-1 font-medium">

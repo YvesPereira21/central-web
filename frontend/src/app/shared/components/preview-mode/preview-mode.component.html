@@ -1,0 +1,19 @@
+<section
+    class="w-full flex flex-col rounded-lg border border-[#30363d] bg-[#0d1117] p-4 min-h-[350px]">
+    <!-- Cabeçalho apenas informativo -->
+    <div class="flex items-center justify-between border-b border-[#30363d] pb-2 mb-3">
+        <span class="text-xs font-mono uppercase tracking-wider text-gray-400">
+            Visualização (Somente leitura)
+        </span>
+        <span class="text-xs text-emerald-400 font-medium">Ao vivo</span>
+    </div>
+
+    <div
+        class="break-words text-gray-300 text-left leading-relaxed font-lora font-semibold prose prose-invert max-w-none prose-p:my-2 prose-headings:mb-3 prose-headings:mt-6 [&_markdown>*:first-child]:!mt-0 [&_code]:break-all">
+        @if (content()?.trim()) {
+        <markdown [data]="content()"></markdown>
+        } @else {
+        <p class="text-gray-500 italic text-sm">O que você digitar na esquerda aparecerá formatado aqui...</p>
+        }
+    </div>
+</section>

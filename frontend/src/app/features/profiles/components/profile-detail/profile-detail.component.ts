@@ -8,10 +8,11 @@ import { AuthenticationService } from '../../../../features/authentications/serv
 import { LevelStageComponent } from '../../../../shared/components/level-stage/level-stage.component';
 import { environment } from '../../../../environments/environment';
 import { DatePipe } from '@angular/common';
+import { ExperienceLevelPipe } from '../../../../shared/pipes/experience-level.pipe';
 
 @Component({
   selector: 'app-profile-detail',
-  imports: [RouterLink, ArticleListComponent, QuestionListComponent, LevelStageComponent, DatePipe],
+  imports: [RouterLink, ArticleListComponent, QuestionListComponent, LevelStageComponent, DatePipe, ExperienceLevelPipe],
   templateUrl: './profile-detail.component.html',
   styleUrl: './profile-detail.component.css'
 })

@@ -1,14 +1,15 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { QuestionService } from '../../services/question.service';
 import { FormArray, FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { QuestionCreate, QuestionUpdate } from '../../../../core/models/question';
 import { TagSelectorComponent } from '../../../../shared/components/tag-selector/tag-selector.component';
+import { PreviewModeComponent } from '../../../../shared/components/preview-mode/preview-mode.component';
 
 @Component({
   selector: 'app-question-create',
-  imports: [ReactiveFormsModule, TagSelectorComponent],
+  imports: [ReactiveFormsModule, TagSelectorComponent, PreviewModeComponent],
   templateUrl: './question-create.component.html',
   styleUrl: './question-create.component.css'
 })
@@ -26,6 +27,7 @@ export class QuestionCreateComponent implements OnInit {
   isSubmiting: boolean = false;
   isEditMode: boolean = false;
   questionId: string | null = null;
+  showPreview = signal<boolean>(false);
 
   questionForm = this.formBuilder.group({
     title: ['', Validators.required],
@@ -112,5 +114,9 @@ export class QuestionCreateComponent implements OnInit {
     this.questionForm.reset();
     this.technologyNames.clear();
     this.isSubmiting = false;
+  }
+
+  togglePreview() {
+    this.showPreview.update(value => !value);
   }
 }
