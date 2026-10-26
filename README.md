@@ -1,6 +1,6 @@
 # Central Web
 
-**Central Web** é um fórum colaborativo de compartilhamento de conhecimento e Q&A (semelhante ao StackOverflow e Medium). A plataforma permite que desenvolvedores criem perfis, façam perguntas, publiquem artigos técnicos, respondam a dúvidas de outros membros, façam comentários, curtam publicações e organizem seus conteúdos favoritos em listas personalizadas.
+**Central Web** é um fórum colaborativo de compartilhamento de conhecimento e Q&A (semelhante ao StackOverflow e Medium). A plataforma permite que desenvolvedores criem perfis, publiquem artigos técnicos e façam perguntas (com suporte a **modo preview** em tempo real), pesquisem conteúdos via **Full Text Search**, respondam a dúvidas de outros membros, façam comentários, curtam publicações e organizem seus conteúdos favoritos em listas personalizadas.
 
 
 ## Tecnologias Utilizadas
@@ -8,14 +8,14 @@
 ### Backend
 * **Java 21**: Linguagem de programação principal utilizada com recursos modernos da plataforma Java.
 * **Spring Boot 3**: Framework base para construção da API RESTful, injeção de dependências e segurança com **Spring Security**.
-* **PostgreSQL**: Banco de dados relacional para persistência de dados.
+* **PostgreSQL & Full Text Search**: Banco de dados relacional para persistência de dados e motor de busca textual otimizada com `tsvector`, índices `GIN`, dicionário em português (`websearch_to_tsquery`) e ranqueamento por relevância com `ts_rank`.
 * **Flyway**: Ferramenta de migração e versionamento automatizado do schema do banco de dados PostgreSQL.
 * **Redis**: Banco de dados em memória para suporte a **Spring Cache** (`@Cacheable`, `@CacheEvict`), otimizando a performance de consultas.
 * **SLF4J (via `@Slf4j` do Lombok)**: Logging estruturado aplicada em services, controllers e filtros de segurança para auditoria, rastreamento de fluxos e diagnósticos de erros.
 
 ### Frontend
-* **Angular 19**: Framework SPA para construção de uma interface visual.
-* **Biblioteca Markdown (`ngx-markdown` com `marked` e `prismjs`)**: Processamento e renderização de conteúdos em Markdown com destaque de sintaxe (*syntax highlighting*) para blocos de código técnicos.
+* **Angular 19**: Framework SPA para construção de uma interface visual moderna e reativa.
+* **Biblioteca Markdown (`ngx-markdown` com `marked` e `prismjs`)**: Processamento e renderização de conteúdos em Markdown com destaque de sintaxe (*syntax highlighting*) para blocos de código técnicos e suporte a **Modo Preview** ao vivo.
 * **TailwindCSS & DaisyUI**: Estilização do sistema.
 
 
@@ -46,8 +46,23 @@ Para conter vulnerabilidades de **IDOR** (onde um atacante tenta alterar IDs na 
   Em `QuestionService.deleteQuestionById` e `AnswerService.deleteAnswerById`, o sistema verifica se o `userId` autenticado corresponde exatamente ao criador do recurso ou se possui perfil `ADMIN`. Caso contrário, a requisição é negada e capturada pelo `GlobalHandlerException`, retornando HTTP 401.
 
 
-## Suporte a Markdown
+## Suporte a Markdown e Modo Preview
+
 A aplicação conta com suporte nativo a **Markdown** no frontend (utilizando a biblioteca `ngx-markdown`). Isso permite que os desenvolvedores formatem seus artigos, perguntas e respostas com blocos de código (com destaque de sintaxe), títulos, listas, tabelas, formatações de texto (negrito, itálico) e links, facilitando a escrita e a leitura de conteúdos técnicos.
+
+### Modo Preview (Pré-visualização em Tempo Real)
+Ao criar ou editar artigos e perguntas, os usuários contam com o recurso de **Modo Preview** (tela dividida):
+* **Visualização Lado a Lado**: Permite redigir o conteúdo no editor enquanto acompanha simultaneamente como o artigo ou pergunta será exibido para a comunidade.
+* **Sincronização em Tempo Real**: Qualquer texto ou bloco de código inserido é renderizado instantaneamente com destaque de sintaxe, facilitando a revisão visual antes da publicação.
+
+
+## Pesquisa com Full Text Search
+
+A plataforma conta com um sistema de **Full Text Search** nativo do PostgreSQL para a busca rápida e inteligente de artigos e perguntas, substituindo abordagens tradicionais baseadas em `Specification` / `LIKE`:
+
+* **Indexação com Pesos e Dicionário em Português**: As tabelas de artigos e perguntas utilizam colunas geradas (`tsvector`) configuradas com o dicionário `portuguese`. O título recebe maior relevância (peso `A`) em relação ao corpo do texto (peso `B`), com aceleração de consultas via índices `GIN`.
+* **Consultas em Linguagem Natural**: A pesquisa utiliza `websearch_to_tsquery('portuguese', :termo)`, permitindo buscas amigáveis com suporte a múltiplos termos, frases exatas entre aspas e exclusão de palavras.
+* **Ranqueamento por Relevância**: Os resultados são ordenados pelo grau de relevância textual calculado pela função `ts_rank`, trazendo os conteúdos mais pertinentes no topo da listagem.
 
 
 ## Sistema de Reputação e Nível de Experiência
