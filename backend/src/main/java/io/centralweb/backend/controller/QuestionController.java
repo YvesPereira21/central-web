@@ -1,18 +1,11 @@
 package io.centralweb.backend.controller;
 
+import io.centralweb.backend.controller.doc.QuestionControllerDoc;
 import io.centralweb.backend.dto.question.QuestionCreateDTO;
-import io.centralweb.backend.dto.question.QuestionListDTO;
 import io.centralweb.backend.dto.question.QuestionDTO;
+import io.centralweb.backend.dto.question.QuestionListDTO;
 import io.centralweb.backend.dto.question.QuestionUpdateDTO;
-import io.centralweb.backend.security.SecurityConfigurations;
 import io.centralweb.backend.service.QuestionService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -30,9 +23,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping(path = "/questions")
 @Validated
-@Tag(name = "Question", description = "Gerenciamento de perguntas")
-@SecurityRequirement(name = SecurityConfigurations.SECURITY)
-public class QuestionController {
+public class QuestionController implements QuestionControllerDoc {
 
     private final QuestionService questionService;
 
@@ -40,28 +31,19 @@ public class QuestionController {
         this.questionService = questionService;
     }
 
+    @Override
     @PreAuthorize("hasRole('PERSON')")
     @PostMapping("")
-    @Operation(summary = "Cria uma nova pergunta", description = "Cria uma pergunta associada ao usuário autenticado")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Pergunta criada com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Dados inválidos fornecidos")
-    })
     public ResponseEntity<QuestionDTO> createQuestion(
-            @RequestBody @Valid QuestionCreateDTO question,
-            @Parameter(hidden = true)
+            @RequestBody QuestionCreateDTO question,
             @AuthenticationPrincipal(expression = "userId") UUID userId
     ) {
         QuestionDTO newQuestion = questionService.createQuestion(question, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(newQuestion);
     }
 
+    @Override
     @GetMapping("/{questionId}")
-    @Operation(summary = "Busca uma pergunta por ID", description = "Retorna os detalhes de uma pergunta específica")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Pergunta encontrada"),
-            @ApiResponse(responseCode = "404", description = "Pergunta não encontrada para o ID informado")
-    })
     public ResponseEntity<QuestionDTO> getQuestion(
             @PathVariable("questionId") UUID questionId
     ) {
@@ -69,11 +51,8 @@ public class QuestionController {
         return ResponseEntity.ok(question);
     }
 
+    @Override
     @GetMapping("")
-    @Operation(summary = "Lista todas as perguntas publicadas", description = "Retorna a lista de perguntas que estão publicadas")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de perguntas retornada com sucesso")
-    })
     public ResponseEntity<Page<QuestionListDTO>> getAllPublishedQuestions(
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable
@@ -81,28 +60,19 @@ public class QuestionController {
         return ResponseEntity.ok(questionService.getAllPublishedQuestions(pageable));
     }
 
+    @Override
     @GetMapping("/{profileId}/profile")
-    @Operation(summary = "Busca perguntas por perfil", description = "Retorna as perguntas de um perfil específico, apenas para o próprio dono")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de perguntas do perfil"),
-            @ApiResponse(responseCode = "403", description = "Acesso negado"),
-            @ApiResponse(responseCode = "404", description = "Perfil não encontrado")
-    })
     public ResponseEntity<Page<QuestionListDTO>> getProfileQuestions(
             @PathVariable UUID profileId,
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable,
-            @Parameter(hidden = true)
             @AuthenticationPrincipal(expression = "userId") UUID userId
     ) {
         return ResponseEntity.ok(questionService.getAllQuestionsByProfile(profileId, userId, pageable));
     }
 
+    @Override
     @GetMapping("/search")
-    @Operation(summary = "Busca perguntas pelo título ou conteúdo", description = "Pesquisa perguntas publicadas contendo o termo no título ou conteúdo")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de perguntas correspondentes")
-    })
     public ResponseEntity<Page<QuestionListDTO>> searchPublishedQuestions(
             @RequestParam("query") String query,
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
@@ -110,14 +80,8 @@ public class QuestionController {
         return ResponseEntity.ok(questionService.searchPublishedQuestions(query, pageable));
     }
 
+    @Override
     @GetMapping("/{technologyName}/tag")
-    @Operation(
-            summary = "Busca perguntas por tag/tecnologia",
-            description = "Retorna perguntas publicadas associadas a uma determinada tecnologia (tag)"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de perguntas filtradas pela tecnologia")
-    })
     public ResponseEntity<Page<QuestionListDTO>> getQuestionsByTag(
             @PathVariable String technologyName,
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
@@ -128,14 +92,8 @@ public class QuestionController {
         ));
     }
 
+    @Override
     @GetMapping("/filter")
-    @Operation(
-            summary = "Busca perguntas por múltiplas tags",
-            description = "Retorna perguntas publicadas que possuam TODAS as tags listadas (Filtro Estrito)"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de perguntas correspondentes")
-    })
     public ResponseEntity<Page<QuestionListDTO>> getQuestionsByTags(
             @RequestParam List<String> tags,
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
@@ -146,14 +104,8 @@ public class QuestionController {
         ));
     }
 
+    @Override
     @GetMapping("/accepteds-answers")
-    @Operation(
-            summary = "Lista perguntas com resposta aceita",
-            description = "Retorna perguntas publicadas que possuem pelo menos uma resposta aceita"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de perguntas com resposta aceita")
-    })
     public ResponseEntity<Page<QuestionListDTO>> getQuestionsWithAcceptedAnswer(
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable
@@ -163,39 +115,20 @@ public class QuestionController {
         ));
     }
 
+    @Override
     @PreAuthorize("hasRole('PERSON')")
     @PutMapping("/{questionId}")
-    @Operation(
-            summary = "Atualiza uma pergunta",
-            description = "Atualiza os dados de uma pergunta existente. Apenas o autor pode alterá-la."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Pergunta atualizada com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Requisição inválida"),
-            @ApiResponse(responseCode = "404", description = "Pergunta não encontrada"),
-            @ApiResponse(responseCode = "403", description = "Acesso negado usuário não é o autor")
-    })
     public ResponseEntity<QuestionDTO> updateQuestion(
             @PathVariable UUID questionId,
-            @RequestBody @Valid QuestionUpdateDTO question,
-            @Parameter(hidden = true)
+            @RequestBody QuestionUpdateDTO question,
             @AuthenticationPrincipal(expression = "userId") UUID userId
     ) {
         return ResponseEntity.status(HttpStatus.OK).body(questionService.updateQuestion(questionId, question, userId));
     }
 
+    @Override
     @PreAuthorize("hasRole('PERSON')")
     @PatchMapping("/{questionId}/like")
-    @Operation(
-            summary = "Adiciona/Remove curtida",
-            description = "Adiciona/Remove uma curtida para uma pergunta existente."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Like realizado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Requisição inválida"),
-            @ApiResponse(responseCode = "404", description = "Pergunta não encontrada"),
-            @ApiResponse(responseCode = "403", description = "Acesso negado. Usuário não está autenticado")
-    })
     public ResponseEntity<Void> toggleQuestionLike(
             @PathVariable UUID questionId,
             @AuthenticationPrincipal(expression = "userId")
@@ -205,12 +138,8 @@ public class QuestionController {
         return ResponseEntity.ok().build();
     }
 
+    @Override
     @DeleteMapping("/{questionId}")
-    @Operation(summary = "Exclui uma pergunta", description = "Remove uma pergunta existente")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Pergunta excluída com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Pergunta não encontrada")
-    })
     public ResponseEntity<Void> deleteQuestion(
             @PathVariable UUID questionId,
             @AuthenticationPrincipal(expression = "userId")

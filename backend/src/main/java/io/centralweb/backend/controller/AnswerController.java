@@ -1,16 +1,9 @@
 package io.centralweb.backend.controller;
 
+import io.centralweb.backend.controller.doc.AnswerControllerDoc;
 import io.centralweb.backend.dto.answer.AnswerCreateDTO;
 import io.centralweb.backend.dto.answer.AnswerDTO;
-import io.centralweb.backend.security.SecurityConfigurations;
 import io.centralweb.backend.service.AnswerService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -27,9 +20,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping(path = "/answers")
 @Validated
-@Tag(name = "Answer", description = "Gerenciamento de respostas")
-@SecurityRequirement(name = SecurityConfigurations.SECURITY)
-public class AnswerController {
+public class AnswerController implements AnswerControllerDoc {
 
     private final AnswerService answerService;
 
@@ -37,29 +28,20 @@ public class AnswerController {
         this.answerService = answerService;
     }
 
+    @Override
     @PreAuthorize("hasRole('PERSON')")
     @PostMapping("/{questionId}")
-    @Operation(summary = "Cria uma resposta", description = "Cria uma nova resposta associada ao usuário autenticado")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Resposta criada com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Dados inválidos fornecidos")
-    })
     public ResponseEntity<AnswerDTO> createAnswer(
-            @RequestBody @Valid AnswerCreateDTO answer,
+            @RequestBody AnswerCreateDTO answer,
             @PathVariable UUID questionId,
-            @Parameter(hidden = true)
             @AuthenticationPrincipal(expression = "userId") UUID userId
     ) {
         AnswerDTO newAwnser = answerService.createAnswer(questionId, answer, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(newAwnser);
     }
 
+    @Override
     @GetMapping("/{questionId}")
-    @Operation(summary = "Lista respostas de uma pergunta", description = "Retorna todas as respostas associadas a uma pergunta específica")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de respostas retornada"),
-            @ApiResponse(responseCode = "404", description = "Pergunta não encontrada")
-    })
     public ResponseEntity<Page<AnswerDTO>> getAllAnswersFromQuestion(
             @PathVariable UUID questionId,
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
@@ -68,36 +50,20 @@ public class AnswerController {
         return ResponseEntity.ok(answerService.getAllAnswersFromQuestion(questionId, pageable));
     }
 
+    @Override
     @PreAuthorize("hasRole('PERSON')")
     @PatchMapping("/{answerId}")
-    @Operation(summary = "Aceita uma resposta", description = "Marca uma resposta como aceita para uma pergunta")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Resposta aceita com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Requisição inválida"),
-            @ApiResponse(responseCode = "403", description = "Acesso negado (usuário não autorizado)"),
-            @ApiResponse(responseCode = "404", description = "Resposta ou pergunta não encontrada")
-    })
     public ResponseEntity<Void> acceptAnswer(
             @PathVariable UUID answerId,
-            @Parameter(hidden = true)
             @AuthenticationPrincipal(expression = "userId") UUID userId
     ) {
         answerService.acceptAnswer(answerId, userId);
         return ResponseEntity.ok().build();
     }
 
+    @Override
     @PreAuthorize("hasRole('PERSON')")
     @PatchMapping("/{answerId}/like")
-    @Operation(
-            summary = "Adiciona/Remove curtida",
-            description = "Adiciona/Remove uma curtida para uma resposta existente."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Like realizado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Requisição inválida"),
-            @ApiResponse(responseCode = "404", description = "Resposta não encontrado"),
-            @ApiResponse(responseCode = "403", description = "Acesso negado. Usuário não está autenticado")
-    })
     public ResponseEntity<Void> toggleAnswerLike(
             @PathVariable UUID answerId,
             @AuthenticationPrincipal(expression = "userId")
@@ -107,12 +73,8 @@ public class AnswerController {
         return ResponseEntity.ok().build();
     }
 
+    @Override
     @DeleteMapping("/{answerId}")
-    @Operation(summary = "Exclui uma resposta", description = "Remove uma resposta existente")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Resposta removida com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Resposta não encontrada")
-    })
     public ResponseEntity<Void> deleteAnswer(
             @PathVariable UUID answerId,
             @AuthenticationPrincipal(expression = "userId")

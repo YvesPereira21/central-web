@@ -1,28 +1,26 @@
 package io.centralweb.backend.controller;
 
-import io.centralweb.backend.dto.user.*;
+import io.centralweb.backend.controller.doc.AuthenticationControllerDoc;
+import io.centralweb.backend.dto.auth.AuthUserDTO;
+import io.centralweb.backend.dto.user.LoginRequestDTO;
 import io.centralweb.backend.exception.TokenRefreshException;
 import io.centralweb.backend.model.RefreshToken;
 import io.centralweb.backend.model.User;
 import io.centralweb.backend.security.CookieUtil;
 import io.centralweb.backend.security.TokenService;
 import io.centralweb.backend.service.RefreshTokenService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
-@Tag(name = "Authentication", description = "Autenticação de usuários")
-public class AuthenticationController {
+public class AuthenticationController implements AuthenticationControllerDoc {
 
     private final AuthenticationManager authenticationManager;
     private final TokenService tokenService;
@@ -39,14 +37,9 @@ public class AuthenticationController {
         this.cookieUtil = cookieUtil;
     }
 
+    @Override
     @PostMapping("/login")
-    @Operation(summary = "Realiza login", description = "Autentica um usuário e define cookies HttpOnly de acesso e refresh")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Login bem-sucedido, cookies definidos"),
-            @ApiResponse(responseCode = "400", description = "Requisição inválida (dados de login mal formatados)"),
-            @ApiResponse(responseCode = "401", description = "Credenciais inválidas")
-    })
-    public ResponseEntity<Void> login(@RequestBody @Valid LoginRequestDTO login) {
+    public ResponseEntity<Void> login(@RequestBody LoginRequestDTO login) {
         var emailPassword = new UsernamePasswordAuthenticationToken(login.email(), login.password());
         var auth = this.authenticationManager.authenticate(emailPassword);
 
@@ -66,8 +59,8 @@ public class AuthenticationController {
                 .build();
     }
 
+    @Override
     @PostMapping("/refresh")
-    @Operation(summary = "Atualiza o Access Token", description = "Gera um novo access token a partir do cookie HttpOnly de refresh token")
     public ResponseEntity<Void> refresh(@CookieValue(name = CookieUtil.REFRESH_TOKEN_COOKIE_NAME, required = false) String requestRefreshToken) {
         if (requestRefreshToken == null || requestRefreshToken.isBlank()) {
             throw new TokenRefreshException("", "Refresh token não fornecido nos cookies!");
@@ -94,8 +87,8 @@ public class AuthenticationController {
                         "Refresh token não encontrado na base de dados!"));
     }
 
+    @Override
     @PostMapping("/logout")
-    @Operation(summary = "Realiza logout", description = "Invalida o refresh token no banco e limpa os cookies HttpOnly")
     public ResponseEntity<Void> logout(@CookieValue(name = CookieUtil.REFRESH_TOKEN_COOKIE_NAME, required = false) String requestRefreshToken) {
         if (requestRefreshToken != null && !requestRefreshToken.isBlank()) {
             refreshTokenService.deleteByToken(requestRefreshToken);
@@ -110,12 +103,12 @@ public class AuthenticationController {
                 .build();
     }
 
+    @Override
     @GetMapping("/me")
-    @Operation(summary = "Obtém usuário autenticado", description = "Retorna os dados básicos do usuário logado (userId, email, role)")
-    public ResponseEntity<io.centralweb.backend.dto.auth.AuthUserDTO> me(@org.springframework.security.core.annotation.AuthenticationPrincipal User user) {
+    public ResponseEntity<AuthUserDTO> me(@AuthenticationPrincipal User user) {
         if (user == null) {
-            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return ResponseEntity.ok(new io.centralweb.backend.dto.auth.AuthUserDTO(user.getUserId(), user.getEmail(), user.getRole()));
+        return ResponseEntity.ok(new AuthUserDTO(user.getUserId(), user.getEmail(), user.getRole()));
     }
 }

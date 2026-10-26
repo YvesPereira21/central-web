@@ -1,0 +1,110 @@
+package io.centralweb.backend.controller.doc;
+
+import io.centralweb.backend.dto.article.ArticleCreateDTO;
+import io.centralweb.backend.dto.article.ArticleDTO;
+import io.centralweb.backend.dto.article.ArticleUpdateDTO;
+import io.centralweb.backend.security.SecurityConfigurations;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+
+import java.util.List;
+import java.util.UUID;
+
+@Tag(name = "Article", description = "Gerenciamento de artigos")
+@SecurityRequirement(name = SecurityConfigurations.SECURITY)
+public interface ArticleControllerDoc {
+
+    @Operation(summary = "Cria um artigo", description = "Cria um novo artigo associado ao usuário autenticado")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Artigo criado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos fornecidos")
+    })
+    ResponseEntity<ArticleDTO> createArticle(
+            @Valid ArticleCreateDTO article,
+            @Parameter(hidden = true) UUID userId
+    );
+
+    @Operation(summary = "Busca artigo por ID", description = "Retorna os detalhes de um artigo específico")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Artigo encontrado"),
+            @ApiResponse(responseCode = "404", description = "Artigo não encontrado")
+    })
+    ResponseEntity<ArticleDTO> getArticle(UUID articleId);
+
+    @Operation(summary = "Lista todos os artigos publicados", description = "Retorna a lista de artigos publicados")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de artigos retornada com sucesso")
+    })
+    ResponseEntity<Page<ArticleDTO>> getAllPublishedArticles(Pageable pageable);
+
+    @Operation(summary = "Busca artigos pelo título", description = "Pesquisa artigos publicados cujo título contenha o texto informado")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de artigos correspondentes")
+    })
+    ResponseEntity<Page<ArticleDTO>> searchPublishedArticles(String query, Pageable pageable);
+
+    @Operation(summary = "Busca artigos por tag/tecnologia", description = "Retorna artigos publicados associados a uma tecnologia (tag)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de artigos filtrados pela tecnologia")
+    })
+    ResponseEntity<Page<ArticleDTO>> getArticlesByTag(String technologyName, Pageable pageable);
+
+    @Operation(summary = "Busca artigos por múltiplas tags", description = "Retorna artigos que possuam TODAS as tags listadas (Filtro Estrito)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de artigos correspondentes")
+    })
+    ResponseEntity<Page<ArticleDTO>> getArticlesByTags(List<String> tags, Pageable pageable);
+
+    @Operation(summary = "Busca artigos por perfil", description = "Retorna os artigos publicados de um perfil específico")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de artigos do perfil"),
+            @ApiResponse(responseCode = "404", description = "Perfil não encontrado")
+    })
+    ResponseEntity<Page<ArticleDTO>> getProfileArticles(UUID profileId, Pageable pageable);
+
+    @Operation(summary = "Atualiza um artigo", description = "Atualiza um artigo existente. Apenas o autor pode alterá-lo.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Artigo atualizado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Requisição inválida"),
+            @ApiResponse(responseCode = "404", description = "Artigo não encontrado"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado (usuário não é o autor)")
+    })
+    ResponseEntity<ArticleDTO> updateArticle(
+            UUID articleId,
+            @Valid ArticleUpdateDTO articleUpdated,
+            @Parameter(hidden = true) UUID userId
+    );
+
+    @Operation(
+            summary = "Adiciona/Remove curtida",
+            description = "Adiciona/Remove uma curtida para um artigo existente."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Like realizado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Requisição inválida"),
+            @ApiResponse(responseCode = "404", description = "Artigo não encontrado"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado. Usuário não está autenticado")
+    })
+    ResponseEntity<Void> toggleArticleLike(
+            UUID articleId,
+            @Parameter(hidden = true) UUID userId
+    );
+
+    @Operation(summary = "Exclui um artigo", description = "Remove um artigo existente")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Artigo removido com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Artigo não encontrado")
+    })
+    ResponseEntity<Void> deleteArticle(
+            UUID articleId,
+            @Parameter(hidden = true) UUID userProfileId
+    );
+}
