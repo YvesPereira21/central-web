@@ -45,6 +45,8 @@ public class SecurityConfigurations {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/refresh", "/auth/logout", "/profiles").permitAll()
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
+                        // O endpoint MCP é público; suas ferramentas devem expor apenas conteúdo público.
+                        .requestMatchers("/mcp").permitAll()
                         .requestMatchers(HttpMethod.GET, "/uploads/profiles/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .anyRequest().authenticated()

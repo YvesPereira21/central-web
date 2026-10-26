@@ -180,6 +180,21 @@ A aplicação possui integração com o **Swagger UI** (utilizando `springdoc-op
 > 2. Clique no botão verde **Authorize** no topo direito da página do Swagger.
 > 3. Cole o token gerado e clique em **Authorize**.
 
+## Consulta via MCP
+
+Clientes MCP compatíveis com Streamable HTTP podem conectar-se ao endpoint `/mcp` do backend, sem autenticação. Localmente, o endereço é `http://localhost:8080/mcp`; em produção, use o endereço HTTPS do backend seguido de `/mcp`.
+
+O servidor oferece apenas ferramentas de consulta:
+
+| Ferramenta | Argumentos | Resultado |
+| --- | --- | --- |
+| `search_questions` | `termo`, `pagina` | Perguntas publicadas que correspondem ao termo |
+| `search_articles` | `termo`, `pagina` | Artigos publicados que correspondem ao termo |
+| `search_answers` | `perguntaId`, `pagina` | Respostas de uma pergunta publicada |
+| `search_comments` | `respostaId`, `pagina` | Comentários de uma resposta vinculada a uma pergunta publicada |
+
+As páginas começam em zero e contêm até cinco resultados. Ao adicionar outras ferramentas ao servidor, mantenha a restrição de conteúdo público ou implemente autorização apropriada para elas.
+
 
 ## Como Executar a Aplicação Localmente
 

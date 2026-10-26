@@ -67,6 +67,12 @@ public class CommentService {
                 .map(commentMapper::toDTO);
     }
 
+    public Page<CommentDTO> getCommentsFromPublishedQuestion(UUID answerId, Pageable pageable) {
+        return commentRepository
+                .findAllByAnswer_AnswerIdAndAnswer_Question_PublishedTrue(answerId, pageable)
+                .map(commentMapper::toDTO);
+    }
+
     @Transactional(rollbackOn = Exception.class)
     public CommentDTO updateComment(UUID commentId, CommentUpdateDTO dto, UUID userProfileId) {
         log.info("Atualizando comentário com ID: '{}' solicitado pelo perfil de usuário com ID: '{}'", commentId, userProfileId);
