@@ -8,12 +8,16 @@ import io.centralweb.backend.model.RefreshToken;
 import io.centralweb.backend.model.User;
 import io.centralweb.backend.security.CookieUtil;
 import io.centralweb.backend.security.TokenService;
+import io.centralweb.backend.security.LoginAttemptLimiter;
 import io.centralweb.backend.service.RefreshTokenService;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -26,22 +30,48 @@ public class AuthenticationController implements AuthenticationControllerDoc {
     private final TokenService tokenService;
     private final RefreshTokenService refreshTokenService;
     private final CookieUtil cookieUtil;
+    private final LoginAttemptLimiter loginAttemptLimiter;
 
     public AuthenticationController(AuthenticationManager authenticationManager,
                                   TokenService tokenService,
                                   RefreshTokenService refreshTokenService,
-                                  CookieUtil cookieUtil) {
+                                  CookieUtil cookieUtil,
+                                  LoginAttemptLimiter loginAttemptLimiter) {
         this.authenticationManager = authenticationManager;
         this.tokenService = tokenService;
         this.refreshTokenService = refreshTokenService;
         this.cookieUtil = cookieUtil;
+        this.loginAttemptLimiter = loginAttemptLimiter;
     }
 
     @Override
     @PostMapping("/login")
-    public ResponseEntity<Void> login(@RequestBody LoginRequestDTO login) {
+    public ResponseEntity<Void> login(@RequestBody LoginRequestDTO login, HttpServletRequest request) {
+        LoginAttemptLimiter.Reservation reservation;
+        try {
+            reservation = loginAttemptLimiter.reserve(login.email(), request.getRemoteAddr());
+        } catch (DataAccessException | IllegalStateException exception) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+        }
+        if (reservation.waitMillis() > 0) {
+            long retryAfterSeconds = (reservation.waitMillis() + 999) / 1000;
+            return ResponseEntity.status(429)
+                    .header(HttpHeaders.RETRY_AFTER, Long.toString(retryAfterSeconds))
+                    .build();
+        }
         var emailPassword = new UsernamePasswordAuthenticationToken(login.email(), login.password());
-        var auth = this.authenticationManager.authenticate(emailPassword);
+        org.springframework.security.core.Authentication auth;
+        try {
+            auth = this.authenticationManager.authenticate(emailPassword);
+        } catch (BadCredentialsException exception) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            loginAttemptLimiter.completeSuccessfulLogin(reservation);
+        } catch (DataAccessException exception) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+        }
 
         User user = (User) auth.getPrincipal();
 

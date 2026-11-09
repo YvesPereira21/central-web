@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Authentication", description = "Autenticação de usuários")
@@ -18,9 +19,11 @@ public interface AuthenticationControllerDoc {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Login bem-sucedido, cookies definidos"),
             @ApiResponse(responseCode = "400", description = "Requisição inválida (dados de login mal formatados)"),
-            @ApiResponse(responseCode = "401", description = "Credenciais inválidas")
+            @ApiResponse(responseCode = "401", description = "Credenciais inválidas"),
+            @ApiResponse(responseCode = "429", description = "Limite de tentativas atingido"),
+            @ApiResponse(responseCode = "503", description = "Limitador de login indisponível")
     })
-    ResponseEntity<Void> login(@Valid LoginRequestDTO login);
+    ResponseEntity<Void> login(@Valid LoginRequestDTO login, @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(summary = "Atualiza o Access Token", description = "Gera um novo access token a partir do cookie HttpOnly de refresh token")
     ResponseEntity<Void> refresh(String requestRefreshToken);
