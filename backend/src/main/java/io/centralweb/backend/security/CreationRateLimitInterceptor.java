@@ -3,9 +3,8 @@ package io.centralweb.backend.security;
 import io.centralweb.backend.model.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
+import io.centralweb.backend.ratelimit.TokenBucketRateLimiter;
+import io.github.bucket4j.ConsumptionProbe;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,7 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.HandlerMapping;
 
-import java.util.List;
+import java.time.Duration;
 import java.util.Map;
 
 @Component
@@ -29,31 +28,10 @@ public class CreationRateLimitInterceptor implements HandlerInterceptor {
             "/comments/answer/{answerId}", new Policy("comments", 10, 10_000)
     );
 
-    private static final DefaultRedisScript<Long> CONSUME_TOKEN = new DefaultRedisScript<>("""
-            local tokenCost = tonumber(ARGV[2])
-            local maxCredits = tonumber(ARGV[1]) * tokenCost
-            local clock = redis.call('TIME')
-            local now = tonumber(clock[1]) * 1000 + math.floor(tonumber(clock[2]) / 1000)
-            local state = redis.call('HMGET', KEYS[1], 'credits', 'updatedAt')
-            local credits = tonumber(state[1]) or maxCredits
-            local updatedAt = tonumber(state[2]) or now
-            local effectiveNow = math.max(now, updatedAt)
-            credits = math.min(maxCredits, credits + effectiveNow - updatedAt)
-            local waitMillis = 0
-            if credits >= tokenCost then
-                credits = credits - tokenCost
-            else
-                waitMillis = tokenCost - credits
-            end
-            redis.call('HSET', KEYS[1], 'credits', credits, 'updatedAt', effectiveNow)
-            redis.call('PEXPIRE', KEYS[1], maxCredits)
-            return waitMillis
-            """, Long.class);
+    private final TokenBucketRateLimiter rateLimiter;
 
-    private final StringRedisTemplate redis;
-
-    public CreationRateLimitInterceptor(StringRedisTemplate redis) {
-        this.redis = redis;
+    public CreationRateLimitInterceptor(TokenBucketRateLimiter rateLimiter) {
+        this.rateLimiter = rateLimiter;
     }
 
     @Override
@@ -79,22 +57,18 @@ public class CreationRateLimitInterceptor implements HandlerInterceptor {
             identity = "user:" + user.getUserId();
         }
 
-        String key = "rate-limit:create:" + policy.action() + ":" + identity;
-        Long waitMillis;
+        String key = "bucket4j:create:" + policy.action() + ":" + identity;
+        ConsumptionProbe result;
         try {
-            waitMillis = redis.execute(CONSUME_TOKEN, List.of(key),
-                    Integer.toString(policy.capacity()), Long.toString(policy.refillMillis()));
-        } catch (DataAccessException exception) {
+            result = rateLimiter.consume(key, policy.capacity(), Duration.ofMillis(policy.refillMillis()));
+        } catch (RuntimeException exception) {
             response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
             return false;
         }
-        if (waitMillis == null) {
-            response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-            return false;
-        }
-        if (waitMillis > 0) {
+        if (!result.isConsumed()) {
             response.setStatus(429);
-            response.setHeader(HttpHeaders.RETRY_AFTER, Long.toString((waitMillis + 999) / 1000));
+            response.setHeader(HttpHeaders.RETRY_AFTER,
+                    Long.toString(Math.ceilDiv(result.getNanosToWaitForRefill(), 1_000_000_000L)));
             return false;
         }
         return true;

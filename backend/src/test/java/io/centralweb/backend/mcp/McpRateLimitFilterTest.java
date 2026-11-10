@@ -4,8 +4,9 @@ import jakarta.servlet.FilterChain;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.script.RedisScript;
+import io.centralweb.backend.ratelimit.TokenBucketRateLimiter;
+import io.github.bucket4j.ConsumptionProbe;
+import java.time.Duration;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -16,7 +17,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class McpRateLimitFilterTest {
-    private final StringRedisTemplate redis = mock(StringRedisTemplate.class);
+    private final TokenBucketRateLimiter redis = mock(TokenBucketRateLimiter.class);
     private final FilterChain chain = mock(FilterChain.class);
     private final McpRateLimitFilter filter = new McpRateLimitFilter(redis);
     private MockHttpServletRequest request;
@@ -31,15 +32,15 @@ class McpRateLimitFilterTest {
 
     @Test
     void allowedRequestContinuesWithIpSpecificKey() throws Exception {
-        when(redis.execute(any(RedisScript.class), eq(List.of("rate-limit:mcp:192.0.2.1"))))
-                .thenReturn(0L);
+        when(redis.consume(eq("bucket4j:mcp:192.0.2.1"), eq(10), eq(Duration.ofSeconds(1))))
+                .thenReturn(ConsumptionProbe.consumed(9, 0));
         filter.doFilter(request, response, chain);
         verify(chain).doFilter(request, response);
     }
 
     @Test
     void exhaustedBucketReturnsRetryAfterWithoutContinuing() throws Exception {
-        when(redis.execute(any(RedisScript.class), anyList())).thenReturn(350L);
+        when(redis.consume(anyString(), anyInt(), any())).thenReturn(ConsumptionProbe.rejected(0, 350_000_000L, 0));
         filter.doFilter(request, response, chain);
         assertThat(response.getStatus()).isEqualTo(429);
         assertThat(response.getHeader("Retry-After")).isEqualTo("1");
@@ -48,7 +49,7 @@ class McpRateLimitFilterTest {
 
     @Test
     void redisFailureReturnsServiceUnavailable() throws Exception {
-        when(redis.execute(any(RedisScript.class), anyList()))
+        when(redis.consume(anyString(), anyInt(), any()))
                 .thenThrow(new DataAccessResourceFailureException("Redis indisponível"));
         filter.doFilter(request, response, chain);
         assertThat(response.getStatus()).isEqualTo(503);
