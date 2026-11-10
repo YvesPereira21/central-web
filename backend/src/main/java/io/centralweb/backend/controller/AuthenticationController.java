@@ -1,7 +1,9 @@
 package io.centralweb.backend.controller;
 
 import io.centralweb.backend.controller.doc.AuthenticationControllerDoc;
+import io.centralweb.backend.dto.ApiError;
 import io.centralweb.backend.dto.auth.AuthUserDTO;
+import io.centralweb.backend.ratelimit.RateLimitResponses;
 import io.centralweb.backend.dto.user.LoginRequestDTO;
 import io.centralweb.backend.exception.TokenRefreshException;
 import io.centralweb.backend.model.RefreshToken;
@@ -11,6 +13,7 @@ import io.centralweb.backend.security.TokenService;
 import io.centralweb.backend.security.LoginAttemptLimiter;
 import io.centralweb.backend.service.RefreshTokenService;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -22,6 +25,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/auth")
 public class AuthenticationController implements AuthenticationControllerDoc {
@@ -46,18 +50,20 @@ public class AuthenticationController implements AuthenticationControllerDoc {
 
     @Override
     @PostMapping("/login")
-    public ResponseEntity<Void> login(@RequestBody LoginRequestDTO login, HttpServletRequest request) {
+    public ResponseEntity<ApiError> login(@RequestBody LoginRequestDTO login, HttpServletRequest request) {
         LoginAttemptLimiter.Reservation reservation;
         try {
             reservation = loginAttemptLimiter.reserve(login.email(), request.getRemoteAddr());
         } catch (DataAccessException | IllegalStateException exception) {
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+            log.warn("Não foi possível atualizar a cota de login", exception);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(RateLimitResponses.body(HttpStatus.SERVICE_UNAVAILABLE));
         }
         if (reservation.waitMillis() > 0) {
             long retryAfterSeconds = (reservation.waitMillis() + 999) / 1000;
-            return ResponseEntity.status(429)
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                     .header(HttpHeaders.RETRY_AFTER, Long.toString(retryAfterSeconds))
-                    .build();
+                    .body(RateLimitResponses.body(HttpStatus.TOO_MANY_REQUESTS));
         }
         var emailPassword = new UsernamePasswordAuthenticationToken(login.email(), login.password());
         org.springframework.security.core.Authentication auth;
@@ -70,7 +76,9 @@ public class AuthenticationController implements AuthenticationControllerDoc {
         try {
             loginAttemptLimiter.completeSuccessfulLogin(reservation);
         } catch (DataAccessException exception) {
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+            log.warn("Não foi possível atualizar a cota de login", exception);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(RateLimitResponses.body(HttpStatus.SERVICE_UNAVAILABLE));
         }
 
         User user = (User) auth.getPrincipal();

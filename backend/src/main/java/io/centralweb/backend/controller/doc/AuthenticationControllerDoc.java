@@ -1,5 +1,6 @@
 package io.centralweb.backend.controller.doc;
 
+import io.centralweb.backend.dto.ApiError;
 import io.centralweb.backend.dto.auth.AuthUserDTO;
 import io.centralweb.backend.dto.user.LoginRequestDTO;
 import io.centralweb.backend.model.User;
@@ -23,7 +24,7 @@ public interface AuthenticationControllerDoc {
             @ApiResponse(responseCode = "429", description = "Limite de tentativas atingido"),
             @ApiResponse(responseCode = "503", description = "Limitador de login indisponível")
     })
-    ResponseEntity<Void> login(@Valid LoginRequestDTO login, @Parameter(hidden = true) HttpServletRequest request);
+    ResponseEntity<ApiError> login(@Valid LoginRequestDTO login, @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(summary = "Atualiza o Access Token", description = "Gera um novo access token a partir do cookie HttpOnly de refresh token")
     ResponseEntity<Void> refresh(String requestRefreshToken);

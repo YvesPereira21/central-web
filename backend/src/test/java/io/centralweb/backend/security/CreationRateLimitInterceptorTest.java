@@ -11,6 +11,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.servlet.HandlerMapping;
+import tools.jackson.databind.json.JsonMapper;
 import java.util.List;
 import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,7 +20,8 @@ import static org.mockito.Mockito.*;
 
 class CreationRateLimitInterceptorTest {
     private final TokenBucketRateLimiter redis = mock(TokenBucketRateLimiter.class);
-    private final CreationRateLimitInterceptor interceptor = new CreationRateLimitInterceptor(redis);
+    private final JsonMapper mapper = JsonMapper.builder().build();
+    private final CreationRateLimitInterceptor interceptor = new CreationRateLimitInterceptor(redis, mapper);
 
     @AfterEach
     void clearSecurityContext() {
@@ -27,7 +29,7 @@ class CreationRateLimitInterceptorTest {
     }
 
     @Test
-    void limitsDynamicAnswerRouteByUserAndReturnsRetryAfter() {
+    void limitsDynamicAnswerRouteByUserAndReturnsRetryAfter() throws Exception {
         User user = mock(User.class);
         UUID userId = UUID.randomUUID();
         when(user.getUserId()).thenReturn(userId);
@@ -41,11 +43,12 @@ class CreationRateLimitInterceptorTest {
         assertThat(interceptor.preHandle(request, response, new Object())).isFalse();
         assertThat(response.getStatus()).isEqualTo(429);
         assertThat(response.getHeader("Retry-After")).isEqualTo("2");
+        assertThat(mapper.readTree(response.getContentAsString()).path("code").asInt()).isEqualTo(429);
         verify(redis).consume("bucket4j:create:answers:user:" + userId, 10, Duration.ofMillis(30000));
     }
 
     @Test
-    void registrationUsesIpAndOtherMethodsBypassLimiter() {
+    void registrationUsesIpAndOtherMethodsBypassLimiter() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/profiles");
         request.setRemoteAddr("192.0.2.1");
         request.setAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE, "/profiles");

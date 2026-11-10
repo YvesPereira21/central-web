@@ -10,7 +10,7 @@ import java.time.Duration;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-import java.util.List;
+import tools.jackson.databind.json.JsonMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
@@ -19,7 +19,8 @@ import static org.mockito.Mockito.*;
 class McpRateLimitFilterTest {
     private final TokenBucketRateLimiter redis = mock(TokenBucketRateLimiter.class);
     private final FilterChain chain = mock(FilterChain.class);
-    private final McpRateLimitFilter filter = new McpRateLimitFilter(redis);
+    private final JsonMapper mapper = JsonMapper.builder().build();
+    private final McpRateLimitFilter filter = new McpRateLimitFilter(redis, mapper);
     private MockHttpServletRequest request;
     private MockHttpServletResponse response;
 
@@ -44,6 +45,8 @@ class McpRateLimitFilterTest {
         filter.doFilter(request, response, chain);
         assertThat(response.getStatus()).isEqualTo(429);
         assertThat(response.getHeader("Retry-After")).isEqualTo("1");
+        assertThat(response.getContentType()).isEqualTo("application/json");
+        assertThat(mapper.readTree(response.getContentAsString()).path("code").asInt()).isEqualTo(429);
         verifyNoInteractions(chain);
     }
 
@@ -53,6 +56,7 @@ class McpRateLimitFilterTest {
                 .thenThrow(new DataAccessResourceFailureException("Redis indisponível"));
         filter.doFilter(request, response, chain);
         assertThat(response.getStatus()).isEqualTo(503);
+        assertThat(mapper.readTree(response.getContentAsString()).path("code").asInt()).isEqualTo(503);
         verifyNoInteractions(chain);
     }
 

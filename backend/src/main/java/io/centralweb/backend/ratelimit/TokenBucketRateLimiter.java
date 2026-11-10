@@ -38,6 +38,7 @@ public class TokenBucketRateLimiter {
             RedisClient client = (RedisClient) connectionFactory.getRequiredNativeClient();
             connection = client.connect(ByteArrayCodec.INSTANCE);
             manager = Bucket4jLettuce.casBasedBuilder(connection)
+                    .requestTimeout(Duration.ofMillis(500))
                     .expirationAfterWrite(ExpirationAfterWriteStrategy
                             .basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(10)))
                     .build();
